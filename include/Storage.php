@@ -42,10 +42,11 @@ class Storage {
 	function updateRelease() {
 
 		$svn = new Svn;
-
+		$svn->update($this->dev_branch);
 		$logxml = $svn->fetchLogFromBranch($this->dev_branch, $this->first_revision);
+
 		if (!$logxml) {
-			Throw new \Exception('SVN log failed ' );
+			return FALSE;
 		}
 
 		foreach ($logxml->logentry as  $v) {

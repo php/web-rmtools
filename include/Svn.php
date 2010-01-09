@@ -16,12 +16,11 @@ class Svn {
 			2 => array("pipe", "w") // stderr is a file to write to
 		);
 
-		$env = array('some_option' => 'aeiou');
 		$cmd = "svn log -r $first_revision:HEAD --xml";
 
 		$path = SVN_REPO_PATH . '/php-src/branches/' . $branch;
 
-		$process = proc_open($cmd, $descriptorspec, $pipes, $path, $env);
+		$process = proc_open($cmd, $descriptorspec, $pipes, $path);
 		$log_xml = stream_get_contents($pipes[1]);
 		fclose($pipes[1]);
 		proc_close($process);
@@ -31,6 +30,27 @@ class Svn {
 			throw new \Exception('svn log failed ' . $path);
 		}
 		return $sx;
+	}
+
+	function update($branch) {
+		if (!static::isValidBranch($branch)) {
+			throw new \Exception('Invalid branch name ' . $branch);
+			return FALSE;
+		}
+
+		$descriptorspec = array(
+			1 => array("pipe", "w"),  // stdout is a pipe that the child will write to
+			2 => array("pipe", "w") // stderr is a file to write to
+		);
+
+		$cmd = "svn update";
+
+		$path = SVN_REPO_PATH . '/php-src/branches/' . $branch;
+
+		$process = proc_open($cmd, $descriptorspec, $pipes, $path);
+		$out = stream_get_contents($pipes[1]);
+		fclose($pipes[1]);
+		proc_close($process);
 	}
 
 	/* TODO: do some sanity check if the branch is actually co'ed */
