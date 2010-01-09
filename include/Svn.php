@@ -13,13 +13,11 @@ class Svn {
 
 		$descriptorspec = array(
 			1 => array("pipe", "w"),  // stdout is a pipe that the child will write to
-			2 => array("file", "/tmp/error-output.txt", "a") // stderr is a file to write to
+			2 => array("pipe", "w") // stderr is a file to write to
 		);
 
-		$cwd = '/tmp';
 		$env = array('some_option' => 'aeiou');
 		$cmd = "svn log -r $first_revision:HEAD --xml";
-		
 
 		$path = SVN_REPO_PATH . '/php-src/branches/' . $branch;
 
