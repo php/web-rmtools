@@ -88,9 +88,12 @@
                                                 elLiner.innerHTML = ' <img src="/images/rejected_small.png" width="30"/>';
                                                 break;
                                         // Open 
-                                        case 0:
+                                        case 2:
+                                                elLiner.innerHTML = '  <img src="/images/question_small.png" width="30"/>';
+                                                break;
                                         default:
-                                                elLiner.innerHTML = ' ';
+												elLiner.innerHTML = ' ';
+
                                 }
                         };
 
