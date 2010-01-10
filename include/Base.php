@@ -64,7 +64,7 @@ class Base {
 
 	function getRelease($release) {
 		$release = sqlite_escape_string($release);
-		$sql = "SELECT name, release_branch, dev_branch, status, first_revision FROM release WHERE name='" . $release . "'";
+		$sql = "SELECT name, release_branch, dev_branch, status, first_revision, last_revision FROM release WHERE name='" . $release . "'";
 		$res = sqlite_query($this->db, $sql, SQLITE_ASSOC);
 		if (!$res) {
 			Throw new \Exception('Query failed for ' . $release);
