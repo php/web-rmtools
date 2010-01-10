@@ -1,8 +1,8 @@
 <?php
-set_include_path('.:/home/web/rmtools.php.net/include');
+include __DIR__ . '/../include/config.php';
+
 error_reporting(E_ALL|E_NOTICE);
 
-include 'config.php';
 include 'Storage.php';
 include 'Base.php';
 

@@ -1,8 +1,7 @@
 <?php
-set_include_path('.:/home/pierre/public_html/rmtools/include');
 error_reporting(E_ALL|E_NOTICE);
+include __DIR__ . '/../include/config.php';
 
-include 'config.php';
 include 'Storage.php';
 include 'Base.php';
 use rmtools as rm;
