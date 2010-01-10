@@ -13,20 +13,23 @@ $extra_head = $error = FALSE;
 include 'login.php';
 
 $title = $release = '5.3.2';
-
+try {
 $svn = new rm\Storage($release);
-
+} catch (Exception $e) {
+	$error = $e->getMessage();
+	$tpl = 'error.php';
+}
 $mode = filter_input(INPUT_GET, 'mode', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW|FILTER_FLAG_STRIP_HIGH);
 
 switch ($mode) {
 	case 'list':
 		$nojs = filter_input(INPUT_GET, 'nojs', FILTER_VALIDATE_INT);
 		if ($nojs) {
-			$tpl = TPL_PATH . '/revision_list.php';
+			$tpl = 'revision_list.php';
 			$svn_log = $svn->getAll();
 		} else {
-			$extra_head = TPL_PATH . '/revision_list_yui_extra_head.php';
-			$tpl = TPL_PATH . '/revision_list_yui.php';
+			$extra_head = 'revision_list_yui_extra_head.php';
+			$tpl = 'revision_list_yui.php';
 		}
 		break;
 
@@ -42,10 +45,10 @@ switch ($mode) {
 		}
 		if (!$revision) {
 			if ($json) {
-				//header('HTTP/1.0 404 Not Found');
+				header('HTTP/1.0 404 Not Found');
 			}
 			$error = "$revision cannot be found.";
-			$tpl = __DIR__ . '/../template/error.php';
+			$tpl = 'error.php';
 		} else {
 			if (!empty($_POST)) {
 				$revision['comment'] = filter_input(INPUT_POST, 'comment', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW|FILTER_FLAG_STRIP_HIGH);
@@ -57,7 +60,7 @@ switch ($mode) {
 						header('HTTP/1.0 500 Internal Server Error');
 					}
 					$error = "Failed to update revision: $revision";
-					$tpl = __DIR__ . '/../template/error.php';
+					$tpl = 'error.php';
 					break;
 				}
 				if ($json) {
@@ -70,7 +73,7 @@ switch ($mode) {
 				break;
 			}
 
-			$tpl = __DIR__ . '/../template/edit_revision.php';
+			$tpl = 'edit_revision.php';
 		}
 		break;
 
@@ -78,8 +81,8 @@ switch ($mode) {
 	default:
 		$base = new rm\Base;
 		$releases = $base->getReleaseForRM($username);
-		$tpl = TPL_PATH  . '/menu.php';
+		$tpl = 'menu.php';
 }
 include TPL_PATH . '/header.php';
-include $tpl;
+include TPL_PATH . '/'. $tpl;
 include TPL_PATH . '/footer.php';
