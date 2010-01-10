@@ -24,9 +24,10 @@ class Base {
 	}
 
 	function createStorage() {
-		if (!sqlite_query($this->db, 'CREATE TABLE release (name VARCHAR(32), release_branch VARCHAR(32), dev_branch VARCHAR(32), status INTEGER, first_revision INTEGER)')) {
+		if (!sqlite_query($this->db, 'CREATE TABLE release (name VARCHAR(32), release_branch VARCHAR(32), dev_branch VARCHAR(32), status INTEGER, first_revision INTEGER, last_revision INTEGER)')) {
 			throw new \Exception('Cannot initialize TABLE release');
 		}
+
 		if (!sqlite_query($this->db, 'CREATE TABLE rm (name VARCHAR(32), release_name VARCHAR(32))')) {
 			throw new \Exception('Cannot initialize TABLE release');
 		}
