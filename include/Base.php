@@ -24,7 +24,15 @@ class Base {
 	}
 
 	function createStorage() {
-		if (!sqlite_query($this->db, 'CREATE TABLE release (name VARCHAR(32), release_branch VARCHAR(32), dev_branch VARCHAR(32), status INTEGER, first_revision INTEGER, last_revision INTEGER)')) {
+		if (!sqlite_query($this->db, 'CREATE TABLE release (
+		name VARCHAR(32),
+		release_branch VARCHAR(32),
+		dev_branch VARCHAR(32),
+		status INTEGER,
+		first_revision INTEGER,
+		last_revision INTEGER,
+		last_snap_revision INTEGER,
+		last_update VARCHAR(32))')) {
 			throw new \Exception('Cannot initialize TABLE release');
 		}
 
@@ -53,7 +61,7 @@ class Base {
 		$rm = sqlite_escape_string($rm);
 		$res = sqlite_query($this->db, "SELECT name FROM rm WHERE name='$rm' AND release_name='$release'");
 		if (sqlite_num_rows($res) > 0) {
-			Throw new \Exception($release . 'already exists');
+			Throw new \Exception($release . ' cannot be found');
 		}
 
 		$res = sqlite_query($this->db, "INSERT INTO rm (name, release_name) VALUES('$rm','$release')");
@@ -61,10 +69,19 @@ class Base {
 			Throw new \Exception('Cannot create release');
 		}
 	}
+	
+	function setLatestRevisionForRelease($release, $revision) {
+		$release = sqlite_escape_string($release);
+		$revision = (int)$revision;
+		$res = sqlite_query($this->db, "UPDATE release SET last_revision=$revision WHERE name='$release'");
+		if (sqlite_changes($this->db) < 1) {
+			Throw new \Exception('Release not found ' . $release);
+		}
+	}
 
 	function getRelease($release) {
 		$release = sqlite_escape_string($release);
-		$sql = "SELECT name, release_branch, dev_branch, status, first_revision, last_revision FROM release WHERE name='" . $release . "'";
+		$sql = "SELECT name, release_branch, dev_branch, status, first_revision, last_revision, last_update, last_snap_revision FROM release WHERE name='" . $release . "'";
 		$res = sqlite_query($this->db, $sql, SQLITE_ASSOC);
 		if (!$res) {
 			Throw new \Exception('Query failed for ' . $release);
@@ -75,7 +92,6 @@ class Base {
 		}
 		return sqlite_fetch_array($res);
 	}
-	
 
 	function getReleaseForRM($rm) {
 		$sql = "SELECT release_name FROM rm WHERE name='" . sqlite_escape_string($rm) . "'";
