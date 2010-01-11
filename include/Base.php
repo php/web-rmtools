@@ -79,6 +79,19 @@ class Base {
 		}
 	}
 
+	function setLastUpdateForRelease($release, $date=FALSE) {
+		if (!$date) {
+			$date = date(DATE_RFC822);
+		}
+		$release = sqlite_escape_string($release);
+		$date = sqlite_escape_string($date);
+		$res = sqlite_query($this->db, "UPDATE release SET last_update='$date' WHERE name='$release'");
+
+		if (sqlite_changes($this->db) < 1) {
+			Throw new \Exception('Release not found ' . $release);
+		}
+	}
+
 	function getRelease($release) {
 		$release = sqlite_escape_string($release);
 		$sql = "SELECT name, release_branch, dev_branch, status, first_revision, last_revision, last_update, last_snap_revision FROM release WHERE name='" . $release . "'";

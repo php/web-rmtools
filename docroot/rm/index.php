@@ -12,9 +12,10 @@ $extra_head = $error = FALSE;
 
 include 'login.php';
 
-$title = $release = '5.3.2';
+$release_name = filter_input(INPUT_GET, 'release', FILTER_SANITIZE_NUMBER_FLOAT,FILTER_FLAG_ALLOW_FRACTION);
+$title = $release_name;
 try {
-	$svn = new rm\Storage($release);
+	$svn = new rm\Storage($release_name);
 } catch (Exception $e) {
 	$error = $e->getMessage();
 	$tpl = 'error.php';
@@ -31,6 +32,9 @@ switch ($mode) {
 			$extra_head = 'revision_list_yui_extra_head.php';
 			$tpl = 'revision_list_yui.php';
 		}
+
+		$base = new rm\Base;
+		$release = $base->getRelease($release_name);
 		break;
 
 	case 'edit':

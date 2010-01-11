@@ -1,6 +1,6 @@
   <div class="yui-skin-sam">
     <div id="hd">
-      <h1>PHP <?php echo $release; ?> Merges</h1>
+      <h1>PHP <?php echo $release_name; ?> Merges (updated on <?php echo $release['last_update'];?>)</h1>
     </div>
 
     <div id="bd" style="margin:2em">

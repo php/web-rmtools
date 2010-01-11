@@ -88,6 +88,8 @@ class Storage {
 		}
 		$this->release['last_revision'] = $this->getLatestRevision();
 		$this->base->setLatestRevisionForRelease($this->release['name'], $this->release['last_revision']);
+		$this->release['last_update'] = date(DATE_RFC822);
+		$this->base->setLastUpdateForRelease($this->release['name'], $this->release['last_update']);
 	}
 
 	function createSnapshot($filename = FALSE, $force = FALSE) {
