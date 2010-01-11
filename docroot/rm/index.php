@@ -14,7 +14,7 @@ include 'login.php';
 
 $title = $release = '5.3.2';
 try {
-$svn = new rm\Storage($release);
+	$svn = new rm\Storage($release);
 } catch (Exception $e) {
 	$error = $e->getMessage();
 	$tpl = 'error.php';
@@ -88,9 +88,14 @@ switch ($mode) {
 
 	case 'menu':
 	default:
-		$base = new rm\Base;
-		$releases = $base->getReleaseForRM($username);
 		$tpl = 'menu.php';
+		$base = new rm\Base;
+		try {
+			$releases = $base->getReleaseForRM($username);
+		} catch (\Exception $e) {
+			$error = "$username has no RM role in any active release.";
+			$tpl = 'error.php';
+		}
 }
 include TPL_PATH . '/header.php';
 include TPL_PATH . '/'. $tpl;
