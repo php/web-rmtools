@@ -30,7 +30,6 @@ class Auth {
 		$ctx = stream_context_create(array("http" => $opts));
 		$s = file_get_contents("http://master.php.net/fetch/cvsauth.php", false, $ctx);
 		$a = unserialize($s);
-var_dump($a, MASTER_AUTH_TOKEN);
 		/*
 		define("E_UNKNOWN", 0);
 		define("E_USERNAME", 1);
