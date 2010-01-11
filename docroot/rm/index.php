@@ -54,21 +54,30 @@ switch ($mode) {
 				$revision['comment'] = filter_input(INPUT_POST, 'comment', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW|FILTER_FLAG_STRIP_HIGH);
 				$revision['news'] = filter_input(INPUT_POST, 'news', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW|FILTER_FLAG_STRIP_HIGH);
 				$revision['status'] = filter_input(INPUT_POST, 'status', FILTER_VALIDATE_INT, array('min_range'=>0. , 'max_range'=>2));
-
-				if (!$svn->updateRevision($revision)) {
-					if ($json) {
-						header('HTTP/1.0 500 Internal Server Error');
+				try {
+					if (!$svn->updateRevision($revision)) {
+						if ($json) {
+							header('HTTP/1.0 500 Internal Server Error');
+						}
+						$error = "Failed to update revision: $revision";
+						$tpl = 'error.php';
+						break;
 					}
-					$error = "Failed to update revision: $revision";
-					$tpl = 'error.php';
-					break;
-				}
-				if ($json) {
-					echo json_encode($revision);
-					exit();
-				} else {
-					header('Location: index.php');
-					exit();
+
+					if ($json) {
+						echo json_encode($revision);
+						exit();
+					} else {
+						header('Location: index.php');
+						exit();
+					}
+				} catch (\Exception $e) {
+						if ($json) {
+							header('HTTP/1.0 500 Internal Server Error');
+							exit();
+						}
+						$error = "Failed to update revision: $revision";
+						$tpl = 'error.php';
 				}
 				break;
 			}
