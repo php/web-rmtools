@@ -28,7 +28,7 @@ class Auth {
 				);
 
 		$ctx = stream_context_create(array("http" => $opts));
-		$s = file_get_contents("http://master.php.net/fetch/cvsauth.php", false, $ctx);
+		$s = file_get_contents("https://master.php.net/fetch/cvsauth.php", false, $ctx);
 		$a = unserialize($s);
 		/*
 		define("E_UNKNOWN", 0);
