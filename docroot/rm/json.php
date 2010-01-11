@@ -6,8 +6,8 @@ include 'Storage.php';
 include 'Base.php';
 
 use rmtools as rm;
-
-$svn = new rm\Storage('5.3.2');
+$release_name = filter_input(INPUT_GET, 'release', FILTER_SANITIZE_NUMBER_FLOAT,FILTER_FLAG_ALLOW_FRACTION);
+$svn = new rm\Storage($release_name);
 $json = $svn->exportAsJson();
 
 //$json = '{"replyCode":201, "replyText":"Data follows","data": ' . $json . '}';

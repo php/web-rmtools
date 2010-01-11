@@ -119,6 +119,7 @@ class Storage {
 		} else {
 			$snaps_archive_name = $filename;
 		}
+
 		$now = date(DATE_RFC822);
 		$text = "
 PHP source snapshot generated on $now. The last revision in this snap is
@@ -150,6 +151,10 @@ $latest_revision";
 	}
 
 	function getAll() {
+		/* Test if we actually have a separate branch for the release phases */
+		if ($this->release['release_branch'] == $this->release['dev_branch']) {
+			return NULL;
+		}
 		$res = sqlite_query($this->db, 'SELECT * FROM revision ORDER by revision', SQLITE_ASSOC);
 		if ($res && sqlite_num_rows($res) > 0) {
 			return sqlite_fetch_all($res);

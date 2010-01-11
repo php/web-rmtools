@@ -103,6 +103,7 @@ class Base {
 		if (sqlite_num_rows($res) == 0) {
 			Throw new \Exception($release . ' not found.');
 		}
+
 		return sqlite_fetch_array($res);
 	}
 
@@ -116,6 +117,12 @@ class Base {
 		if (sqlite_num_rows($res) == 0) {
 			Throw new \Exception($rm . ' not found.');
 		}
-		return sqlite_fetch_array($res, SQLITE_ASSOC);
+		$rel = sqlite_fetch_all($res, SQLITE_NUM);
+		$releases = array();
+		foreach ($rel as $v) {
+			$releases[] = $v[0];
+		}
+
+		return $releases;
 	}
 }

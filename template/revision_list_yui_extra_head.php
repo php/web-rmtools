@@ -117,7 +117,7 @@
                                 {key:"news", resizeable: true, width:300}
                         ];
 
-                        var ds = new YAHOO.util.DataSource("/rm/json.php?"); 
+                        var ds = new YAHOO.util.DataSource("/rm/json.php?release=<?php echo $release_name; ?>"); 
                                 ds.responseType = YAHOO.util.DataSource.TYPE_JSON; 
                                 ds.connXhrMode = "queueRequests"; 
                                 ds.responseSchema = { 
