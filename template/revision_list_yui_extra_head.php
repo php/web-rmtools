@@ -165,11 +165,15 @@
                                                 dialog_form.status[0].checked = false;
                                                 dialog_form.status[1].checked = true;
                                                 dialog_form.status[2].checked = false;
-                                        } else {
+                                        } else if (status == 2) {
                                                 dialog_form.status[0].checked = false;
                                                 dialog_form.status[1].checked = false;
                                                 dialog_form.status[2].checked = true;
-                                        }
+                                        } else {
+                                                dialog_form.status[0].checked = false;
+                                                dialog_form.status[1].checked = false;
+                                                dialog_form.status[2].checked = false;
+										}
 
                                         YAHOO.rmtools.container.editRowDialog.show();
                                         YAHOO.rmtools.container.editRowDialog.record = record;
@@ -180,7 +184,7 @@
                 dt.subscribe("rowMouseoverEvent", dt.onEventHighlightRow); 
                 dt.subscribe("rowMouseoutEvent", dt.onEventUnhighlightRow); 
                 dt.subscribe("rowClickEvent", dt.onEventSelectRow); 
-                        dt.subscribe("rowSelectEvent", showRowEditor);
+                dt.subscribe("rowSelectEvent", showRowEditor);
 
                 }
         });

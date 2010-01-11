@@ -27,16 +27,15 @@ YAHOO.namespace("rmtools.container");
                 var new_data = record.getData();
                 response = response.split("<!")[0];
                 document.getElementById("resp").innerHTML = response;
-
                 dt.updateRow(record, return_data);
         };
 
         var handleFailure = function(o) {
-                alert("Submission failed: " + o.status);
+                alert("Submission failed: " + o.status + "\nResponse: " + o.response.Text);
         };
 
-    // Remove progressively enhanced content class, just before creating the module
-    YAHOO.util.Dom.removeClass("editRowDialog", "yui-pe-content");
+		// Remove progressively enhanced content class, just before creating the module
+		YAHOO.util.Dom.removeClass("editRowDialog", "yui-pe-content");
 
         // Instantiate the Dialog
         YAHOO.rmtools.container.editRowDialog = new YAHOO.widget.Dialog("editRowDialog", 
@@ -61,7 +60,6 @@ YAHOO.namespace("rmtools.container");
                                                                 success: handleSuccess,
                                                                 failure: handleFailure
                                                         };
-        
 
         YAHOO.rmtools.container.editRowDialog.render();
     });
