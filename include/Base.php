@@ -5,6 +5,10 @@ namespace rmtools;
 
 class Base {
 	protected $db;
+	const STATUS_SNAP_ONLY = 1;
+	const STATUS_CLOSED = 2;
+	const STATUS_RELEASE = 3;
+	const STATUS_DEV = 4;
 
 	function __construct() {
 		$path = DB_PATH . '/rmtools.sqlite';
@@ -86,6 +90,21 @@ class Base {
 		$release = sqlite_escape_string($release);
 		$date = sqlite_escape_string($date);
 		$res = sqlite_query($this->db, "UPDATE release SET last_update='$date' WHERE name='$release'");
+
+		if (sqlite_changes($this->db) < 1) {
+			Throw new \Exception('Release not found ' . $release);
+		}
+	}
+
+	function setLastRevisionSnapForRelease($release, $revision) {
+		$release = sqlite_escape_string($release);
+		$revision = (int)$revision;
+
+		if (!$revision) {
+			Throw new \Exception('Invalid revision ' . $revision);
+		}
+
+		$res = sqlite_query($this->db, "UPDATE release SET last_snap_revision=$revision WHERE name='$release'");
 
 		if (sqlite_changes($this->db) < 1) {
 			Throw new \Exception('Release not found ' . $release);

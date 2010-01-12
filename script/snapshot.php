@@ -11,6 +11,7 @@ if ($argc < 2 || $argc > 3) {
 	echo "Usage: snapshot <release name> <snap absolute path>\n";
 	exit();
 }
+
 $release = filter_var($argv[1], FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW|FILTER_FLAG_STRIP_HIGH);
 
 if ($argc == 3) {

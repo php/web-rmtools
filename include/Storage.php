@@ -53,11 +53,16 @@ class Storage {
 	function updateRelease() {
 
 		$svn = new Svn;
-		$svn->update($this->dev_branch);
-		
+		$last_revision = $svn->update($this->dev_branch);
+
 		if ($this->dev_branch == $this->release_branch) {
+			$this->release['last_update'] = date(DATE_RFC822);
+			$this->release['last_revision'] = $last_revision;
+			$this->base->setLatestRevisionForRelease($this->release['name'], $last_revision);
+			$this->base->setLastUpdateForRelease($this->release['name'], $this->release['last_update']);
 			return TRUE;
 		}
+
 		$logxml = $svn->fetchLogFromBranch($this->dev_branch, $this->first_revision);
 
 		if (!$logxml) {
@@ -90,7 +95,8 @@ class Storage {
 					}
 			}
 		}
-		$this->release['last_revision'] = $this->getLatestRevision();
+
+		$this->release['last_revision'] = $last_revision;
 		$this->base->setLatestRevisionForRelease($this->release['name'], $this->release['last_revision']);
 		$this->release['last_update'] = date(DATE_RFC822);
 		$this->base->setLastUpdateForRelease($this->release['name'], $this->release['last_update']);
@@ -106,8 +112,7 @@ class Storage {
 			$filename = SNAPS_PATH . '/php-' . $this->release['name'] . '-src-' . date("YmdHis") . '.zip';
 		}
 
-		$latest_revision = $this->getLatestRevision();
-		if ($this->release['last_revision'] == $latest_revision && !$force) {
+		if ($this->release['last_revision'] == $this->release['last_snap_revision'] && !$force) {
 			return TRUE;
 		}
 
@@ -139,14 +144,13 @@ $latest_revision";
 			throw new \Exception('Fail to create archive ' . $snaps_archive_name);
 		}
 
-		$this->base->setLatestRevisionForRelease($this->release['name'], $latest_revision);
-		$this->release['last_revision'] = $latest_revision;
+		$this->base->setLastRevisionSnapForRelease($this->release['name'], $this->release['last_revision']);
+		$this->release['last_snap_revision'] = $this->release['last_revision'];
 
 		return $filename;
 	}
 
 	function getLatestRevision() {
-		 ;
 		$res = sqlite_query($this->db, 'SELECT MAX(revision) as revision FROM revision WHERE release=' . "'" . $this->release['name'] . "'", SQLITE_ASSOC);
 		if ($res && sqlite_num_rows($res) > 0) {
 			$latest_rev = sqlite_fetch_array($res);

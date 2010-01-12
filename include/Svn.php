@@ -49,8 +49,10 @@ class Svn {
 
 		$process = proc_open($cmd, $descriptorspec, $pipes, $path);
 		$out = stream_get_contents($pipes[1]);
+		$revision = (int)str_replace('At revision ', '', $out);
 		fclose($pipes[1]);
 		proc_close($process);
+		return $revision;
 	}
 
 	function export($branch, $targetdir) {
