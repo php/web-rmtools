@@ -54,6 +54,10 @@ class Storage {
 
 		$svn = new Svn;
 		$svn->update($this->dev_branch);
+		
+		if ($this->dev_branch == $this->release_branch) {
+			return TRUE;
+		}
 		$logxml = $svn->fetchLogFromBranch($this->dev_branch, $this->first_revision);
 
 		if (!$logxml) {
@@ -90,6 +94,7 @@ class Storage {
 		$this->base->setLatestRevisionForRelease($this->release['name'], $this->release['last_revision']);
 		$this->release['last_update'] = date(DATE_RFC822);
 		$this->base->setLastUpdateForRelease($this->release['name'], $this->release['last_update']);
+		return TRUE;
 	}
 
 	function createSnapshot($filename = FALSE, $force = FALSE) {
