@@ -86,7 +86,11 @@ class Svn {
 
 	/* TODO: do some sanity check if the branch is actually co'ed */
 	static function isValidBranch($branch) {
-		$path = SVN_REPO_PATH . '/php-src/branches/' . $branch;
+		if ($branch == 'trunk') {
+			$path = SVN_REPO_PATH . '/php-src/trunk';
+		} else {
+			$path = SVN_REPO_PATH . '/php-src/branches/' . $branch;
+		}
 
 		if (is_dir($path)) {
 			return TRUE;
