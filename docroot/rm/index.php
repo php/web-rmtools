@@ -12,15 +12,21 @@ $extra_head = $error = FALSE;
 
 include 'login.php';
 
+$json = filter_input(INPUT_GET, 'json', FILTER_VALIDATE_INT);
 $release_name = filter_input(INPUT_GET, 'release', FILTER_SANITIZE_NUMBER_FLOAT,FILTER_FLAG_ALLOW_FRACTION);
+$mode = filter_input(INPUT_GET, 'mode', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW|FILTER_FLAG_STRIP_HIGH);
 $title = $release_name;
+
 try {
 	$svn = new rm\Storage($release_name);
 } catch (Exception $e) {
 	$error = $e->getMessage();
+	if ($json) {
+		header('HTTP/1.0 500 Internal Error');
+	}
 	$tpl = 'error.php';
+	$mode = 'error';
 }
-$mode = filter_input(INPUT_GET, 'mode', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW|FILTER_FLAG_STRIP_HIGH);
 
 switch ($mode) {
 	case 'list':
@@ -38,7 +44,6 @@ switch ($mode) {
 		break;
 
 	case 'edit':
-		$json = filter_input(INPUT_GET, 'json', FILTER_VALIDATE_INT);
 		if ($json) {
 			$rev = filter_input(INPUT_POST, 'revision', FILTER_VALIDATE_INT);
 		} else {
@@ -89,6 +94,8 @@ switch ($mode) {
 			$tpl = 'edit_revision.php';
 		}
 		break;
+	case 'error':
+		break;
 
 	case 'menu':
 	default:
@@ -101,6 +108,7 @@ switch ($mode) {
 			$tpl = 'error.php';
 		}
 }
+
 include TPL_PATH . '/header.php';
 include TPL_PATH . '/'. $tpl;
 include TPL_PATH . '/footer.php';

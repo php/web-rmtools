@@ -7,7 +7,7 @@ include 'Base.php';
 use rmtools as rm;
 
 if ($argc < 4) {
-	echo "Usage: updatebranch <release name> <release branch name> <dev branch name> <last revision> <rm1> <rm2>...
+	echo "Usage: createbranch <release name> <release branch name> <dev branch name> <last revision> <rm1> <rm2>...
 <release name>\tname of the new release (5.3.3)
 <release branch name>\tname of the new release branch (PHP_5_3_3)
 <dev branch name>\tname of the new branch name (PHP_5_3)

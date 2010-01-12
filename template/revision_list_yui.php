@@ -31,7 +31,7 @@ YAHOO.namespace("rmtools.container");
         };
 
         var handleFailure = function(o) {
-                alert("Submission failed: " + o.status + "\nResponse: " + o.response.Text);
+                alert("Submission failed: " + o.status + "\nResponse: " + o.responseText);
         };
 
 		// Remove progressively enhanced content class, just before creating the module
@@ -76,7 +76,7 @@ YAHOO.namespace("rmtools.container");
 
       <div class="bd">
         <form method="post" action=
-        "index.php?mode=edit&json=1">
+        "index.php?mode=edit&json=1&release=<?php echo $release_name;?>">
           <div id="meta"></div><label for=
           "comment">Comment:</label> 
           <textarea name="comment">

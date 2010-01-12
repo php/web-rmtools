@@ -42,7 +42,7 @@
         color: #fff;
         padding-bottom: 8px;
   </style>
-<?php if ($extra_head) {
+<?php if (!$error && $extra_head) {
 	include $extra_head;
 }
 ?>
