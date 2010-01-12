@@ -17,17 +17,18 @@ $release_name = filter_input(INPUT_GET, 'release', FILTER_SANITIZE_NUMBER_FLOAT,
 $mode = filter_input(INPUT_GET, 'mode', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW|FILTER_FLAG_STRIP_HIGH);
 $title = $release_name;
 
-try {
-	$svn = new rm\Storage($release_name);
-} catch (Exception $e) {
-	$error = $e->getMessage();
-	if ($json) {
-		header('HTTP/1.0 500 Internal Error');
+if (!empty($mode) && $mode != 'menu') {
+	try {
+		$svn = new rm\Storage($release_name);
+	} catch (Exception $e) {
+		$error = $e->getMessage();
+		if ($json) {
+			header('HTTP/1.0 500 Internal Error');
+		}
+		$tpl = 'error.php';
+		$mode = 'error';
 	}
-	$tpl = 'error.php';
-	$mode = 'error';
 }
-
 switch ($mode) {
 	case 'list':
 		$nojs = filter_input(INPUT_GET, 'nojs', FILTER_VALIDATE_INT);
