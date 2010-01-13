@@ -52,6 +52,24 @@ class Svn {
 		$revision = (int)str_replace('At revision ', '', $out);
 		fclose($pipes[1]);
 		proc_close($process);
+
+
+		$cmd = 'svn info --xml ' . $path;
+		$process = proc_open($cmd, $descriptorspec, $pipes, $path);
+		$out = stream_get_contents($pipes[1]);
+		$revision = (int)str_replace('At revision ', '', $out);
+		fclose($pipes[1]);
+		proc_close($process);
+
+		$sx = new \SimpleXMLElement($out);
+		if (!$sx) {
+			throw new \Exception('svn log failed ' . $path);
+		}
+
+		$revision = (int)$sx->entry['revision'];
+		if (!$revision) {
+			throw new \Exception('svn log failed ' . $path);
+		}
 		return $revision;
 	}
 

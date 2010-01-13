@@ -22,7 +22,9 @@ if ($argc == 3) {
 
 try {
 	$svn = new rm\Storage($release);
-	$svn->createSnapshot($filename);
+	$filename = $svn->createSnapshot($filename);
 } catch (Exception $e) {
 	echo 'An error occured: ',  $e->getMessage(), "\n";
 }
+
+echo $filename;

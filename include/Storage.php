@@ -107,9 +107,9 @@ class Storage {
 		if ($filename && !is_dir(dirname($filename))) {
 			throw new \Exception('Invalid filename ' . $filename);
 		}
-
+		$time = time();
 		if (!$filename) {
-			$filename = SNAPS_PATH . '/php-' . $this->release['name'] . '-src-' . date("YmdHis") . '.zip';
+			$filename = SNAPS_PATH . '/php-' . $this->release['name'] . '-src-' . date("YmdHi", $time) . '.zip';
 		}
 
 		if ($this->release['last_revision'] == $this->release['last_snap_revision'] && !$force) {
@@ -130,10 +130,11 @@ class Storage {
 			$snaps_archive_name = $filename;
 		}
 
-		$now = date(DATE_RFC822);
+		$now = date(DATE_RFC822, $time);
+
 		$text = "
 PHP source snapshot generated on $now. The last revision in this snap is
-$latest_revision";
+ " . $this->release['last_revision'];
 
 		file_put_contents("SNAPSHOT.txt", $text);
 		$cmd = "zip -r $snaps_archive_name *";
