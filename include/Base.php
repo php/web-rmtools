@@ -126,6 +126,7 @@ class Base {
 			dev_first_revision, dev_last_revision, dev_last_update,
 			release_last_revision, release_last_snap_revision, release_last_update
 		FROM release WHERE name='" . $release . "'";
+
 		$res = sqlite_query($this->db, $sql, SQLITE_ASSOC);
 		if (!$res) {
 			Throw new \Exception('Query failed for ' . $release);

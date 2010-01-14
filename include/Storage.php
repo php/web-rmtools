@@ -18,7 +18,7 @@ class Storage {
 		$this->release_branch = $release['release_branch'];
 		$this->dev_first_revision = $release['dev_first_revision'];
 
-		$path = DB_PATH . '/' . $this->release_branch . '.sqlite';
+		$path = DB_PATH . '/' . $this->release_branch . '-' . $this->dev_branch . '.sqlite';
 
 		$this->db = sqlite_open($path);
 
@@ -56,6 +56,10 @@ class Storage {
 		$dev_last_revision = $svn->update($this->dev_branch);
 		if ($this->dev_branch != $this->release_branch) {
 			$release_last_revision = $svn->update($this->release_branch);
+			$status = 0;
+		} else {
+			// if same branches, status is by default 'merged'
+			$status = 1;
 		}
 		$date_now = date('Y-m-d h:m O');
 
@@ -87,14 +91,14 @@ class Storage {
 				$row = sqlite_fetch_array($res);
 				if ($row && empty($row['author'])) {
 					$res = sqlite_query($this->db, "UPDATE revision SET author='" . sqlite_escape_string($author) .
-						"' WHERE revision='" . sqlite_escape_string($rev) . "'");
+						"', status=$status WHERE revision='" . sqlite_escape_string($rev) . "'");
 					if (!$res) {
 						Throw new \Exception('Update query failed for ' . $rev);
 					}
 				}
 			} else {
 				$res = sqlite_query($this->db, "INSERT INTO revision (revision, release, date, author, status, msg, comment, news)
-						VALUES('$rev' , '" . $this->release['name'] . "','" . $date . "','" . $author . "', 0, '" . sqlite_escape_string($msg) . "', '', '');");
+						VALUES('$rev' , '" . $this->release['name'] . "','" . $date . "','" . $author . "', $status, '" . sqlite_escape_string($msg) . "', '', '');");
 					if (!$res) {
 						Throw new \Exception('Insert query failed for ' . $rev);
 					}
@@ -168,10 +172,6 @@ PHP source snapshot generated on $now. The last revision in this snap is
 	}
 
 	function getAll() {
-		/* Test if we actually have a separate branch for the release phases */
-		if ($this->release['release_branch'] == $this->release['dev_branch']) {
-			return NULL;
-		}
 		$res = sqlite_query($this->db, "SELECT * FROM revision  WHERE release='" . $this->release['name'] . "' ORDER by revision", SQLITE_ASSOC);
 		if ($res && sqlite_num_rows($res) > 0) {
 			return sqlite_fetch_all($res);
