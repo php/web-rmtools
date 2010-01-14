@@ -13,7 +13,7 @@ $extra_head = $error = FALSE;
 include 'login.php';
 
 $json = filter_input(INPUT_GET, 'json', FILTER_VALIDATE_INT);
-$release_name = filter_input(INPUT_GET, 'release', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW|FILTER_FLAG_STRIP_HIGH);
+$release_name = filter_input(INPUT_GET, 'release', FILTER_SANITIZE_NUMBER_FLOAT,FILTER_FLAG_ALLOW_FRACTION);
 $mode = filter_input(INPUT_GET, 'mode', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW|FILTER_FLAG_STRIP_HIGH);
 $title = $release_name;
 
