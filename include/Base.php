@@ -33,10 +33,12 @@ class Base {
 		release_branch VARCHAR(32),
 		dev_branch VARCHAR(32),
 		status INTEGER,
-		first_revision INTEGER,
-		last_revision INTEGER,
-		last_snap_revision INTEGER,
-		last_update VARCHAR(32))')) {
+		dev_first_revision INTEGER,
+		dev_last_revision INTEGER,
+		dev_last_update VARCHAR(32),
+		release_last_revision INTEGER,
+		release_last_snap_revision INTEGER,
+		release_last_update VARCHAR(32))')) {
 			throw new \Exception('Cannot initialize TABLE release');
 		}
 
@@ -51,8 +53,8 @@ class Base {
 		if (!$res || sqlite_num_rows($res) > 0) {
 			Throw new \Exception($release . ' already exists');
 		}
-		
-		$res = sqlite_query($this->db, "INSERT INTO release (name, release_branch, dev_branch, first_revision) VALUES('" .
+
+		$res = sqlite_query($this->db, "INSERT INTO release (name, release_branch, dev_branch, dev_first_revision) VALUES('" .
 				sqlite_escape_string($release) . "','" . sqlite_escape_string($release_branch) . "','" . sqlite_escape_string($dev_branch) . "'," .
 				(int)$first_revision . ")");
 		if (!$res) {
@@ -74,12 +76,19 @@ class Base {
 		}
 	}
 	
-	function setLatestRevisionForRelease($release, $revision) {
+	function setLatestRevisionForRelease($release, $dev_revision, $release_revision) {
 		$release = sqlite_escape_string($release);
-		$revision = (int)$revision;
-		$res = sqlite_query($this->db, "UPDATE release SET last_revision=$revision WHERE name='$release'");
+		$dev_revision = (int)$dev_revision;
+		$release_revision = (int)$release_revision;
+		if (!$dev_revision) {
+			Throw new \Exception('Invalid revision ' . $dev_revision);
+		}
+		if (!$release_revision) {
+			Throw new \Exception('Invalid revision ' . $release_revision);
+		}
+		$res = sqlite_query($this->db, "UPDATE release SET dev_last_revision=$dev_revision, release_last_revision=$release_revision WHERE name='$release'");
 		if (sqlite_changes($this->db) < 1) {
-			Throw new \Exception('Release not found ' . $release);
+			Throw new \Exception('Release not found or update failed for ' . $release);
 		}
 	}
 
@@ -89,7 +98,7 @@ class Base {
 		}
 		$release = sqlite_escape_string($release);
 		$date = sqlite_escape_string($date);
-		$res = sqlite_query($this->db, "UPDATE release SET last_update='$date' WHERE name='$release'");
+		$res = sqlite_query($this->db, "UPDATE release SET release_last_update='$date', dev_last_update='$date' WHERE name='$release'");
 
 		if (sqlite_changes($this->db) < 1) {
 			Throw new \Exception('Release not found ' . $release);
@@ -104,7 +113,7 @@ class Base {
 			Throw new \Exception('Invalid revision ' . $revision);
 		}
 
-		$res = sqlite_query($this->db, "UPDATE release SET last_snap_revision=$revision WHERE name='$release'");
+		$res = sqlite_query($this->db, "UPDATE release SET release_last_snap_revision=$revision WHERE name='$release'");
 
 		if (sqlite_changes($this->db) < 1) {
 			Throw new \Exception('Release not found ' . $release);
@@ -113,7 +122,10 @@ class Base {
 
 	function getRelease($release) {
 		$release = sqlite_escape_string($release);
-		$sql = "SELECT name, release_branch, dev_branch, status, first_revision, last_revision, last_update, last_snap_revision FROM release WHERE name='" . $release . "'";
+		$sql = "SELECT name, release_branch, dev_branch, status,
+			dev_first_revision, dev_last_revision, dev_last_update,
+			release_last_revision, release_last_snap_revision, release_last_update
+		FROM release WHERE name='" . $release . "'";
 		$res = sqlite_query($this->db, $sql, SQLITE_ASSOC);
 		if (!$res) {
 			Throw new \Exception('Query failed for ' . $release);

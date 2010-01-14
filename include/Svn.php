@@ -66,9 +66,9 @@ class Svn {
 			throw new \Exception('svn log failed ' . $path);
 		}
 
-		$revision = (int)$sx->entry['revision'];
+		$revision = (int)$sx->entry[0]->commit['revision'];
 		if (!$revision) {
-			throw new \Exception('svn log failed ' . $path);
+			throw new \Exception('svn log failed, invalid revision ' . $revision . ' in ' . $path);
 		}
 		return $revision;
 	}

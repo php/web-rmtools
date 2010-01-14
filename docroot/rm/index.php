@@ -29,6 +29,7 @@ if (!empty($mode) && $mode != 'menu') {
 		$mode = 'error';
 	}
 }
+
 switch ($mode) {
 	case 'list':
 		$nojs = filter_input(INPUT_GET, 'nojs', FILTER_VALIDATE_INT);
@@ -53,6 +54,7 @@ switch ($mode) {
 		if ($rev) {
 			$revision = $svn->getOne($rev);
 		}
+
 		if (!$revision) {
 			if ($json) {
 				header('HTTP/1.0 404 Not Found');

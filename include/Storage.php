@@ -7,7 +7,7 @@ class Storage {
 	protected $release = NULL;
 	protected $dev_branch = NULL;
 	protected $release_branch = NULL;
-	protected $first_revision = NULL;
+	protected $dev_first_revision = NULL;
 
 	function __construct($release) {
 	
@@ -16,7 +16,7 @@ class Storage {
 		$release = $this->release = $svn->getRelease($release);
 		$this->dev_branch = $release['dev_branch'];
 		$this->release_branch = $release['release_branch'];
-		$this->first_revision = $release['first_revision'];
+		$this->dev_first_revision = $release['dev_first_revision'];
 
 		$path = DB_PATH . '/' . $this->release_branch . '.sqlite';
 
@@ -53,23 +53,28 @@ class Storage {
 	function updateRelease() {
 
 		$svn = new Svn;
-		$last_revision = $svn->update($this->dev_branch);
+		$dev_last_revision = $svn->update($this->dev_branch);
+		if ($this->dev_branch != $this->release_branch) {
+			$release_last_revision = $svn->update($this->release_branch);
+		}
+		$date_now = date('Y-m-d h:m O');
 
-		if ($this->dev_branch == $this->release_branch) {
-			$this->release['last_update'] = date(DATE_RFC822);
-			$this->release['last_revision'] = $last_revision;
-			$this->base->setLatestRevisionForRelease($this->release['name'], $last_revision);
-			$this->base->setLastUpdateForRelease($this->release['name'], $this->release['last_update']);
+		if (0 && $this->dev_branch == $this->release_branch) {
+			$this->release['release_last_update'] = $this->release['dev_last_update'] = $date_now;
+			$this->release['dev_last_revision'] = $dev_last_revision;
+			$this->release['release_last_revision'] = $release_last_revision;
+			$this->base->setLatestRevisionForRelease($this->release['name'], $dev_last_revision, $release_last_revision);
+			$this->base->setLastUpdateForRelease($this->release['name'], $this->release['release_last_update']);
 			return TRUE;
 		}
 
-		$logxml = $svn->fetchLogFromBranch($this->dev_branch, $this->first_revision);
+		$log_xml = $svn->fetchLogFromBranch($this->dev_branch, $this->dev_first_revision);
 
-		if (!$logxml) {
+		if (!$log_xml) {
 			return FALSE;
 		}
 
-		foreach ($logxml->logentry as  $v) {
+		foreach ($log_xml->logentry as  $v) {
 			$msg = (string) $v->msg;
 			$msg = substr(substr($msg, 0, strpos($msg . "\n", "\n")), 0, 80);
 			$rev =  (string) $v['revision'];
@@ -88,18 +93,20 @@ class Storage {
 					}
 				}
 			} else {
-				$res = sqlite_query($this->db, "INSERT INTO revision (revision, date, author, status, msg, comment, news)
-						VALUES('$rev' ,'" . $date . "','" . $author . "', 0, '" . sqlite_escape_string($msg) . "', '', '');");
+				$res = sqlite_query($this->db, "INSERT INTO revision (revision, release, date, author, status, msg, comment, news)
+						VALUES('$rev' , '" . $this->release['name'] . "','" . $date . "','" . $author . "', 0, '" . sqlite_escape_string($msg) . "', '', '');");
 					if (!$res) {
 						Throw new \Exception('Insert query failed for ' . $rev);
 					}
 			}
 		}
 
-		$this->release['last_revision'] = $last_revision;
-		$this->base->setLatestRevisionForRelease($this->release['name'], $this->release['last_revision']);
-		$this->release['last_update'] = date(DATE_RFC822);
-		$this->base->setLastUpdateForRelease($this->release['name'], $this->release['last_update']);
+		$this->release['dev_last_revision'] = $dev_last_revision;
+		$this->release['release_last_revision'] = ($this->dev_branch == $this->release_branch) ? $dev_last_revision : $release_last_revision;
+
+		$this->base->setLatestRevisionForRelease($this->release['name'], $this->release['dev_last_revision'],  $this->release['release_last_revision']);
+		$this->release['last_update'] = $date_now ;
+		$this->base->setLastUpdateForRelease($this->release['name'], $date_now);
 		return TRUE;
 	}
 
@@ -112,7 +119,7 @@ class Storage {
 			$filename = SNAPS_PATH . '/php-' . $this->release['name'] . '-src-' . date("YmdHi", $time) . '.zip';
 		}
 
-		if ($this->release['last_revision'] == $this->release['last_snap_revision'] && !$force) {
+		if ($this->release['release_last_revision'] == $this->release['release_last_snap_revision'] && !$force) {
 			return TRUE;
 		}
 
@@ -134,7 +141,7 @@ class Storage {
 
 		$text = "
 PHP source snapshot generated on $now. The last revision in this snap is
- " . $this->release['last_revision'];
+ " . $this->release['release_last_revision'];
 
 		file_put_contents("SNAPSHOT.txt", $text);
 		$cmd = "zip -r $snaps_archive_name *";
@@ -145,8 +152,8 @@ PHP source snapshot generated on $now. The last revision in this snap is
 			throw new \Exception('Fail to create archive ' . $snaps_archive_name);
 		}
 
-		$this->base->setLastRevisionSnapForRelease($this->release['name'], $this->release['last_revision']);
-		$this->release['last_snap_revision'] = $this->release['last_revision'];
+		$this->base->setLastRevisionSnapForRelease($this->release['name'], $this->release['release_last_revision']);
+		$this->release['release_last_snap_revision'] = $this->release['release_last_revision'];
 
 		return $filename;
 	}
@@ -165,7 +172,7 @@ PHP source snapshot generated on $now. The last revision in this snap is
 		if ($this->release['release_branch'] == $this->release['dev_branch']) {
 			return NULL;
 		}
-		$res = sqlite_query($this->db, 'SELECT * FROM revision ORDER by revision', SQLITE_ASSOC);
+		$res = sqlite_query($this->db, "SELECT * FROM revision  WHERE release='" . $this->release['name'] . "' ORDER by revision", SQLITE_ASSOC);
 		if ($res && sqlite_num_rows($res) > 0) {
 			return sqlite_fetch_all($res);
 		}
@@ -182,8 +189,8 @@ PHP source snapshot generated on $now. The last revision in this snap is
 
 	function updateRevision($revision) {
 		$error = FALSE;
-		if (!isset($revision['status']) || !isset($revision['comment']) || !isset($revision['news']) || ((int)$revision['revision'] < $this->release['first_revision'])) {
-			Throw new \Exception('Invalid revision ' . $revision);
+		if (!isset($revision['status']) || !isset($revision['comment']) || !isset($revision['news']) || ((int)$revision['revision'] < $this->release['dev_first_revision'])) {
+			Throw new \Exception('Invalid revision, incomplete update');
 		}
 
 		$sql = "UPDATE revision
