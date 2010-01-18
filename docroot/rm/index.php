@@ -1,9 +1,6 @@
 <?php
 include __DIR__ . '/../../include/config.php';
 
-ini_set('display_errors', 1);
-error_reporting(E_ALL|E_NOTICE);
-
 include 'Storage.php';
 include 'Base.php';
 
