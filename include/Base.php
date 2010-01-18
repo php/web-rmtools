@@ -157,4 +157,24 @@ class Base {
 
 		return $releases;
 	}
+	
+	function getAllReleases() {
+		$sql = 'SELECT name FROM release ORDER BY name';
+		$res = sqlite_query($this->db, $sql);
+		if (!$res) {
+			Throw new \Exception('Query failed for ' . $release);
+		}
+
+		if (sqlite_num_rows($res) == 0) {
+			Throw new \Exception($rm . ' not found.');
+		}
+		$rel = sqlite_fetch_all($res, SQLITE_NUM);
+		print_r($rel);
+		$releases = array();
+		foreach ($rel as $v) {
+			$releases[] = $v[0];
+		}
+
+		return $releases;
+	}
 }
