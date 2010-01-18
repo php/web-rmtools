@@ -25,10 +25,14 @@ class Auth {
 					"method"  => "POST",
 					"header"  => "Content-type: application/x-www-form-urlencoded",
 					"content" => $post,
+					"ignore_errors" => TRUE,
 				);
 
 		$ctx = stream_context_create(array("http" => $opts));
 		$s = file_get_contents("https://master.php.net/fetch/cvsauth.php", false, $ctx);
+		if (!$s) {
+			return false;
+		}
 		$a = unserialize($s);
 		/*
 		define("E_UNKNOWN", 0);
