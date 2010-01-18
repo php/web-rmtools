@@ -53,9 +53,4 @@
 </div>
   <ul id="menu">
     <li><a href="index.php" title="Home">Home</a></li>
-<!--
-    <li><a href="" title="Releases">Releases</a></li>
-    <li><a href="#" title="Merges">Merges</a></li>
-    <li><a href="#" title="Support">Build requests</a></li>
-    <li><a href="#" title="FAQ">FAQ</a></li>-->
   </ul>
