@@ -15,3 +15,5 @@ define('SVN_REPO_URL', 'http://svn.php.net/repository/php/php-src');
 define('DB_PATH', $rmtools_base . '/data');
 define('TPL_PATH', $rmtools_base . '/template');
 define('SNAPS_PATH', $rmtools_base . '/snaps');
+define('WWW_ROOT', $rmtools_base . '/docroot');
+define('TMP_DIR', $rmtools_base . '/tmp');
