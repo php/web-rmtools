@@ -2,7 +2,6 @@
 
 namespace rmtools;
 
-
 class Base {
 	protected $db;
 	const STATUS_SNAP_ONLY = 1;
@@ -75,7 +74,7 @@ class Base {
 			Throw new \Exception('Cannot create release');
 		}
 	}
-	
+
 	function setLatestRevisionForRelease($release, $dev_revision, $release_revision) {
 		$release = sqlite_escape_string($release);
 		$dev_revision = (int)$dev_revision;
@@ -157,7 +156,7 @@ class Base {
 
 		return $releases;
 	}
-	
+
 	function getAllReleases() {
 		$sql = 'SELECT name FROM release ORDER BY name';
 		$res = sqlite_query($this->db, $sql);
@@ -176,5 +175,19 @@ class Base {
 		}
 
 		return $releases;
+	}
+	
+	function exportReleasesAsJson() {
+		$sql = 'SELECT * FROM release ORDER BY name';
+		$res = sqlite_query($this->db, $sql);
+		if (!$res) {
+			Throw new \Exception('Query failed.');
+		}
+
+		$rel = sqlite_fetch_all($res, SQLITE_ASSOC);
+		if (!$rel) {
+			Throw new \Exception('No release found.');
+		}
+		return json_encode($rel);
 	}
 }

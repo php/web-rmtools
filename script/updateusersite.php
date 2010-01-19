@@ -50,3 +50,7 @@ foreach ($releases as $release_name) {
 	$json = $svn->exportAsJson();
 	save_contents(WWW_ROOT . '/json/' . $release_name .'.json', $json);
 }
+
+$json = $base->exportReleasesAsJson();
+save_contents(WWW_ROOT . '/json/releases_list.json', $json);
+
