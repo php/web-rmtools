@@ -169,7 +169,7 @@ class Base {
 			Throw new \Exception($rm . ' not found.');
 		}
 		$rel = sqlite_fetch_all($res, SQLITE_NUM);
-		print_r($rel);
+
 		$releases = array();
 		foreach ($rel as $v) {
 			$releases[] = $v[0];
