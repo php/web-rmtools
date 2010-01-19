@@ -14,9 +14,25 @@ if ($argc < 2) {
 }
 
 $release = filter_var($argv[1], FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW|FILTER_FLAG_STRIP_HIGH);
-try {
-	$svn = new rm\Storage($release);
-	$logxml = $svn->updateRelease();
-} catch (Exception $e) {
-	echo 'An error occured: ',  $e->getMessage(), "\n";
+
+if ($release == 'all') {
+	try {
+		$base = new rm\Base;
+		$releases = $base->getAllReleases();
+		foreach ($releases as $release) {
+			$svn = new rm\Storage($release);
+			$svn->updateRelease();
+		}
+	} catch (Exception $e) {
+		echo 'An error occured: ',  $e->getMessage(), "\n";
+	}
+
+} else {
+	try {
+		$svn = new rm\Storage($release);
+		$svn->updateRelease();
+	} catch (Exception $e) {
+		echo 'An error occured: ',  $e->getMessage(), "\n";
+	}
+
 }
