@@ -24,7 +24,6 @@ if ($release == 'all') {
 	try {
 		$base = new rm\Base;
 		$releases = $base->getAllReleases();
-		print_r($releases);
 		foreach ($releases as $release) {
 			$svn = new rm\Storage($release);
 			$svn->createSnapshot($filename, true);
