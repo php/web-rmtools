@@ -8,7 +8,7 @@ include 'Base.php';
 use rmtools as rm;
 
 if ($argc < 2 || $argc > 3) {
-	echo "Usage: snapshot <release name> <snap absolute path>\n";
+	echo "Usage: snapshot <release name, or all for all releases> <snap absolute path>\n";
 	exit();
 }
 
@@ -20,11 +20,24 @@ if ($argc == 3) {
 	$filename = FALSE;
 }
 
-try {
-	$svn = new rm\Storage($release);
-	$filename = $svn->createSnapshot($filename);
-} catch (Exception $e) {
-	echo 'An error occured: ',  $e->getMessage(), "\n";
+if ($release == 'all') {
+	try {
+		$base = new rm\Base;
+		$releases = $base->getAllReleases();
+		print_r($releases);
+		foreach ($releases as $release) {
+			$svn = new rm\Storage($release);
+			$svn->createSnapshot($filename, true);
+		}
+	} catch (Exception $e) {
+		echo 'An error occured: ',  $e->getMessage(), "\n";
+	}
+} else {
+	try {
+		$svn = new rm\Storage($release);
+		$filename = $svn->createSnapshot($filename);
+	} catch (Exception $e) {
+		echo 'An error occured: ',  $e->getMessage(), "\n";
+	}
 }
-
-echo $filename;
+echo "done.\n";
