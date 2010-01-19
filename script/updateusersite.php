@@ -34,6 +34,9 @@ if (!$error) {
 	// Add log
 }
 
+if (!is_dir(WWW_ROOT . '/json/')) {
+	mkdir(WWW_ROOT . '/json/'); 
+}
 reset($releases);
 $extra_head = TPL_PATH. '/revision_list_extra_head_public.php';
 foreach ($releases as $release_name) {
