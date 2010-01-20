@@ -34,9 +34,28 @@ if (!$error) {
 	// Add log
 }
 
+reset($releases);
+foreach ($releases as $release_name) {
+	$latest_link = SNAPS_PATH . "/php-$release_name-src-latest.zip";
+
+	if (file_exists($latest_link)) {
+		unlink($latest_link);
+	}
+
+	$snaps = glob(SNAPS_PATH  . "/*$release_name*");
+
+	if (empty($snaps)) {
+		continue;
+	}
+	$latest = $snaps[count($snaps) - 1];
+
+	symlink($latest, $latest_link);
+}
+
 if (!is_dir(WWW_ROOT . '/json/')) {
 	mkdir(WWW_ROOT . '/json/'); 
 }
+
 reset($releases);
 $extra_head = TPL_PATH. '/revision_list_extra_head_public.php';
 foreach ($releases as $release_name) {

@@ -20,6 +20,12 @@ if ($argc == 3) {
 	$filename = FALSE;
 }
 
+if (!is_dir(SNAPS_PATH)) {
+	if (!mkdir(SNAPS_PATH)) {
+		exit('Snap dir does not exist and cannot be created: ' . SNAPS_PATH);
+	}
+}
+
 if ($release == 'all') {
 	try {
 		$base = new rm\Base;
