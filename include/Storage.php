@@ -89,9 +89,9 @@ class Storage {
 
 			if ($res && sqlite_num_rows($res) > 0) {
 				$row = sqlite_fetch_array($res);
-				if ($row && empty($row['author'])) {
-					$res = sqlite_query($this->db, "UPDATE revision SET author='" . sqlite_escape_string($author) .
-						"', status=$status WHERE revision='" . sqlite_escape_string($rev) . "'");
+				if ($row) {
+					$res = sqlite_query($this->db, "UPDATE revision SET " .
+						"status=" . $row['status'] . " WHERE revision='" . sqlite_escape_string($rev) . "'");
 					if (!$res) {
 						Throw new \Exception('Update query failed for ' . $rev);
 					}
@@ -120,8 +120,14 @@ class Storage {
 		}
 		$time = time();
 		if (!$filename) {
+			if (!is_dir(SNAPS_PATH)) {
+				if (!mkdir(SNAPS_PATH)) {
+					throw new \Exception('Snap dir does not exist and cannot be created: ' . SNAPS_PATH);
+				}
+			}
 			$filename = SNAPS_PATH . '/php-' . $this->release['name'] . '-src-' . date("YmdHi", $time) . '.zip';
 		}
+		$snaps_archive_name = $filename;
 
 		if ($this->release['release_last_revision'] == $this->release['release_last_snap_revision'] && !$force) {
 			return TRUE;
@@ -135,11 +141,6 @@ class Storage {
 
 		$odir = getcwd();
 		chdir($tmpname_dir);
-		if (!$filename) {
-			$snaps_archive_name = SNAPS_PATH . '/test.zip';
-		} else {
-			$snaps_archive_name = $filename;
-		}
 
 		$now = date(DATE_RFC822, $time);
 
