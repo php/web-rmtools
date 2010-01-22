@@ -32,7 +32,7 @@ if ($release == 'all') {
 		$releases = $base->getAllReleases();
 		foreach ($releases as $release) {
 			$svn = new rm\Storage($release);
-			$svn->createSnapshot($filename, true);
+			$svn->createSnapshot($filename);
 		}
 	} catch (Exception $e) {
 		echo 'An error occured: ',  $e->getMessage(), "\n";
