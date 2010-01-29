@@ -31,22 +31,23 @@ class Auth {
 		$ctx = stream_context_create(array("http" => $opts));
 		$s = file_get_contents("https://master.php.net/fetch/cvsauth.php", false, $ctx);
 		if (!$s) {
-			return false;
+			return FALSE;
 		}
 		$a = unserialize($s);
+
 		/*
 		define("E_UNKNOWN", 0);
 		define("E_USERNAME", 1);
 		define("E_PASSWORD", 2);
 		*/
 		if (!is_array($a)) {
-			return 0;
+			return FALSE;
 		}
 		if (isset($a["errno"])) {
-			return (int)$a["errno"];
+			return FALSE;
 		}
 
-		return true;
+		return TRUE;
 	}
 
 }
