@@ -5,7 +5,7 @@ use rmtools as rm;
 session_name('_rmtools_');
 session_start();
 
-if (1 ||!isset($_SESSION['username'])) {
+if (!isset($_SESSION['username'])) {
 	$username = $password = FALSE;
 
 	if (isset($_POST['username'])) {
