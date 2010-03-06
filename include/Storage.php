@@ -51,7 +51,10 @@ class Storage {
 	}
 
 	function updateRelease() {
-
+		if ($this->status == Base::STATUS_RELEASED
+			|| $this->status == Base::STATUS_CLOSED) {
+				return FALSE;
+		}
 		$svn = new Svn;
 		$dev_last_revision = $svn->update($this->dev_branch);
 		if ($this->dev_branch != $this->release_branch) {
