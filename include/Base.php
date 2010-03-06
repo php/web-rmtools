@@ -6,7 +6,7 @@ class Base {
 	protected $db;
 	const STATUS_SNAP_ONLY = 1;
 	const STATUS_CLOSED = 2;
-	const STATUS_RELEASE = 3;
+	const STATUS_RELEASED = 3;
 	const STATUS_DEV = 4;
 
 	function __construct() {
@@ -32,6 +32,7 @@ class Base {
 		release_branch VARCHAR(32),
 		dev_branch VARCHAR(32),
 		status INTEGER,
+		dev_last_active_revision INTEGER,
 		dev_first_revision INTEGER,
 		dev_last_revision INTEGER,
 		dev_last_update VARCHAR(32),
