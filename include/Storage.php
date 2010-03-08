@@ -55,6 +55,7 @@ class Storage {
 			|| $this->status == Base::STATUS_CLOSED) {
 				return FALSE;
 		}
+
 		$svn = new Svn;
 		$dev_last_revision = $svn->update($this->dev_branch);
 		if ($this->dev_branch != $this->release_branch) {
@@ -176,7 +177,8 @@ PHP source snapshot generated on $now. The last revision in this snap is
 	}
 
 	function getAll() {
-		$res = sqlite_query($this->db, "SELECT * FROM revision  WHERE release='" . $this->release['name'] . "' ORDER by revision", SQLITE_ASSOC);
+		$res = sqlite_query($this->db, "SELECT * FROM revision  WHERE release='" . $this->release['name'] . "' AND revision < " . $this->release['dev_last_active_revision'] . " ORDER by revision", SQLITE_ASSOC);
+
 		if ($res && sqlite_num_rows($res) > 0) {
 			return sqlite_fetch_all($res);
 		}

@@ -122,7 +122,7 @@ class Base {
 
 	function getRelease($release) {
 		$release = sqlite_escape_string($release);
-		$sql = "SELECT name, release_branch, dev_branch, status,
+		$sql = "SELECT name, release_branch, dev_branch, status, dev_last_active_revision,
 			dev_first_revision, dev_last_revision, dev_last_update,
 			release_last_revision, release_last_snap_revision, release_last_update
 		FROM release WHERE name='" . $release . "'";
