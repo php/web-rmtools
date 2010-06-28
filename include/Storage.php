@@ -177,11 +177,18 @@ PHP source snapshot generated on $now. The last revision in this snap is
 	}
 
 	function getAll() {
-		$res = sqlite_query($this->db, "SELECT * FROM revision  WHERE release='" . $this->release['name'] . "' AND revision < " . $this->release['dev_last_active_revision'] . " ORDER by revision", SQLITE_ASSOC);
+		if ($this->release['dev_last_active_revision'] > 0) {
+			$sql = "SELECT * FROM revision  WHERE release='" . $this->release['name'] . "' AND revision < " . $this->release['dev_last_active_revision'] . " ORDER by revision";
+		} else {
+			$sql = "SELECT * FROM revision  WHERE release='" . $this->release['name'] . "' ORDER by revision";
+		}
+		$res = sqlite_query($this->db, $sql, SQLITE_ASSOC);
+
 
 		if ($res && sqlite_num_rows($res) > 0) {
 			return sqlite_fetch_all($res);
 		}
+
 		return NULL;
 	}
 
