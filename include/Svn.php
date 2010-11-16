@@ -24,7 +24,6 @@ class Svn {
 		$log_xml = stream_get_contents($pipes[1]);
 		fclose($pipes[1]);
 		proc_close($process);
-file_put_contents('/home/pierre/t.xml', $log_xml);
 		$sx = new \SimpleXMLElement($log_xml);
 		if (!$sx) {
 			throw new \Exception('svn log failed ' . $path);
@@ -66,7 +65,6 @@ file_put_contents('/home/pierre/t.xml', $log_xml);
 		if (!$sx) {
 			throw new \Exception('svn log failed ' . $path);
 		}
-var_dump($sx->entry[0]->commit['revision']);
 		$revision = (int)$sx->entry[0]->commit['revision'];
 		if (!$revision) {
 			throw new \Exception('svn log failed, invalid revision ' . $revision . ' in ' . $path);
