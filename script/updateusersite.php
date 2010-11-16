@@ -42,7 +42,7 @@ foreach ($releases as $release_name) {
 		unlink($latest_link);
 	}
 
-	$snaps = glob(SNAPS_PATH  . "/*$release_name*");
+	$snaps = glob(SNAPS_PATH  . "/php-$release_name*");
 
 	if (empty($snaps)) {
 		continue;

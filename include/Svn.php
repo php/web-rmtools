@@ -24,7 +24,7 @@ class Svn {
 		$log_xml = stream_get_contents($pipes[1]);
 		fclose($pipes[1]);
 		proc_close($process);
-
+file_put_contents('/home/pierre/t.xml', $log_xml);
 		$sx = new \SimpleXMLElement($log_xml);
 		if (!$sx) {
 			throw new \Exception('svn log failed ' . $path);
@@ -32,7 +32,7 @@ class Svn {
 		return $sx;
 	}
 
-	function update($branch) {
+	function update($branch, $nolog = false) {
 		if (!static::isValidBranch($branch)) {
 			throw new \Exception('Invalid branch name ' . $branch);
 			return FALSE;
@@ -44,15 +44,17 @@ class Svn {
 		);
 
 		$cmd = "svn update";
-
-		$path = SVN_REPO_PATH . '/php-src/branches/' . $branch;
+		if ($branch != 'trunk') {
+			$path = SVN_REPO_PATH . '/php-src/branches/' . $branch;
+		} else {
+			$path = SVN_REPO_PATH . '/php-src/trunk';
+		}
 
 		$process = proc_open($cmd, $descriptorspec, $pipes, $path);
 		$out = stream_get_contents($pipes[1]);
 		$revision = (int)str_replace('At revision ', '', $out);
 		fclose($pipes[1]);
 		proc_close($process);
-
 
 		$cmd = 'svn info --xml ' . $path;
 		$process = proc_open($cmd, $descriptorspec, $pipes, $path);
@@ -60,12 +62,11 @@ class Svn {
 		$revision = (int)str_replace('At revision ', '', $out);
 		fclose($pipes[1]);
 		proc_close($process);
-
 		$sx = new \SimpleXMLElement($out);
 		if (!$sx) {
 			throw new \Exception('svn log failed ' . $path);
 		}
-
+var_dump($sx->entry[0]->commit['revision']);
 		$revision = (int)$sx->entry[0]->commit['revision'];
 		if (!$revision) {
 			throw new \Exception('svn log failed, invalid revision ' . $revision . ' in ' . $path);

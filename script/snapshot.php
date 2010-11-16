@@ -13,8 +13,9 @@ if ($argc < 2 || $argc > 3) {
 }
 
 $release = filter_var($argv[1], FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW|FILTER_FLAG_STRIP_HIGH);
+$force = isset($argv[2]) && $argv[2] == 'force' ? true : false;
 
-if ($argc == 3) {
+if (!$force && $argc == 3) {
 	$filename = filter_var($argv[2], FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW|FILTER_FLAG_STRIP_HIGH);
 } else {
 	$filename = FALSE;
@@ -32,7 +33,7 @@ if ($release == 'all') {
 		$releases = $base->getAllReleases();
 		foreach ($releases as $release) {
 			$svn = new rm\Storage($release);
-			$svn->createSnapshot($filename);
+			$svn->createSnapshot($filename, $force);
 		}
 	} catch (Exception $e) {
 		echo 'An error occured: ',  $e->getMessage(), "\n";
@@ -40,7 +41,7 @@ if ($release == 'all') {
 } else {
 	try {
 		$svn = new rm\Storage($release);
-		$filename = $svn->createSnapshot($filename);
+		$filename = $svn->createSnapshot($filename, $force);
 	} catch (Exception $e) {
 		echo 'An error occured: ',  $e->getMessage(), "\n";
 	}

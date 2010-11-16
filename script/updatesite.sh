@@ -1,1 +1,1 @@
-php /home/web/rmtools.php.net/script/updateusersite.php
+/usr/local/bin/php /home/web/rmtools.php.net/script/updateusersite.php
