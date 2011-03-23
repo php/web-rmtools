@@ -12,7 +12,7 @@ if (!isset($_SESSION['username'])) {
 		$username = filter_input(INPUT_POST, 'username', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW|FILTER_FLAG_STRIP_HIGH);
 		$password = filter_input(INPUT_POST, 'password', FILTER_SANITIZE_STRING, FILTER_FLAG_STRIP_LOW|FILTER_FLAG_STRIP_HIGH);
 		// Set magic cookie if login information is available
-	} else {
+	} elseif(false) { // FIXME: Disabled magic cookie :]
 		// Preserve information previously set in magic cookie if available
 		if (isset($_COOKIE['MAGIC_COOKIE']) && !isset($_POST['user']) && !isset($_POST['pw'])) {
 			list($user, $password) = explode(":", base64_decode($_COOKIE['MAGIC_COOKIE']), 2);
@@ -31,7 +31,8 @@ if (!isset($_SESSION['username'])) {
 	$_SESSION['username'] = $username;
 	$_SESSION['time'] = time();
 
-	if ($password && $username) {
+    // FIXME: Disabled magic cookie session
+	if (false && $password && $username) {
 		setcookie(
 			"MAGIC_COOKIE",
 			base64_encode("$username:$password"),
