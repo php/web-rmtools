@@ -19,6 +19,7 @@ $branch = new rm\Branch($config_path);
 $branch->update();
 
 $branch_name = $branch->config->getName();
+$branch_name_short = $branch->config->getBranch();
 
 if ($force || $branch->hasNewRevision()) {
 	$last_rev = $branch->getLastRevisionId();
@@ -66,13 +67,13 @@ if ($force || $branch->hasNewRevision()) {
 			}
 
 			if ($build->archive_path) {
-				copy($build->archive_path, $toupload_dir . '/php-' . $branch_name . '-' . $build_name . '-r'. $last_rev . '.zip');
+				copy($build->archive_path, $toupload_dir . '/php-' . $branch_name_short . '-' . $build_name . '-r'. $last_rev . '.zip');
 			}
 			if ($build->archive_path) {
-				copy($build->devel_path, $toupload_dir . '/php-devel-pack-' . $branch_name . '-' . $build_name . '-r'. $last_rev . '.zip');
+				copy($build->devel_path, $toupload_dir . '/php-devel-pack-' . $branch_name_short . '-' . $build_name . '-r'. $last_rev . '.zip');
 			}
 			if ($build->archive_path) {
-				copy($build->debug_path, $toupload_dir . '/php-debug-pack-' . $branch_name . '-' . $build_name . '-r'. $last_rev . '.zip');
+				copy($build->debug_path, $toupload_dir . '/php-debug-pack-' . $branch_name_short . '-' . $build_name . '-r'. $last_rev . '.zip');
 			}
 
 			file_put_contents($toupload_dir . '/logs/buildconf-' . $build_name . '-r'. $last_rev . '.txt', $build->log_buildconf);
