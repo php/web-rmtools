@@ -1,0 +1,12 @@
+body {background-color: #ffffff;font-size: 80.01%; /* 12px [1] */color: black;font-family: arial, sans-serif;padding: 1em;margin: 0em;}
+#log {margin-top:.5em;}
+#log .con{font-size:small;color:#000;}
+#log .l { color:#666; }
+#log .m {background-color:#ffb;}
+#log i {color: green; font-weight:bold;}
+#log tr.dir{background-color:#C5D5A9;}
+#log td.f{width:3em;padding-left:2em;padding-right:.5em;}
+#log .alt {background-color: #E8E8F0;}
+#log td.error{background-color: #FF0000;}
+#log td.warning{background-color: #FF9966;}
+#log td.lib{background-color: #FF9933;}

@@ -1,0 +1,7 @@
+#results {margin-top:.5em;}
+#results .con{font-size:small;color:#000;}
+#more .l, #results .l { color:#666; }
+#results .m {background-color:#ffb;}
+#results i {color: green; font-weight:bold;}
+#results tr.dir{background-color:#C5D5A9;}
+#results td.f{width:3em;padding-left:2em;padding-right:.5em;}
