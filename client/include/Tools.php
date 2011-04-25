@@ -186,3 +186,38 @@ function upload_build_result_ftp_curl($src_dir, $target)
 	}
 	\curl_multi_close($mh);
 }
+
+function send_error_notification($build_entries, $previous_revision, $current_revision, $url_log)
+{
+	$errors = '';
+	$params = NULL;
+	$headers =	'From: noreply@php.net' . "\r\n" .
+							'Reply-To: noreply@php.net' . "\r\n" .
+							'X-Mailer: rmtools/php.net';
+
+	foreach ($build_entries as $build_name => $entries) {
+		$errors .= 'Build ' . $build_name . ":\n";
+		foreach ($entries as $e) {
+			$errors .= implode(', ', $e) . "\n";
+		}
+		$errors .= "\n\n";
+	}
+	$to = 'pierre.php@gmail.com';
+	$subject = '[rmtools] Build error between r' . $previous_revision . ' and  ' . $current_revision;
+
+	ob_start();
+	include __DIR__ . '/../template/mail_notification.tpl.php';
+	$body = ob_get_contents();
+	ob_end_clean();
+	echo $mail . "\n";
+
+	if (substr($to, -7) === 'php.net') {
+		$params = '-fnoreply@php.net';
+	}
+
+	if($params == null){
+		return mail($to, $subject, $body, $headers);
+	}else{
+		return mail($to, $subject, $body, $headers, $params);
+	}
+}

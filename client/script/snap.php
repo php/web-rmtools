@@ -21,6 +21,9 @@ $branch->update();
 $branch_name = $branch->config->getName();
 $branch_name_short = $branch->config->getBranch();
 
+echo "Running <$config_path>\n";
+echo " \t$branch_name\n";
+
 if ($force || $branch->hasNewRevision()) {
 	$last_rev = $branch->getLastRevisionId();
 	if ($force || $last_rev != $branch->getLastRevisionExported()) {
@@ -48,6 +51,9 @@ if ($force || $branch->hasNewRevision()) {
 		copy($src_original_path . '.zip', $toupload_dir . '/' . $branch_name . '-src-r'. $last_rev . '.zip');
 
 		$builds = $branch->getBuildList('windows');
+
+		$has_build_errors = false;
+		$build_errors = array();
 
 		foreach ($builds as $build_name) {
 			$build_src_path = realpath($build_dir_parent) . DIRECTORY_SEPARATOR . $build_name;
@@ -86,6 +92,7 @@ if ($force || $branch->hasNewRevision()) {
 			copy(__DIR__ . '/../template/log_style.css', $toupload_dir . '/logs/log_style.css');
 
 			$stats = $build->getStats();
+
 			$json_filename = $build_name . '.json';
 
 			$json_data = array(
@@ -94,6 +101,13 @@ if ($force || $branch->hasNewRevision()) {
 				'has_debug_pkg' => file_exists($build->debug_path),
 				'has_devel_pkg' => file_exists($build->devel_path),
 			);
+
+			if ($stats['error'] > 0) {
+				$has_build_errors = true;
+				$build_errors[$build_name] = $build->compiler_log_parser->getErrors();
+				$json_data['build_error'] = $build_errors[$build_name];
+			}
+
 			$json = json_encode($json_data);
 			file_put_contents($toupload_dir . '/' . $json_filename, $json);
 
@@ -106,6 +120,10 @@ if ($force || $branch->hasNewRevision()) {
 
 if (!$new_rev) {
 	echo "no new revision.\n";
+}
+
+if ($has_build_errors) {
+	rm\send_error_notification($build_errors, $prev_revision, $current_revision, 'http://windows.php.net/downloads/snaps/' . $branch_name . '/r' . $last_rev);
 }
 
 echo "Done.\n";

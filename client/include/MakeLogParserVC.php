@@ -3,9 +3,6 @@ namespace rmtools;
 include __DIR__ . '/MakeLogParser.php';
 
 class MakeLogParserVc extends MakeLogParser {
-	public $log;
-	public $stats;
-
 	function parse($path, $root_src_dir)
 	{
 		$this->stats = array('warning' => 0, 'error' => 0);
@@ -135,6 +132,10 @@ class MakeLogParserVc extends MakeLogParser {
 				$row['file'] = str_ireplace($root_src_dir, '', $row['file']);
 				$row['section'] = strtolower(dirname($row['file']));
 				$row['file'] = str_ireplace($row['section'] . '\\', '', $row['file']);
+				if ($row['level'] == 'fatal') {
+					$row['level'] = 'error';
+				}
+
 				if (isset($this->stats[$row['level']])) {
 					$this->stats[$row['level']]++;
 				}

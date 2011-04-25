@@ -14,13 +14,15 @@ class BuildVC {
 	public $archive_path = false;
 	public $debug_path = false;
 	public $devel_path = false;
+	
+	public $compiler_log_parser;
 	public $stats;
 
 	function __construct(Branch $branch, $build_name)
 	{
 		$this->branch = $branch;
 		$this->build_name = $build_name;
-		$this->obj_dir = $this->branch->config->getBuildDir();
+		$this->obj_dir = $this->branch->config->getBuildDir() . '/' . $this->build_name;
 		$this->compiler = $this->branch->config->getCompiler();
 		$this->architecture = $this->branch->config->getArchitecture();
 
@@ -81,8 +83,8 @@ class BuildVC {
 	function configure($extra = false)
 	{
 		$args = $this->branch->config->getConfigureOptions($this->build_name) . ($extra ?: $extra);
-		$cmd = 'configure ' . $args . ' --enable-object-out-dir=' . $this->obj_dir . '/' . $this->build_name;
-		mkdir($this->obj_dir . '/' . $this->build_name);
+		$cmd = 'configure ' . $args . ' --enable-object-out-dir=' . $this->obj_dir;
+		mkdir($this->obj_dir . '/' . $this->build_name, 0655, true);
 		$ret = exec_single_log($cmd, $this->build_dir, $this->env);
 		if (!$ret) {
 			throw new \Exception('Configure failed');
@@ -145,7 +147,9 @@ class BuildVC {
 		$tmpfile = $this->obj_dir . '/' . 'make.txt';
 		file_put_contents($tmpfile, $this->log_make);
 		$parser->parse($tmpfile, $this->build_dir);
+		unlink($tmpfile);
 		$this->stats = $parser->stats;
+		$this->compiler_log_parser = $parser;
 		return $parser->toHtml($this->build_name);
 	}
 
@@ -156,9 +160,8 @@ class BuildVC {
 
 	function clean()
 	{
-		$dir = $this->obj_dir . '/' . $this->build_name;
-		//rmdir_rf($this->obj_dir . '/' . $this->build_name);
-		echo "rm $dir\n";
+		$dir = $this->obj_dir;
+		rmdir_rf($this->obj_dir);
 	}
 
 	function getLogs()
