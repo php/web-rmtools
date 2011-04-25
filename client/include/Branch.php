@@ -20,7 +20,7 @@ class Branch {
 		$this->config = new BranchConfig($config_path);
 		$this->repo = Repository::fromBranchConfig($this->config);
 		$this->repo->setModule($this->config->getModule());
-		$this->repo->setBranch($this->config->getBranch());
+		$this->repo->setBranch($this->config->getRepoBranch());
 		$this->db_path = __DIR__ . '/../data/db/' . $this->config->getName() . '.json';
 		if (file_exists($this->db_path)) {
 			$this->data = json_decode(file_get_contents($this->db_path));

@@ -16,7 +16,7 @@ class BranchConfig {
 		'Branch'	=> 'branch',
 		'Name'	=> 'name',
 		'RepoName'=>'repo_name',
-		'Branch'=> 'repo_branch',
+		'RepoBranch'=> 'repo_branch',
 		'Module' => 'repo_module',
 	);
 
