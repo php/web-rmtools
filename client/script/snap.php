@@ -22,7 +22,8 @@ $branch_name = $branch->config->getName();
 $branch_name_short = $branch->config->getBranch();
 
 echo "Running <$config_path>\n";
-echo " \t$branch_name\n";
+echo "\t$branch_name\n";
+echo "\tprevious revision was: " . $branch->getPreviousRevision() . "\n";
 
 if ($force || $branch->hasNewRevision()) {
 	$last_rev = $branch->getLastRevisionId();
@@ -111,7 +112,7 @@ if ($force || $branch->hasNewRevision()) {
 			$json = json_encode($json_data);
 			file_put_contents($toupload_dir . '/' . $json_filename, $json);
 
-			rm\upload_build_result_ftp_curl($toupload_dir, $branch_name . '/r' . $last_rev);
+			//rm\upload_build_result_ftp_curl($toupload_dir, $branch_name . '/r' . $last_rev);
 			$build->clean();
 			rmdir($build_src_path);
 		}
@@ -123,7 +124,7 @@ if (!$new_rev) {
 }
 
 if ($has_build_errors) {
-	rm\send_error_notification($build_errors, $prev_revision, $current_revision, 'http://windows.php.net/downloads/snaps/' . $branch_name . '/r' . $last_rev);
+	rm\send_error_notification($build_errors, $branch->getPreviousRevision(), $last_rev, 'http://windows.php.net/downloads/snaps/' . $branch_name . '/r' . $last_rev);
 }
 
 echo "Done.\n";

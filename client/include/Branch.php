@@ -99,6 +99,13 @@ class Branch {
 		}
 		return $this->data->revision_last;
 	}
+	public function getPreviousRevision()
+	{
+		if (!$this->data->revision_previous) {
+			$this->update();
+		}
+		return $this->data->revision_previous;
+	}
 
 	function getBuildList($platform)
 	{

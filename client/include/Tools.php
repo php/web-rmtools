@@ -192,8 +192,8 @@ function send_error_notification($build_entries, $previous_revision, $current_re
 	$errors = '';
 	$params = NULL;
 	$headers =	'From: noreply@php.net' . "\r\n" .
-							'Reply-To: noreply@php.net' . "\r\n" .
-							'X-Mailer: rmtools/php.net';
+			'Reply-To: noreply@php.net' . "\r\n" .
+			'X-Mailer: rmtools/php.net';
 
 	foreach ($build_entries as $build_name => $entries) {
 		$errors .= 'Build ' . $build_name . ":\n";
