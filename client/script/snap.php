@@ -112,7 +112,7 @@ if ($force || $branch->hasNewRevision()) {
 			$json = json_encode($json_data);
 			file_put_contents($toupload_dir . '/' . $json_filename, $json);
 
-			//rm\upload_build_result_ftp_curl($toupload_dir, $branch_name . '/r' . $last_rev);
+			rm\upload_build_result_ftp_curl($toupload_dir, $branch_name . '/r' . $last_rev);
 			$build->clean();
 			rmdir($build_src_path);
 		}
