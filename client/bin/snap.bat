@@ -1,4 +1,5 @@
 @ECHO OFF
+SET BAT_DIR=%~dp0
 SET PSDK_61_DIR=C:\Program Files\Microsoft SDKs\Windows\v6.1
 SET VC9_DIR=C:\Program Files (x86)\Microsoft Visual Studio 9.0
 SET VC9_SHELL=C:\WINDOWS\system32\cmd.exe /E:ON /V:ON /T:0E /K "C:\Program Files\Microsoft SDKs\Windows\v6.1\Bin\SetEnv.Cmd"
@@ -16,4 +17,4 @@ SET INCLUDE=%VC9_INCLUDE%
 SET RMTOOLS_BASE_DIR=d:\php-sdk\rmtools.new
 SET BISON_SIMPLE=d:\php-sdk\bin\bison.simple
 
-d:\php-sdk\php\php.exe -d extension_dir=d:\php-sdk\php\ext -d extension=php_openssl.dll  -d extension=php_curl.dll d:\php-sdk\rmtools.new\script\snap.php %*
+d:\php-sdk\php\php.exe -d extension_dir=d:\php-sdk\php\ext -d extension=php_openssl.dll  -d extension=php_curl.dll %BAT_DIR%\..\script\snap.php %*
