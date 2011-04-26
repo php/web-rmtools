@@ -25,11 +25,11 @@ class Branch {
 		if (file_exists($this->db_path)) {
 			$this->data = json_decode(file_get_contents($this->db_path));
 		} else {
-			$this->data = array(
-					'revision_last'						=> NULL,
-					'revision_previous'				=> NULL,
-					'revision_last_exported'	=> NULL,
-				);
+			$data = new \StdClass;
+			$data->revision_last = NULL;
+			$data->revision_previous = NULL;
+			$data->revision_last_exported = NULL;
+			$this->data = $data;
 		}
 		$this->addBuildList();
 	}
