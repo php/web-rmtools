@@ -27,9 +27,6 @@ class Svn {
 		if ($res === FALSE) {
 			throw new \Exception('svn export failed <' . $this->repo_url . '/' . $this->module. '/' . $this->branch . '>');
 		}
-		if ($res['log']) {
-			file_put_contents('g:/temp/obj/svnlog.txt', $res['log']);
-		}
 	}
 
 	public function info()
