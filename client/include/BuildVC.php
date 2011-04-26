@@ -84,7 +84,7 @@ class BuildVC {
 	{
 		$args = $this->branch->config->getConfigureOptions($this->build_name) . ($extra ?: $extra);
 		$cmd = 'configure ' . $args . ' --enable-object-out-dir=' . $this->obj_dir;
-		mkdir($this->obj_dir . '/' . $this->build_name, 0655, true);
+		mkdir($this->obj_dir, 0655, true);
 		$ret = exec_single_log($cmd, $this->build_dir, $this->env);
 		if (!$ret) {
 			throw new \Exception('Configure failed');
