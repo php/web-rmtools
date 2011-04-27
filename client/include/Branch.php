@@ -51,7 +51,7 @@ class Branch {
 	public function update()
 	{
 		$last_id =  $this->repo->getLastCommitId();
-		if ($last_id != $this->data->revision_previous) {
+		if ($last_id != $this->data->revision_last) {
 			$this->data->revision_previous = $this->data->revision_last;
 			$this->data->revision_last = $last_id;
 			$json = json_encode($this->data);
@@ -102,6 +102,7 @@ class Branch {
 		}
 		return $this->data->revision_last;
 	}
+
 	public function getPreviousRevision()
 	{
 		if (!$this->data->revision_previous) {
