@@ -202,7 +202,7 @@ function send_error_notification($build_entries, $previous_revision, $current_re
 		}
 		$errors .= "\n\n";
 	}
-	$to = 'pierre.php@gmail.com';
+	$to = 'pierre.php@gmail.com, felipensp@gmail.com';
 	$subject = '[rmtools] Build error between r' . $previous_revision . ' and  ' . $current_revision;
 
 	ob_start();
