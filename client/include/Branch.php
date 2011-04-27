@@ -50,10 +50,13 @@ class Branch {
 
 	public function update()
 	{
-		$this->data->revision_previous = $this->data->revision_last;
-		$this->data->revision_last = $this->repo->getLastCommitId();
-		$json = json_encode($this->data);
-		file_put_contents($this->db_path, $json);
+		$last_id =  $this->repo->getLastCommitId();
+		if ($last_id != $this->data->revision_previous) {
+			$this->data->revision_previous = $this->data->revision_last;
+			$this->data->revision_last = $last_id;
+			$json = json_encode($this->data);
+			file_put_contents($this->db_path, $json);
+		}
 	}
 
 	public function hasNewRevision()
@@ -102,7 +105,7 @@ class Branch {
 	public function getPreviousRevision()
 	{
 		if (!$this->data->revision_previous) {
-			$this->update();
+			return NULL;
 		}
 		return $this->data->revision_previous;
 	}
