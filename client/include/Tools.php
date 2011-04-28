@@ -111,6 +111,7 @@ function ftp_is_dir($ftp_stream, $dir)
 	}
 }
 
+
 function upload_build_result_ftp_curl($src_dir, $target)
 {
 	include __DIR__ . '/../data/config/credentials_ftps.php';
@@ -125,7 +126,6 @@ function upload_build_result_ftp_curl($src_dir, $target)
 
 	$curl = array();
 
-	$ftpserver = 'windows.php.net';
 	$ftp_path   = $target;
 	$ftp_user   = $user_snaps;
 	$ftp_password   = $password;
