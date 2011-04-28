@@ -10,7 +10,7 @@ class Branch {
 	public $last_revision_has_snap;
 	public $config;
 	private $repo;
-	protected $db_path;
+	public $db_path;
 
 	public function __construct($config_path)
 	{

@@ -111,6 +111,22 @@ function ftp_is_dir($ftp_stream, $dir)
 	}
 }
 
+function upload_file($src, $target)
+{
+	include __DIR__ . '/../data/config/credentials_ftps.php';
+$ftp_server = 'windows.php.net';
+$user_snaps = 'windows.php.net_snaps';
+$user_json = 'windows.php.net_json';
+$password = 'SwMG00gl3&$!';
+	$ftp = ftp_connect($ftp_server); 
+	$login_result = ftp_login($ftp, $user_snaps, $password);
+	if (!$login_result) {
+		return false;
+	}
+	$res = ftp_put($ftp, $target, $src, FTP_BINARY);
+	ftp_close($ftp);
+	return $res;
+}
 
 function upload_build_result_ftp_curl($src_dir, $target)
 {

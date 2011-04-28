@@ -21,6 +21,9 @@ $branch->update();
 $branch_name = $branch->config->getName();
 $branch_name_short = $branch->config->getBranch();
 
+/*Upload the branch DB */
+rm\upload_file($branch->db_path, $branch_name . '/' . basename($branch->db_path));
+
 echo "Running <$config_path>\n";
 echo "\t$branch_name\n";
 echo "\tprevious revision was: " . $branch->getPreviousRevision() . "\n";
