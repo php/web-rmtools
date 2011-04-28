@@ -128,8 +128,12 @@ function upload_file($src, $target)
 function upload_build_result_ftp_curl($src_dir, $target)
 {
 	include __DIR__ . '/../data/config/credentials_ftps.php';
-
-	$ftp = ftp_connect($ftp_server); 
+	var_dump($ftp_server, $user_snaps, $password);
+	$ftp = ftp_connect($ftp_server);
+	if (!$ftp) {
+		echo "Cannot connect to $ftp_server\n";
+		return false;
+	}
 	$login_result = ftp_login($ftp, $user_snaps, $password);
 	if (!$login_result) {
 		return false;
@@ -156,7 +160,7 @@ function upload_build_result_ftp_curl($src_dir, $target)
 		$fp = fopen($local_file, "rb");
 		$local_file = basename($local_file);
 
-		$remoteurl = "ftps://${ftp_user}:${ftp_password}@${ftpserver}${ftp_path}/${local_file}";
+		$remoteurl = "ftps://${ftp_user}:${ftp_password}@${ftp_server}${ftp_path}/${local_file}";
 
 		\curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
 		\curl_setopt($ch, CURLOPT_URL, $remoteurl);
