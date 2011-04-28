@@ -11,6 +11,7 @@ class Branch {
 	public $config;
 	private $repo;
 	public $db_path;
+	private $has_new_revision;
 
 	public function __construct($config_path)
 	{
@@ -56,12 +57,13 @@ class Branch {
 			$this->data->revision_last = $last_id;
 			$json = json_encode($this->data);
 			file_put_contents($this->db_path, $json);
+			$this->has_new_revision = true;
 		}
 	}
 
 	public function hasNewRevision()
 	{
-		return ($this->data->revision_last == $this->data->revision_previous ||  $this->data->revision_previous == NULL);
+		return $this->has_new_revision || ( $this->data->revision_previous == NULL);
 	}
 
 	public function export($revision = false, $zip = false)
