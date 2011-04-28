@@ -128,7 +128,7 @@ function upload_file($src, $target)
 function upload_build_result_ftp_curl($src_dir, $target)
 {
 	include __DIR__ . '/../data/config/credentials_ftps.php';
-	var_dump($ftp_server, $user_snaps, $password);
+
 	$ftp = ftp_connect($ftp_server);
 	if (!$ftp) {
 		echo "Cannot connect to $ftp_server\n";
