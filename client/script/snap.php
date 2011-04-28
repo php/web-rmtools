@@ -20,13 +20,14 @@ $branch->update();
 
 $branch_name = $branch->config->getName();
 $branch_name_short = $branch->config->getBranch();
+$last_rev = $branch->getLastRevisionId();
 
 echo "Running <$config_path>\n";
 echo "\t$branch_name\n";
 echo "\tprevious revision was: " . $branch->getPreviousRevision() . "\n";
+echo "\tlast revision is: " . $branch->getLastRevisionId() . "\n";
 
 if ($force || $branch->hasNewRevision()) {
-	$last_rev = $branch->getLastRevisionId();
 	if ($force || $last_rev != $branch->getLastRevisionExported()) {
 		$new_rev = true;
 		echo "processing revision $last_rev\n";
