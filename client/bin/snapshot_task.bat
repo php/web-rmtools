@@ -29,8 +29,8 @@ rem xcopy /s /e /y /i  D:\php-sdk\src\rmtools-client %RMTOOLS_BASE_DIR% >> %LOG_
 copy D:\php-sdk\rmtools.base\data\config\credentials_ftps.php %RMTOOLS_BASE_DIR%\data\config\ >> %LOG_FILE% 2<&1
 copy D:\php-sdk\rmtools.base\data\db\* %RMTOOLS_BASE_DIR%\data\db\ >> %LOG_FILE% 2<&1
 
-CALL d:\php-sdk\rmtools-client\bin\snap.bat php53 >> %LOG_FILE% 2<&1
-CALL d:\php-sdk\rmtools-client\bin\snap.bat phptrunk >> %LOG_FILE% 2<&1
+CALL d:\php-sdk\rmtools-client\bin\snap.bat php53 %* >> %LOG_FILE% 2<&1
+CALL d:\php-sdk\rmtools-client\bin\snap.bat phptrunk %*>> %LOG_FILE% 2<&1
 
 copy %RMTOOLS_BASE_DIR%\data\db\* D:\php-sdk\rmtools.base\data\db\ >> %LOG_FILE% 2<&1
 del D:\php-sdk\locks\snaps.lock >> %LOG_FILE% 2<&1
