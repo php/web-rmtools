@@ -129,6 +129,9 @@ rm\upload_file($branch->db_path, $branch_name . '/' . basename($branch->db_path)
 
 if ($has_build_errors) {
 	rm\send_error_notification($build_errors, $branch->getPreviousRevision(), $last_rev, 'http://windows.php.net/downloads/snaps/' . $branch_name . '/r' . $last_rev);
+} else {
+	/* if no error, let update the snapshot page */
+	rm\update_snapshot_page();
 }
 
 echo "Done.\n";

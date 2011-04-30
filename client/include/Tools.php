@@ -125,6 +125,20 @@ function upload_file($src, $target)
 	return $res;
 }
 
+function update_snapshot_page()
+{
+	include __DIR__ . '/../data/config/credentials_ftps.php';
+
+	$ftp = ftp_connect($ftp_server); 
+	$login_result = ftp_login($ftp, $user_snaps, $password);
+	if (!$login_result) {
+		return false;
+	}
+	$res = ftp_raw($ftp, 'site UPDATE_SNAPS_PAGE');
+	ftp_close($ftp);
+	return $res;
+}
+
 function upload_build_result_ftp_curl($src_dir, $target)
 {
 	include __DIR__ . '/../data/config/credentials_ftps.php';
@@ -200,7 +214,7 @@ function upload_build_result_ftp_curl($src_dir, $target)
 		}
 		\curl_close($ch);
 	}
-	\curl_multi_close($mh);
+	//\curl_multi_close($mh);
 }
 
 function send_error_notification($build_entries, $previous_revision, $current_revision, $url_log)
