@@ -13,7 +13,7 @@ set LOG_FILE=D:\php-sdk\logs\task-%cur_date%.log
 set RMTOOLS_BASE_DIR=d:\php-sdk\rmtools-client
 
 IF EXIST D:\php-sdk\locks\snaps.lock (
-	ECHO Snapshot script is already running. >> %LOG_FILE%
+	ECHO Snapshot script is already running.
 	GOTO EXIT_LOCKED
 )
 
@@ -36,5 +36,7 @@ CALL d:\php-sdk\rmtools-client\bin\snap.bat phptrunk %* >> %LOG_FILE% 2<&1
 copy %RMTOOLS_BASE_DIR%\data\db\* D:\php-sdk\rmtools.base\data\db\ >> %LOG_FILE% 2<&1
 del D:\php-sdk\locks\snaps.lock >> %LOG_FILE% 2<&1
 
-:EXIT_LOCKED
 echo Done.>> %LOG_FILE%
+
+:EXIT_LOCKED
+echo .
