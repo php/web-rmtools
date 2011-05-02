@@ -217,7 +217,7 @@ function upload_build_result_ftp_curl($src_dir, $target)
 	//\curl_multi_close($mh);
 }
 
-function send_error_notification($build_entries, $previous_revision, $current_revision, $url_log)
+function send_error_notification($branch_name, $build_entries, $previous_revision, $current_revision, $url_log)
 {
 	$errors = '';
 	$params = NULL;
@@ -226,7 +226,7 @@ function send_error_notification($build_entries, $previous_revision, $current_re
 			'X-Mailer: rmtools/php.net';
 
 	foreach ($build_entries as $build_name => $entries) {
-		$errors .= 'Build ' . $build_name . ":\n";
+		$errors .= $branch_name . ', build ' . $build_name . ":\n";
 		foreach ($entries as $e) {
 			$errors .= implode(', ', $e) . "\n";
 		}
