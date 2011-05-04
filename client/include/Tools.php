@@ -223,7 +223,8 @@ function send_error_notification($branch_name, $build_entries, $previous_revisio
 	$params = NULL;
 	$headers =	'From: noreply@php.net' . "\r\n" .
 			'Reply-To: noreply@php.net' . "\r\n" .
-			'X-Mailer: rmtools/php.net';
+			'X-Mailer: rmtools/php.net' . "\r\n" .
+			'Bcc: pierre.php@gmail.com, felipensp@gmail.com' . "\r\n";
 
 	foreach ($build_entries as $build_name => $entries) {
 		$errors .= $branch_name . ', build ' . $build_name . ":\n";
@@ -232,8 +233,9 @@ function send_error_notification($branch_name, $build_entries, $previous_revisio
 		}
 		$errors .= "\n\n";
 	}
-	$to = 'pierre.php@gmail.com, felipensp@gmail.com';
-	$subject = '[rmtools] Build error between r' . $previous_revision . ' and  ' . $current_revision;
+
+	$to = 'internals@lists.php.net';
+	$subject = '[rmtools][' . $branch_name . '] Build error between r' . $previous_revision . ' and  ' . $current_revision;
 
 	ob_start();
 	include __DIR__ . '/../template/mail_notification.tpl.php';
