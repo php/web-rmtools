@@ -247,8 +247,6 @@ function send_error_notification($branch_name, $build_entries, $previous_revisio
 		$params = '-fnoreply@php.net';
 	}
 
-	return;
-
 	if($params == null){
 		return mail($to, $subject, $body, $headers);
 	}else{
