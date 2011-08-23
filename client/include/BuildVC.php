@@ -17,6 +17,14 @@ class BuildVC {
 	
 	public $compiler_log_parser;
 	public $stats;
+	public $log_buildconf;
+	public $log_configure;
+	public $log_make;
+	public $log_archive;
+
+	public $zip_devel_filename;
+	public $zip_debug_filename;
+
 
 	function __construct(Branch $branch, $build_name)
 	{

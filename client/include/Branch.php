@@ -12,6 +12,7 @@ class Branch {
 	private $repo;
 	public $db_path;
 	private $has_new_revision;
+	public $data = NULL;
 
 	public function __construct($config_path)
 	{
