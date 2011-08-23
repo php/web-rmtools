@@ -20,6 +20,8 @@ class MakeLogParserVc extends MakeLogParser {
 		$pcre = '/(error|warning)/';
 		$log = array();
 		foreach ($lines as $line) {
+			$file = '';
+			$level = '';
 			$out = '#' . ($line_nr++) . ' ';
 			$res = preg_match($pcre, $line);
 			if ($res) {
@@ -101,50 +103,44 @@ class MakeLogParserVc extends MakeLogParser {
 									} else {
 										$level = '';
 									}
-								} else {
-									$file = '';
-									$level = '';
 								}
 							}
 
-								$row = array(
-												'file'    => $file,
-												'line'    => '',
-												'level'   => $level,
-												'code'    => $alphanum1,
-												'message' => $error_msg
-												);
-							} else {
+							$row = array(
+											'file'    => $file,
+											'line'    => '',
+											'level'   => $level,
+											'code'    => $alphanum1,
+											'message' => $error_msg
+											);
+						} else {
 								$row = array(
 												'file'    => '',
-												'line'    => $word1,
-												'level'   => $word2,
-												'code'    => $alphanum1,
-												'message' => $error_msg
+												'line'    => '',
+												'level'   => '',
+												'code'    => '',
+												'message' => $txt
 												);
-							}
-						} else {
-							continue;
 						}
 					}
 				}
-
-				$row['file'] = str_ireplace($root_src_dir, '', $row['file']);
-				$row['section'] = strtolower(dirname($row['file']));
-				$row['file'] = str_ireplace($row['section'] . '\\', '', $row['file']);
-				if ($row['level'] == 'fatal') {
-					$row['level'] = 'error';
-				}
-
-				if (isset($this->stats[$row['level']])) {
-					$this->stats[$row['level']]++;
-				}
-				$log[] = $row;
 			} else {
 				continue;
 			}
+
+			$row['file'] = str_ireplace($root_src_dir, '', $row['file']);
+			$row['section'] = strtolower(dirname($row['file']));
+			$row['file'] = str_ireplace($row['section'] . '\\', '', $row['file']);
+			if ($row['level'] == 'fatal') {
+				$row['level'] = 'error';
+			}
+
+			if (isset($this->stats[$row['level']])) {
+				$this->stats[$row['level']]++;
+			}
+			$log[] = $row;
 		}
 		$this->log = $log;
-        return true;
+		return true;
 	}
 }
