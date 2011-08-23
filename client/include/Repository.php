@@ -27,6 +27,8 @@ class Repository {
 				$r = new Svn($repo['url']);
 				return $r;
 				break;
+            default:
+                throw new \Exception('Invalid repo config data, invalid type defined');
 		}
 	}
 }

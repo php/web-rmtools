@@ -16,7 +16,7 @@ class Branch {
 	public function __construct($config_path)
 	{
 		if (!is_readable($config_path)) {
-			throw new \Exception('Cannot open config data <' . $path . '>');
+			throw new \Exception('Cannot open config data <' . $config_path . '>');
 		}
 		$this->config = new BranchConfig($config_path);
 		$this->repo = Repository::fromBranchConfig($this->config);
@@ -75,6 +75,9 @@ class Branch {
 			$zip_path = $dir_name . '.zip';
 			$cmd = "zip -q -r $zip_path $dir_name";
 			$res = exec_single_log($cmd, $this->config->getBuildDir());
+            if (!$res) {
+                throw new \Exception("Export failed, svn exec failed to be ran");
+            }
 		}
 		$target = realpath($target);
 		return $target;
@@ -82,7 +85,7 @@ class Branch {
 
 	public function createSourceSnap($revision = false)
 	{
-		return $this->export($revision = $revision, true);
+		return $this->export($revision, true);
 	}
 
 	public function setLastRevisionExported($last_rev)
@@ -134,7 +137,6 @@ class Branch {
 		}
 
 		$compiler	= strtolower($build['compiler']);
-		$arch			= strtolower($build['arch']);
 		switch ($compiler) {
 			case 'vc9':
 			case 'vc6':

@@ -17,7 +17,7 @@ class MakeLogParserVc extends MakeLogParser {
 		}
 
 		//win32\build\deplister.c(50) : warning C4090: 'function' : different 'const' qualifiers
-		$log = '';
+		$pcre = '/(error|warning)/';
 		$log = array();
 		foreach ($lines as $line) {
 			$out = '#' . ($line_nr++) . ' ';
@@ -33,14 +33,13 @@ class MakeLogParserVc extends MakeLogParser {
 				$re6='.*?';	# Non-greedy match on filler
 				$re7='((?:[a-z][a-z]*[0-9]+[a-z0-9]*))';	# Alphanum 1
 				$re8 =':(.*?)$';
-				if ($c=preg_match_all ("/".$re1.$re2.$re3.$re4.$re5.$re6.$re7.$re8."/is", $txt, $matches))
+				if (preg_match_all ("/".$re1.$re2.$re3.$re4.$re5.$re6.$re7.$re8."/is", $txt, $matches))
 				{
 						$winpath1  = $matches[1][0];
 						$int1      = $matches[2][0];
 						$word1     = $matches[3][0];
 						$alphanum1 = $matches[4][0];
 						$error_msg = trim(str_replace(array("\r","\n"), array('',''),$matches[5][0]));
-						$row      = "match 1: ($winpath1) ($int1) ($word1) ($alphanum1) ($error_msg)\n";
 						$row = array(
 										'file'    => $winpath1,
 										'line'    => $int1,
@@ -60,7 +59,7 @@ class MakeLogParserVc extends MakeLogParser {
 					$re8='((?:[a-z][a-z]*[0-9]+[a-z0-9]*))';	# Alphanum 1
 					$re9 =':(.*?)$';
 
-					if ($c=preg_match_all ("/".$re1.$re2.$re3.$re4.$re5.$re6.$re7.$re8.$re9."/is", $txt, $matches))
+					if (preg_match_all ("/".$re1.$re2.$re3.$re4.$re5.$re6.$re7.$re8.$re9."/is", $txt, $matches))
 					{
 							$path=$matches[1][0];
 							$int1=$matches[2][0];
@@ -84,7 +83,7 @@ class MakeLogParserVc extends MakeLogParser {
 						$re5='((?:[a-z][a-z]*[0-9]+[a-z0-9]*))';	# Alphanum 1
 						$re6 =':(.*?)$';
 
-						if ($c=preg_match_all ("/".$re1.$re2.$re3.$re4.$re5.$re6."/is", $txt, $matches))
+						if (preg_match_all ("/".$re1.$re2.$re3.$re4.$re5.$re6."/is", $txt, $matches))
 						{
 							$word1=$matches[1][0];
 							$word2=$matches[2][0];
@@ -142,5 +141,6 @@ class MakeLogParserVc extends MakeLogParser {
 			}
 		}
 		$this->log = $log;
+        return true;
 	}
 }

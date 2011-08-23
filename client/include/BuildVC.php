@@ -164,7 +164,6 @@ class BuildVC {
 
 	function clean()
 	{
-		$dir = $this->obj_dir;
 		rmdir_rf($this->obj_dir);
 	}
 

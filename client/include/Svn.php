@@ -35,7 +35,8 @@ class Svn {
 
 	public function getLastCommitId()
 	{
-		$cmd = $this->svn_cmd . ' info --xml ' . $this->repo_url . $this->module. $this->branch;
+        $path =  $this->repo_url . $this->module. $this->branch;
+		$cmd = $this->svn_cmd . ' info --xml ' . $path;
 
 		$res = exec_sep_log($cmd);
 		if ($res && is_null($res['log_stdout'])) {

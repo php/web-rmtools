@@ -8,6 +8,7 @@ class MakeLogParser {
 
 	function toHtml($title)
 	{
+		/** @noinspection PhpUnusedLocalVariableInspection */
 		$log = $this->log;
 		ob_start();
 		include __DIR__ . '/../template/make_log.tpl.php';

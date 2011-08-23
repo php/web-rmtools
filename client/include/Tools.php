@@ -2,6 +2,7 @@
 namespace rmtools;
 function exec_sep_log($cmd, $cwd = NULL, $env = NULL)
 {
+    $return_value = false;
 	$log_stdout = $log_stderr = NULL;
 
 	$descriptor_spec = array(
@@ -96,8 +97,8 @@ function rmdir_rf($path)
 function ftp_make_directory($ftp_stream, $dir)
 {
 	if (ftp_is_dir($ftp_stream, $dir) || @ftp_mkdir($ftp_stream, $dir)) return true;
-	if (!make_directory($ftp_stream, dirname($dir))) return false;
-	return ftp_mkdir($ftp_stream, $dir);
+	if (!ftp_make_directory($ftp_stream, dirname($dir))) return false;
+    return ftp_mkdir($ftp_stream, $dir);
 }	
 
 function ftp_is_dir($ftp_stream, $dir)
@@ -152,7 +153,7 @@ function upload_build_result_ftp_curl($src_dir, $target)
 	if (!$login_result) {
 		return false;
 	}
-	$res = ftp_make_directory($ftp, $target. '/logs');
+    ftp_make_directory($ftp, $target. '/logs');
 	ftp_close($ftp);
 
 	$curl = array();
@@ -204,7 +205,7 @@ function upload_build_result_ftp_curl($src_dir, $target)
 	}
 
 	do {
-		$n = \curl_multi_exec($mh,$active);
+		\curl_multi_exec($mh,$active);
 	} while ($active);
 
 	foreach ($curl as $ch) {
@@ -215,6 +216,7 @@ function upload_build_result_ftp_curl($src_dir, $target)
 		\curl_close($ch);
 	}
 	//\curl_multi_close($mh);
+    return true;
 }
 
 function send_error_notification($branch_name, $build_entries, $previous_revision, $current_revision, $url_log)
