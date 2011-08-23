@@ -48,7 +48,7 @@ $row = 0;
 		$row_style = '';
 	}
 ?>
-			<tr<?php echo $row_style?>><td>&nbsp;</td></td><td><?php echo $entry['file'] . ':' . $entry['line']; ?></td><td<?php echo $level_style?>><?php echo $entry['level']; ?><td><?php echo $entry['code']; ?></td></td><td><?php echo $entry['message']; ?></td></tr>
+			<tr<?php echo $row_style?>><td>&nbsp;</td><td><?php echo $entry['file'] . ':' . $entry['line']; ?></td><td<?php echo $level_style?>><?php echo $entry['level']; ?><td><?php echo $entry['code']; ?></td><td><?php echo $entry['message']; ?></td></tr>
 <?php } ?>
 		</table>
 	</div>

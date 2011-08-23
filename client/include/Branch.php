@@ -143,8 +143,8 @@ class Branch {
 				$class_name =  'rmtools\BuildVC';
 				break;
 			case 'icc':
-				break;
 			case 'gcc':
+				throw new \Exception("$compiler not supported yet. Not implemented");
 				break;
 		}
 		$build = new $class_name($this, $build_name);

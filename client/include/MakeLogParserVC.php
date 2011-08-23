@@ -101,7 +101,11 @@ class MakeLogParserVc extends MakeLogParser {
 									} else {
 										$level = '';
 									}
+								} else {
+									$file = '';
+									$level = '';
 								}
+							}
 
 								$row = array(
 												'file'    => $file,
