@@ -68,6 +68,7 @@ class MakeLogParserVc extends MakeLogParser {
 							$word1=$matches[3][0];
 							$alphanum1=$matches[4][0];
 							$error_msg=trim(str_replace(array("\r","\n"), array('',''),$matches[5][0]));
+							/** @noinspection PhpUnusedLocalVariableInspection */
 							$out .= "match 2: ($path) ($int1) ($word1) ($alphanum1) ($error_msg)\n";
 							$row = array(
 											'file'    => $path,

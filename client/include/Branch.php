@@ -140,14 +140,14 @@ class Branch {
 		switch ($compiler) {
 			case 'vc9':
 			case 'vc6':
-				$class_name =  'rmtools\BuildVC';
+				$build = new rmtools\BuildVC($this, $build_name);
 				break;
 			case 'icc':
 			case 'gcc':
 				throw new \Exception("$compiler not supported yet. Not implemented");
 				break;
 		}
-		$build = new $class_name($this, $build_name);
+
 		return $build;
 	}
 }

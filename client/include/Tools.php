@@ -242,7 +242,6 @@ function send_error_notification($branch_name, $build_entries, $previous_revisio
 	include __DIR__ . '/../template/mail_notification.tpl.php';
 	$body = ob_get_contents();
 	ob_end_clean();
-	echo $mail . "\n";
 
 	if (substr($to, -7) === 'php.net') {
 		$params = '-fnoreply@php.net';
