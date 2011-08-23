@@ -10,7 +10,6 @@ function exec_sep_log($cmd, $cwd = NULL, $env = NULL)
 			2 => array("pipe", "w") // stderr is a file to write to
 	);
 
-	$env = NULL;
 	$process = proc_open($cmd, $descriptor_spec, $pipes, $cwd, $env);
 
 	if (is_resource($process)) {
