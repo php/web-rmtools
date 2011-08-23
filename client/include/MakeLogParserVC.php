@@ -6,8 +6,6 @@ class MakeLogParserVc extends MakeLogParser {
 	function parse($path, $root_src_dir)
 	{
 		$this->stats = array('warning' => 0, 'error' => 0);
-		$pcre = '/(error|warning):\s+(.+)/';
-		$pcre = '/(error|warning)/';
 		$lines = file($path);
 		if (empty($lines)) {
 			return NULL;
