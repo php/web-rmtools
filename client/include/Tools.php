@@ -169,7 +169,7 @@ function upload_build_result_ftp_curl($src_dir, $target)
 	$files = glob($src_dir . '/*.{zip,json}', GLOB_BRACE);
 	foreach ($files as $i => $local_file) {
 
-		$ch = $curl[$i] = \curl_init();
+		$curl[$i] = $ch =  \curl_init();
 		$fp = fopen($local_file, "rb");
 		$local_file = basename($local_file);
 
