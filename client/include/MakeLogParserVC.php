@@ -10,7 +10,6 @@ class MakeLogParserVc extends MakeLogParser {
 		if (empty($lines)) {
 			return NULL;
 		}
-		$listing = array();
 		$line_nr = 1;
 
 		if ($root_src_dir && $root_src_dir[strlen($root_src_dir) -1] != '\\') {
