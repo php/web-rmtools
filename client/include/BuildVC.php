@@ -41,10 +41,17 @@ class BuildVC {
 			$vc_env_prefix .= '_';
 		}
 
-		$env = array();
-		$env['PATH'] = getenv($vc_env_prefix . 'PATH') . ';' . getenv('PATH') ;
-		$env['INCLUDE'] = getenv($vc_env_prefix . 'INCLUDE');
-		$env['LIB'] = getenv($vc_env_prefix . 'LIB');
+		$path = getenv($vc_env_prefix . 'PATH');
+		if (empty($path)) {
+			include __DIR__ . '/../data/config.php';
+			/* use default config */
+			$env = $custom_env;
+		} else {
+			$env = array();
+			$env['PATH'] = getenv($vc_env_prefix . 'PATH') . ';' . getenv('PATH') ;
+			$env['INCLUDE'] = getenv($vc_env_prefix . 'INCLUDE');
+			$env['LIB'] = getenv($vc_env_prefix . 'LIB');
+		}
 
 		/* We don't support anymore VC6, so calling these scripts from the
 		   SDK are just fine */
@@ -56,7 +63,9 @@ class BuildVC {
 		$env['TMP'] = $env['TEMP'] = getenv('TEMP');
 		$env['SystemDrive'] = getenv('SystemDrive');
 		$env['SystemRoot'] = getenv('SystemRoot');
-		$env['BISON_SIMPLE'] = getenv('BISON_SIMPLE');
+		if (!isset($env['BISON_SIMPLE'])) {
+			$env['BISON_SIMPLE'] = getenv('BISON_SIMPLE');
+		}
 		$this->env = $env;
 	}
 
