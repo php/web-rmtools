@@ -5,7 +5,7 @@ include __DIR__ . '/Svn.php';
 
 class Repository {
 
-	public function fromBranchConfig(BranchConfig $config)
+	public static function fromBranchConfig(BranchConfig $config)
 	{
 		$name = $config->getRepoName();
 		$config_path = __DIR__ . '/../data/config/repo/' . $name . '.ini';
