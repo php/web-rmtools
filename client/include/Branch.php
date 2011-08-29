@@ -141,7 +141,7 @@ class Branch {
 		switch ($compiler) {
 			case 'vc9':
 			case 'vc6':
-				$build = new rmtools\BuildVC($this, $build_name);
+				$build = new BuildVC($this, $build_name);
 				break;
 			case 'icc':
 			case 'gcc':
