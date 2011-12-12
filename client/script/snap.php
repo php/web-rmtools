@@ -68,6 +68,7 @@ if ($force || $branch->hasNewRevision()) {
 				$build->buildconf();
 				$build->configure();
 				$build->make();
+				$html_make_log = $build->getMakeLogParsed();
 				$build->makeArchive();
 			} catch (Exception $e) {
 				echo $e->getMessage() . "\n";
@@ -82,6 +83,9 @@ if ($force || $branch->hasNewRevision()) {
 			}
 			if ($build->archive_path) {
 				copy($build->debug_path, $toupload_dir . '/php-debug-pack-' . $branch_name_short . '-' . $build_name . '-r'. $last_rev . '.zip');
+			}
+			if ($build->test_path) {
+				copy($build->debug_path, $toupload_dir . '/php-test-pack-' . $branch_name_short . '-' . $build_name . '-r'. $last_rev . '.zip');
 			}
 
 			file_put_contents($toupload_dir . '/logs/buildconf-' . $build_name . '-r'. $last_rev . '.txt', $build->log_buildconf);
@@ -114,8 +118,8 @@ if ($force || $branch->hasNewRevision()) {
 			file_put_contents($toupload_dir . '/' . $json_filename, $json);
 
 			rm\upload_build_result_ftp_curl($toupload_dir, $branch_name . '/r' . $last_rev);
-			$build->clean();
-			rmdir($build_src_path);
+//			$build->clean();
+//			rmdir($build_src_path);
 		}
 	}
 }
@@ -125,13 +129,13 @@ if (!$new_rev) {
 }
 
 /*Upload the branch DB */
-rm\upload_file($branch->db_path, $branch_name . '/' . basename($branch->db_path));
+//rm\upload_file($branch->db_path, $branch_name . '/' . basename($branch->db_path));
 
 if ($has_build_errors) {
 	rm\send_error_notification($branch_name, $build_errors, $branch->getPreviousRevision(), $last_rev, 'http://windows.php.net/downloads/snaps/' . $branch_name . '/r' . $last_rev);
 } else {
 	/* if no error, let update the snapshot page */
-	rm\update_snapshot_page();
+//	rm\update_snapshot_page();
 }
 
 echo "Done.\n";
