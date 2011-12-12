@@ -14,7 +14,8 @@ class BuildVC {
 	public $archive_path = false;
 	public $debug_path = false;
 	public $devel_path = false;
-	
+	public $test_path = false;
+
 	public $compiler_log_parser;
 	public $stats;
 	public $log_buildconf;
@@ -155,9 +156,16 @@ class BuildVC {
 		$zip_debug_filename = trim($matches[1]);
 		$this->zip_debug_filename = $zip_debug_filename;
 
+		if (!preg_match('/.*(php-test-pack-\d\.\d\.\d.*\.zip)/', $this->log_archive, $matches)) {
+			throw new \Exception('Make archive failed, cannot find php-test archive');
+		}
+		$zip_debug_filename = trim($matches[1]);
+		$this->zip_test_filename = $zip_debug_filename;
+
 		$this->archive_path = realpath($zip_dir . '/' . $zip_filename);
 		$this->debug_path = realpath($zip_dir . '/' . $zip_debug_filename);
 		$this->devel_path = realpath($zip_dir . '/' . $zip_devel_filename);
+		$this->test_path = realpath($zip_dir . '/' . $zip_test_filename);
 
 		$this->addLogsToArchive();
 	}
