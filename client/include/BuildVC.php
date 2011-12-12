@@ -159,8 +159,8 @@ class BuildVC {
 		if (!preg_match('/.*(php-test-pack-\d\.\d\.\d.*\.zip)/', $this->log_archive, $matches)) {
 			throw new \Exception('Make archive failed, cannot find php-test archive');
 		}
-		$zip_debug_filename = trim($matches[1]);
-		$this->zip_test_filename = $zip_debug_filename;
+		$zip_test_filename = trim($matches[1]);
+		$this->zip_test_filename = $zip_test_filename;
 
 		$this->archive_path = realpath($zip_dir . '/' . $zip_filename);
 		$this->debug_path = realpath($zip_dir . '/' . $zip_debug_filename);
