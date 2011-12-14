@@ -25,7 +25,7 @@ class BuildVC {
 
 	public $zip_devel_filename;
 	public $zip_debug_filename;
-
+	public $zip_test_filename;
 
 	function __construct(Branch $branch, $build_name)
 	{
