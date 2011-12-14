@@ -107,6 +107,7 @@ if ($force || $branch->hasNewRevision()) {
 				'has_php_pkg'   => file_exists($build->archive_path),
 				'has_debug_pkg' => file_exists($build->debug_path),
 				'has_devel_pkg' => file_exists($build->devel_path),
+				'has_test_pkg' => file_exists($build->test_path),
 			);
 
 			if ($stats['error'] > 0) {
