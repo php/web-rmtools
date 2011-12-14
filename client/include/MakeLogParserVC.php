@@ -22,7 +22,7 @@ class MakeLogParserVc extends MakeLogParser {
 		foreach ($lines as $line) {
 			$file = '';
 			$level = '';
-			$out = '#' . ($line_nr++) . ' ';
+			/* $out = '#' . ($line_nr++) . ' ';*/
 			$res = preg_match($pcre, $line);
 			if ($res) {
 				/* absolute path + error/warning */
@@ -69,7 +69,7 @@ class MakeLogParserVc extends MakeLogParser {
 							$alphanum1=$matches[4][0];
 							$error_msg=trim(str_replace(array("\r","\n"), array('',''),$matches[5][0]));
 							/** @noinspection PhpUnusedLocalVariableInspection */
-							$out .= "match 2: ($path) ($int1) ($word1) ($alphanum1) ($error_msg)\n";
+							/*$out .= "match 2: ($path) ($int1) ($word1) ($alphanum1) ($error_msg)\n";*/
 							$row = array(
 											'file'    => $path,
 											'line'    => $int1,
@@ -93,7 +93,7 @@ class MakeLogParserVc extends MakeLogParser {
 							$alphanum1=$matches[3][0];
 
 							$error_msg = trim(str_replace(array("\r","\n"), array('',''), $matches[4][0]));
-							$out .= "match 3: ($word1) ($word2) ($alphanum1) ($error_msg)\n";
+							/* $out .= "match 3: ($word1) ($word2) ($alphanum1) ($error_msg)\n";*/
 							if (substr($alphanum1, 0, 3) == 'LNK') {
 								if (strpos($txt, '.lib') || strpos($txt, '.obj')) {
 									$pos = strpos($txt, ':');
