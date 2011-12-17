@@ -85,7 +85,7 @@ if ($force || $branch->hasNewRevision()) {
 				copy($build->debug_path, $toupload_dir . '/php-debug-pack-' . $branch_name_short . '-' . $build_name . '-r'. $last_rev . '.zip');
 			}
 			if ($build->test_path) {
-				$tmp = str_replace(array('',''), array('-ts', '-nts'), $build_name);
+				$tmp = str_replace(array('-ts', '-nts'), array('',''),  $build_name);
 				copy($build->test_path, $toupload_dir . '/php-test-pack-' . $branch_name_short . '-' . $tmp . '-r'. $last_rev . '.zip');
 			}
 
