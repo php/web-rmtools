@@ -16,7 +16,7 @@ SET OLD_PATH=%PATH%
 SET PATH=%PATH%;%VC9_PATH%
 SET LIB=%VC9_LIB%
 SET INCLUDE=%VC9_INCLUDE%
-SET BISON_SIMPLE=d:\php-sdk\bin\bison.simple
+SET BISON_SIMPLE=c:\php-sdk\bin\bison.simple
 
-d:\php-sdk\php\php.exe -d extension_dir=d:\php-sdk\php\ext -d extension=php_openssl.dll  -d extension=php_curl.dll %BAT_DIR%\..\script\snap.php %*
+c:\php-sdk\php\php.exe -d extension_dir=c:\php-sdk\php\ext -d extension=php_openssl.dll  -d extension=php_curl.dll %BAT_DIR%\..\script\snap.php %*
 SET PATH=%OLD_PATH%
