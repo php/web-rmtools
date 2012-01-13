@@ -31,8 +31,8 @@ copy D:\php-sdk\rmtools.base\data\db\* %RMTOOLS_BASE_DIR%\data\db\ >> %LOG_FILE%
 mkdir %RMTOOLS_BASE_DIR%\tmp
 
 CALL d:\php-sdk\rmtools-client\bin\snap.bat php53 %* >> %LOG_FILE% 2<&1
-CALL d:\php-sdk\rmtools-client\bin\snap.bat php54 %* >> %LOG_FILE% 2<&1
-CALL d:\php-sdk\rmtools-client\bin\snap.bat phptrunk %* >> %LOG_FILE% 2<&1
+REM CALL d:\php-sdk\rmtools-client\bin\snap.bat php54 %* >> %LOG_FILE% 2<&1
+REM CALL d:\php-sdk\rmtools-client\bin\snap.bat phptrunk %* >> %LOG_FILE% 2<&1
 
 copy %RMTOOLS_BASE_DIR%\data\db\* D:\php-sdk\rmtools.base\data\db\ >> %LOG_FILE% 2<&1
 del D:\php-sdk\locks\snaps.lock >> %LOG_FILE% 2<&1
