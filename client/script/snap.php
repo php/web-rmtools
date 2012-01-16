@@ -131,7 +131,7 @@ if (!$new_rev) {
 }
 
 /*Upload the branch DB */
-//rm\upload_file($branch->db_path, $branch_name . '/' . basename($branch->db_path));
+rm\upload_file($branch->db_path, $branch_name . '/' . basename($branch->db_path));
 
 if ($has_build_errors) {
 	rm\send_error_notification($branch_name, $build_errors, $branch->getPreviousRevision(), $last_rev, 'http://windows.php.net/downloads/snaps/' . $branch_name . '/r' . $last_rev);
