@@ -5,14 +5,15 @@ include __DIR__ . '/../include/Tools.php';
 
 use rmtools as rm;
 
-if ($argc < 2 || $argc > 3) {
-	echo "Usage: snapshot <config name> [force 1/0]\n";
+if ($argc < 3 || $argc > 4) {
+	echo "Usage: snapshot <config name> <build type> [force 1/0]\n";
 	exit();
 }
 
 $new_rev = false;
 $branch_name = $argv[1];
-$force = isset($argv[2]) ? true : false;
+$build_type = $argv[2];
+$force = isset($argv[3]) ? true : false;
 $config_path = __DIR__ . '/../data/config/branch/' . $branch_name . '.ini';
 
 $branch = new rm\Branch($config_path);
@@ -31,7 +32,7 @@ if ($force || $branch->hasNewRevision()) {
 	if ($force || $last_rev != $branch->getLastRevisionExported()) {
 		$new_rev = true;
 		echo "processing revision $last_rev\n";
-		$src_original_path =  $branch->createSourceSnap();
+		$src_original_path =  $branch->createSourceSnap($build_type);
 		$branch->setLastRevisionExported($last_rev);
 
 		$build_dir_parent = $branch->config->getBuildLocation();
@@ -58,6 +59,15 @@ if ($force || $branch->hasNewRevision()) {
 		$build_errors = array();
 
 		foreach ($builds as $build_name) {
+			if (strcmp($build_type, 'all') != 0) {
+				if (substr_compare($build_name, $build_type, 0, 2) != 0) {  // i.e. nts-windows-vc9-x86
+					continue;
+				}
+				else  {
+					echo "Starting build for $build_name\n";
+				}
+			}
+
 			$build_src_path = realpath($build_dir_parent) . DIRECTORY_SEPARATOR . $build_name;
 			$log = rm\exec_single_log('mklink /J ' . $build_src_path . ' ' . $src_original_path);
 
@@ -66,7 +76,13 @@ if ($force || $branch->hasNewRevision()) {
 			try {
 				$build->setSourceDir($build_src_path);
 				$build->buildconf();
-				$build->configure();
+				if ($branch->config->getPGO() == 1)  {
+					echo "Creating PGI build\n";
+					$build->configure(' "--enable-pgi" ');
+				}
+				else {
+					$build->configure();
+				}
 				$build->make();
 				$html_make_log = $build->getMakeLogParsed();
 				$build->makeArchive();
@@ -74,10 +90,27 @@ if ($force || $branch->hasNewRevision()) {
 				echo $e->getMessage() . "\n";
 				echo $build->log_buildconf;
 			}
+			if ($branch->config->getPGO() == 1)  {
+				if ($build->archive_path) {
+					echo "Running pgo_controller.ps1 with PGI build at $build->archive_path, ver=$branch_name\n";
+					$cmd = 'c:\windows\system32\WindowsPowerShell\v1.0\powershell.exe -Command C:\php-sdk\pgo-build\pgo_controller.ps1 -PHPBUILD '. $build->archive_path . ' -PHPVER ' . $branch_name;
+					$pgolog = rm\exec_single_log($cmd);
+//					print_r($pgolog);
 
-			if ($build->archive_path) {
-				copy($build->archive_path, $toupload_dir . '/php-' . $branch_name_short . '-' . $build_name . '-r'. $last_rev . '.zip');
+					echo "Creating PGO build\n";
+					try {
+						$build->make(' clean-pgo');
+						$build->configure(' "--with-pgo" ', false);
+						$build->make();
+						$html_make_log = $build->getMakeLogParsed();
+						$build->makeArchive();
+					} catch (Exception $e) {
+						echo $e->getMessage() . "\n";
+						echo $build->log_buildconf;
+					}
+				}
 			}
+			
 			if ($build->archive_path) {
 				copy($build->devel_path, $toupload_dir . '/php-devel-pack-' . $branch_name_short . '-' . $build_name . '-r'. $last_rev . '.zip');
 			}
@@ -116,8 +149,10 @@ if ($force || $branch->hasNewRevision()) {
 				$json_data['build_error'] = $build_errors[$build_name];
 			}
 
-			$json = json_encode($json_data);
-			file_put_contents($toupload_dir . '/' . $json_filename, $json);
+			if (strcmp($branch_name, 'php-5.4') != 0) {
+				$json = json_encode($json_data);
+				file_put_contents($toupload_dir . '/' . $json_filename, $json);
+			}
 
 			rm\upload_build_result_ftp_curl($toupload_dir, $branch_name . '/r' . $last_rev);
 //			$build->clean();

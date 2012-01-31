@@ -18,6 +18,7 @@ class BranchConfig {
 		'RepoName'=>'repo_name',
 		'RepoBranch'=> 'repo_branch',
 		'Module' => 'repo_module',
+		'PGO' => 'pgo',
 	);
 
 	function __construct($path)

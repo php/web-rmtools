@@ -67,9 +67,9 @@ class Branch {
 		return $this->has_new_revision || ( $this->data->revision_previous == NULL);
 	}
 
-	public function export($revision = false, $zip = false)
+	public function export($revision = false, $build_type = false, $zip = false)
 	{
-		$dir_name = $this->config->getName() . '-src-r' . $this->data->revision_last;
+		$dir_name = $this->config->getName() . '-src-' . ($build_type ? $build_type.'-' : $build_type) . 'r' . $this->data->revision_last;
 		$target = $this->config->getBuildDir() . '/' . $dir_name;
 		$this->repo->export($target);
 		if ($zip) {
@@ -84,9 +84,9 @@ class Branch {
 		return $target;
 	}
 
-	public function createSourceSnap($revision = false)
+	public function createSourceSnap($build_type = false, $revision = false)
 	{
-		return $this->export($revision, true);
+		return $this->export($revision, $build_type, true);
 	}
 
 	public function setLastRevisionExported($last_rev)
