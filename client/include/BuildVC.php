@@ -67,6 +67,19 @@ class BuildVC {
 		if (!isset($env['BISON_SIMPLE'])) {
 			$env['BISON_SIMPLE'] = getenv('BISON_SIMPLE');
 		}
+
+		$env['CPU'] = "i386";
+		$env['APPVER'] = "5.01";  // setenv /xp
+		if (strcasecmp($this->architecture, 'x64') == 0) {
+			$env['CPU'] = "AMD64";
+		}
+		if (strcmp($branch->config->getAppver(), '2008') == 0) {
+			$env['APPVER'] = "6.0";
+		}
+		if ($branch->config->getDebug() == 0) {
+			$env['NODEBUG'] = "1";
+		}
+
 		$this->env = $env;
 	}
 
