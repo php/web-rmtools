@@ -2,6 +2,7 @@
 namespace rmtools;
 
 include __DIR__ . '/Svn.php';
+include __DIR__ . '/Git.php';
 
 class Repository {
 
@@ -25,6 +26,10 @@ class Repository {
 		switch ($repo['type']) {
 			case 'svn':
 				$r = new Svn($repo['url']);
+				return $r;
+				break;
+			case 'git':
+				$r = new Git($repo['url']);
 				return $r;
 				break;
             default:

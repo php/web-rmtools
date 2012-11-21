@@ -53,7 +53,8 @@ class Branch {
 	public function update()
 	{
 		$last_id =  $this->repo->getLastCommitId();
-		if ($last_id != $this->data->revision_last) {
+		if (strcasecmp($last_id, (string)$this->data->revision_last) != 0 ||
+				strcasecmp($last_id, $this->data->revision_previous) != 0) {
 			$this->data->revision_previous = $this->data->revision_last;
 			$this->data->revision_last = $last_id;
 			$json = json_encode($this->data);
@@ -67,26 +68,44 @@ class Branch {
 		return $this->has_new_revision || ( $this->data->revision_previous == NULL);
 	}
 
-	public function export($revision = false, $zip = false)
+	public function export($revision = false, $build_type = false, $zip = false, $is_zip = false)
 	{
-		$dir_name = $this->config->getName() . '-src-r' . $this->data->revision_last;
+		$rev_name = $this->data->revision_last;
+		if (strlen($this->data->revision_last) == 40) {
+			$rev_name = substr($this->data->revision_last, 0, 7);
+		}
+		$dir_name = $this->config->getName() . '-src-' . ($build_type ? $build_type.'-' : $build_type) . 'r' . $rev_name;
 		$target = $this->config->getBuildDir() . '/' . $dir_name;
-		$this->repo->export($target);
-		if ($zip) {
+		$exportfile = $this->repo->export($target);
+
+		if (preg_match('/\.zip$/', $exportfile) > 0) {  // export function returned a .zip file.
+			$is_zip = true;
+		}
+		if ($zip && !$is_zip) {
 			$zip_path = $dir_name . '.zip';
 			$cmd = "zip -q -r $zip_path $dir_name";
 			$res = exec_single_log($cmd, $this->config->getBuildDir());
-            if (!$res) {
-                throw new \Exception("Export failed, svn exec failed to be ran");
-            }
+			if (!$res) {
+				throw new \Exception("Export failed, svn exec failed to be ran");
+			}
 		}
+		elseif ($is_zip === true)  {
+			$cmd = 'unzip -q -o ' . $exportfile . ' -d ' . $this->config->getBuildDir();
+			$res = exec_single_log($cmd);
+			if (!$res) {
+				throw new \Exception("Unzipping $exportfile failed.");
+			}
+			$gitname = $this->config->getBuildDir() . '/php-src-' . strtoupper($this->config->getName()) . '-' . $rev_name;
+			rename($gitname, $target);
+		}
+
 		$target = realpath($target);
 		return $target;
 	}
 
-	public function createSourceSnap($revision = false)
+	public function createSourceSnap($build_type = false, $revision = false)
 	{
-		return $this->export($revision, true);
+		return $this->export($revision, $build_type, true);
 	}
 
 	public function setLastRevisionExported($last_rev)
