@@ -67,6 +67,19 @@ class BuildVC {
 		if (!isset($env['BISON_SIMPLE'])) {
 			$env['BISON_SIMPLE'] = getenv('BISON_SIMPLE');
 		}
+
+		$env['CPU'] = "i386";
+		$env['APPVER'] = "5.01";  // setenv /xp
+		if (strcasecmp($this->architecture, 'x64') == 0) {
+			$env['CPU'] = "AMD64";
+		}
+		if (strcmp($branch->config->getAppver(), '2008') == 0) {
+			$env['APPVER'] = "6.0";
+		}
+		if ($branch->config->getDebug() == 0) {
+			$env['NODEBUG'] = "1";
+		}
+
 		$this->env = $env;
 	}
 
@@ -98,12 +111,12 @@ class BuildVC {
 		$this->log_buildconf = $ret['log'];
 	}
 
-	function configure($extra = false)
+	function configure($extra = false, $rm_obj = true)
 	{
 		$args = $this->branch->config->getConfigureOptions($this->build_name) . ($extra ?: $extra);
 		$cmd = 'configure ' . $args . ' --enable-object-out-dir=' . $this->obj_dir;
 		/* old build may have been stoped */
-		if (is_dir($this->obj_dir)) {
+		if (is_dir($this->obj_dir) && $rm_obj === true) {
 			rmdir_rf($this->obj_dir);
 		}
 		mkdir($this->obj_dir, 0655, true);
@@ -114,9 +127,9 @@ class BuildVC {
 		$this->log_configure = $ret['log'];
 	}
 
-	function make()
+	function make($target = false)
 	{
-		$cmd = 'nmake';
+		$cmd = 'nmake' . ($target ?: $target);
 		$ret = exec_single_log($cmd, $this->build_dir, $this->env);
 		if (!$ret) {
 			throw new \Exception('Make failed');

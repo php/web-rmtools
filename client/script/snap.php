@@ -5,14 +5,15 @@ include __DIR__ . '/../include/Tools.php';
 
 use rmtools as rm;
 
-if ($argc < 2 || $argc > 3) {
-	echo "Usage: snapshot <config name> [force 1/0]\n";
+if ($argc < 3 || $argc > 4) {
+	echo "Usage: snapshot <config name> <build type> [force 1/0]\n";
 	exit();
 }
 
 $new_rev = false;
 $branch_name = $argv[1];
-$force = isset($argv[2]) ? true : false;
+$build_type = strtolower($argv[2]);
+$force = isset($argv[3]) ? true : false;
 $config_path = __DIR__ . '/../data/config/branch/' . $branch_name . '.ini';
 
 $branch = new rm\Branch($config_path);
@@ -26,12 +27,35 @@ echo "Running <$config_path>\n";
 echo "\t$branch_name\n";
 echo "\tprevious revision was: " . $branch->getPreviousRevision() . "\n";
 echo "\tlast revision is: " . $branch->getLastRevisionId() . "\n";
-
 if ($force || $branch->hasNewRevision()) {
-	if ($force || $last_rev != $branch->getLastRevisionExported()) {
+	if ($force || substr_compare($last_rev, $branch->getLastRevisionExported(), 0, 7) != 0) {
 		$new_rev = true;
 		echo "processing revision $last_rev\n";
-		$src_original_path =  $branch->createSourceSnap();
+		if ($branch->config->getPGO() == 1) {  // Check revision to maintain concurrent builds
+			$fh = fopen('c:\php-sdk\locks\snaps_'.$build_type.'.lock', "a");
+			fwrite($fh, "$last_rev");
+			fclose($fh);
+			if (strcmp($build_type, 'nts') == 0) {
+				if (!file_exists('c:\php-sdk\locks\snaps_ts.lock'))  {
+					echo "Waiting for thread-safe build, exiting.\n";
+					exit(0);
+				}
+				else {
+					$fh = fopen('c:\php-sdk\locks\snaps_ts.lock', "r");
+					$data = fread($fh, filesize('c:\php-sdk\locks\snaps_ts.lock'));
+					fclose($fh);
+					if (!preg_match("/$last_rev/", $data)) {
+						echo "Revision mismatch on concurrent builds, waiting for ts build to complete\n";
+						exit(0);
+					}
+				}
+			}
+		}
+
+		if (strlen($last_rev) == 40) {
+			$last_rev = substr($last_rev, 0, 7);
+		}
+		$src_original_path =  $branch->createSourceSnap($build_type);
 		$branch->setLastRevisionExported($last_rev);
 
 		$build_dir_parent = $branch->config->getBuildLocation();
@@ -51,13 +75,21 @@ if ($force || $branch->hasNewRevision()) {
 		}
 
 		copy($src_original_path . '.zip', $toupload_dir . '/' . $branch_name . '-src-r'. $last_rev . '.zip');
-
 		$builds = $branch->getBuildList('windows');
 
 		$has_build_errors = false;
 		$build_errors = array();
 
 		foreach ($builds as $build_name) {
+			if (strcmp($build_type, 'all') != 0) {
+				if (substr_compare($build_name, $build_type, 0, 2) != 0) {  // i.e. nts-windows-vc9-x86
+					continue;
+				}
+				else  {
+					echo "Starting build for $build_name\n";
+				}
+			}
+
 			$build_src_path = realpath($build_dir_parent) . DIRECTORY_SEPARATOR . $build_name;
 			$log = rm\exec_single_log('mklink /J ' . $build_src_path . ' ' . $src_original_path);
 
@@ -66,13 +98,39 @@ if ($force || $branch->hasNewRevision()) {
 			try {
 				$build->setSourceDir($build_src_path);
 				$build->buildconf();
-				$build->configure();
+				if ($branch->config->getPGO() == 1)  {
+					echo "Creating PGI build\n";
+					$build->configure(' "--enable-pgi" ');
+				}
+				else {
+					$build->configure();
+				}
 				$build->make();
 				$html_make_log = $build->getMakeLogParsed();
 				$build->makeArchive();
 			} catch (Exception $e) {
 				echo $e->getMessage() . "\n";
 				echo $build->log_buildconf;
+			}
+			if ($branch->config->getPGO() == 1)  {
+				if ($build->archive_path) {
+					echo "Running pgo_controller.ps1 with PGI build at $build->archive_path, ver=$branch_name\n";
+					$cmd = 'c:\windows\system32\WindowsPowerShell\v1.0\powershell.exe -NonInteractive -Command C:\php-sdk\pgo-build\pgo_controller.ps1 -PHPBUILD '. $build->archive_path . ' -PHPVER ' . $branch_name;
+					$pgolog = rm\exec_single_log($cmd);
+					print_r($pgolog);
+
+					echo "Creating PGO build\n";
+					try {
+						$build->make(' clean-pgo');
+						$build->configure(' "--with-pgo" ', false);
+						$build->make();
+						$html_make_log = $build->getMakeLogParsed();
+						$build->makeArchive();
+					} catch (Exception $e) {
+						echo $e->getMessage() . "\n";
+						echo $build->log_buildconf;
+					}
+				}
 			}
 
 			if ($build->archive_path) {
@@ -116,12 +174,14 @@ if ($force || $branch->hasNewRevision()) {
 				$json_data['build_error'] = $build_errors[$build_name];
 			}
 
-			$json = json_encode($json_data);
-			file_put_contents($toupload_dir . '/' . $json_filename, $json);
+			if (strcmp($branch_name, 'php-5.4') != 0) {
+				$json = json_encode($json_data);
+				file_put_contents($toupload_dir . '/' . $json_filename, $json);
+			}
 
 			rm\upload_build_result_ftp_curl($toupload_dir, $branch_name . '/r' . $last_rev);
 //			$build->clean();
-//			rmdir($build_src_path);
+			rmdir($build_src_path);
 		}
 	}
 }
@@ -131,13 +191,13 @@ if (!$new_rev) {
 }
 
 /*Upload the branch DB */
-rm\upload_file($branch->db_path, $branch_name . '/' . basename($branch->db_path));
+//rm\upload_file($branch->db_path, $branch_name . '/' . basename($branch->db_path));
 
 if ($has_build_errors) {
 	rm\send_error_notification($branch_name, $build_errors, $branch->getPreviousRevision(), $last_rev, 'http://windows.php.net/downloads/snaps/' . $branch_name . '/r' . $last_rev);
 } else {
 	/* if no error, let update the snapshot page */
-	rm\update_snapshot_page();
+//	rm\update_snapshot_page();
 }
 
 echo "Done.\n";
