@@ -235,7 +235,8 @@ function send_error_notification($branch_name, $build_entries, $previous_revisio
 		$errors .= "\n\n";
 	}
 
-	$to = 'internals@lists.php.net';
+//	$to = 'internals@lists.php.net';
+	$to = 'ostcphp@microsoft.com';
 	$subject = '[rmtools][' . $branch_name . '] Build error between r' . $previous_revision . ' and  ' . $current_revision;
 
 	ob_start();
