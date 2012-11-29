@@ -174,11 +174,8 @@ if ($force || $branch->hasNewRevision()) {
 				$json_data['build_error'] = $build_errors[$build_name];
 			}
 
-			if (strcmp($branch_name, 'php-5.4') != 0) {
-				$json = json_encode($json_data);
-				file_put_contents($toupload_dir . '/' . $json_filename, $json);
-			}
-
+			$json = json_encode($json_data);
+			file_put_contents($toupload_dir . '/' . $json_filename, $json);
 			rm\upload_build_result_ftp_curl($toupload_dir, $branch_name . '/r' . $last_rev);
 //			$build->clean();
 			rmdir($build_src_path);
@@ -191,7 +188,7 @@ if (!$new_rev) {
 }
 
 /*Upload the branch DB */
-//rm\upload_file($branch->db_path, $branch_name . '/' . basename($branch->db_path));
+rm\upload_file($branch->db_path, $branch_name . '/' . basename($branch->db_path));
 
 if ($has_build_errors) {
 	rm\send_error_notification($branch_name, $build_errors, $branch->getPreviousRevision(), $last_rev, 'http://windows.php.net/downloads/snaps/' . $branch_name . '/r' . $last_rev);
