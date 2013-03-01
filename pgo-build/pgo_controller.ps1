@@ -9,15 +9,27 @@
 #
 ## Example: pgo_controller.ps1 -PHPBUILD C:\obj\ts-windows-vc9-x86\Release_TS\php-5.4.0RC6-dev-Win32-VC9-x86.zip -PHPVER php-5.4
 
-Param( $PHPBUILD="", $PHPVER="" )
+Param( $PHPBUILD="", $PHPVER="", $APACHEVER="2.4" )
 if ( ($PHPBUILD -eq "") -or ($PHPVER -eq "") )  {
-	write-output "Usage: pgo_controller.ps1 -PHPBUILD <path_to_.zip> -PHPVER <php_ver>"
+	write-output "Usage: pgo_controller.ps1 -PHPBUILD <path_to_.zip> -PHPVER <php_ver> [-APACHEVER <ver>]"
 	exit
 }
 
-$SERVER = "php-pgo01"
+if ( ($APACHEVER -ne "2.4") -and ($APACHEVER -ne "2.2") ) {
+    write-output "Unknown apache version, only 2.2 and 2.4 are supported";
+    exit
+}
+if ( $APACHEVER -eq "2.4" ) {
+    $APACHE_SERVICE = "Apache2.4"
+    $APACHE_DIR = "Apache24"
+} else {
+    $APACHE_SERVICE = "Apache2.2"
+    $APACHE_DIR = "Apache2"
+}
+
+$SERVER = "php-pgo02"
 $WebSvrPHPLoc = "\\$SERVER\pgo"
-$WebSvrApacheLoc = "\\$SERVER\Apache2"
+$WebSvrApacheLoc = "\\$SERVER\$APACHE_DIR"
 $RemoteBaseDir = "C:\pgo"
 $RemotePHPBin = "C:\pgo\php-nts-bin\php.exe"
 
@@ -73,7 +85,7 @@ if ( $PHPBUILD -match "nts" )  {
 	$( winrs -r:$SERVER net stop w3svc )
 }
 else  {
-	$( winrs -r:$SERVER net stop Apache2.2 )
+	$( winrs -r:$SERVER net stop $APACHE_SERVICE )
 }
 
 ## Copy and set up PHP runtime.
@@ -129,7 +141,7 @@ else  {
 		remove-lock $lockfile
 		exit
 	}
-	$( winrs -r:$SERVER net stop Apache2.2 "&" net start Apache2.2 )
+	$( winrs -r:$SERVER net stop $APACHE_SERVICE "&" net start $APACHE_SERVICE )
 	$( winrs -r:$SERVER $RemotePHPBin C:\pgo\scripts\pgo.php localhost 8080 )
 }
 
@@ -137,7 +149,7 @@ if ( $PHPBUILD -match "nts" )  {
 	$( winrs -r:$SERVER net stop w3svc )
 }
 else  {
-	$( winrs -r:$SERVER net stop Apache2.2 )
+	$( winrs -r:$SERVER net stop $APACHE_SERVICE )
 }
 
 ## Important - need to give instrumentation time to

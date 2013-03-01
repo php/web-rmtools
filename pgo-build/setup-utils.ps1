@@ -8,7 +8,7 @@
 ## Description: Check and set the lock file on the PGO host.
 #
 Function set-lock ( $lockfile )  {
-	for ($i=0; $i -lt 70; $i++)  {
+	for ($i=0; $i -lt 120; $i++)  {
 		if ( (test-path "$WebSvrPHPLoc\$lockfile") -eq $true )  {
 			logger "set-lock($lockfile): $WebSvrPHPLoc\$lockfile exists, waiting for 60 seconds."
 			Start-Sleep -s 60
@@ -32,7 +32,7 @@ Function set-lock ( $lockfile )  {
 
 Function remove-lock ( $lockfile )  {
 	logger "remove-lock($lockfile): removing lockfile $WebSvrPHPLoc\$lockfile."
-	remove-item -path "$WebSvrPHPLoc\$lockfile" -Force
+	remove-item -path "$WebSvrPHPLoc\$lockfile" -Force -Recurse
 	if ( (test-path "$WebSvrPHPLoc\$lockfile") -eq $true )  {
 		logger "remove-lock($lockfile): lockfile $WebSvrPHPLoc\$lockfile not removed."
 	}
@@ -78,7 +78,7 @@ Function setup-php ( $extdir="", $phploc )  {
 #
 ## Description: Configure PHP for Apache.
 #
-Function setup-apache( $phppath="" )  {
+Function setup-apache( $phppath="", $ver = "2.4" )  {
 	if ( $phppath -eq "" )  {
 		return $false
 	}
@@ -86,8 +86,18 @@ Function setup-apache( $phppath="" )  {
 
 	$phpdir = $RemoteBaseDir -replace '\\', '/'
 
+	if ( ($ver -ne "2.4") -and ($ver -ne "2.2") ) {
+		logger "setup-apache: unknown apache version '$ver'"
+		return $false
+	}
+	if ( $ver -eq "2.4" ) {
+		$dll = "php5apache2_4.dll"
+	} else {
+		$dll = "php5apache2_2.dll"
+	}
+	
 	$conffile = "$WebSvrApacheLoc/conf/extra/httpd-php.conf"
-	$config = "LoadModule php5_module `"$phpdir/$phppath/php5apache2_2.dll`"`n"
+	$config = "LoadModule php5_module `"$phpdir/$phppath/$dll`"`n"
 	$config += "AddType application/x-httpd-php .php`n"
 	$config += "PHPIniDir `"$phpdir/$phppath`"`n"
 
