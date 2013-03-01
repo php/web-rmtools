@@ -52,7 +52,7 @@ class Branch {
 
 	public function update()
 	{
-		$last_id =  $this->repo->getLastCommitId();
+		$last_id = $this->repo->getLastCommitId();
 		if (strcasecmp($last_id, (string)$this->data->revision_last) != 0 ||
 				strcasecmp($last_id, $this->data->revision_previous) != 0) {
 			$this->data->revision_previous = $this->data->revision_last;
@@ -158,6 +158,7 @@ class Branch {
 
 		$compiler	= strtolower($build['compiler']);
 		switch ($compiler) {
+			case 'vc11':
 			case 'vc9':
 			case 'vc6':
 				$build = new BuildVC($this, $build_name);

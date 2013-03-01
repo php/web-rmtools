@@ -125,6 +125,31 @@ function upload_file($src, $target)
 	return $res;
 }
 
+function upload_file_curl($src, $target) // SAZ - Like upload_file(), but using curl
+{
+	include 'C:/php-sdk/rmtools-client/data/config/credentials_ftps.php';
+	$ftp_user = $user_snaps;
+	$ftp_password = $password;
+
+	$filename = basename($src);
+	$remoteurl = "ftps://${ftp_user}:${ftp_password}@${ftp_server}/${target}/${filename}";
+	$fp = fopen($src, "rb");
+
+	$ch = curl_init();
+	curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
+	curl_setopt($ch, CURLOPT_URL, $remoteurl);
+	curl_setopt($ch, CURLOPT_UPLOAD, 1);
+	curl_setopt($ch, CURLOPT_INFILE, $fp);
+	curl_setopt($ch, CURLOPT_USERPWD, $ftp_user . ':' . $ftp_password);
+	if (curl_exec($ch) === false)  {
+		echo "Error, upload_file_curl(): " . curl_error($ch) . "\n";
+		return false;
+	}
+	fclose($fp);
+
+	return true;
+}
+
 function update_snapshot_page()
 {
 	include __DIR__ . '/../data/config/credentials_ftps.php';
@@ -152,7 +177,12 @@ function upload_build_result_ftp_curl($src_dir, $target)
 	if (!$login_result) {
 		return false;
 	}
-    ftp_make_directory($ftp, $target. '/logs');
+	
+	$try = 0;
+	do {
+		$status = ftp_make_directory($ftp, $target. '/logs');
+		$try++;
+	} while ( $status === false && $try < 10 );
 	ftp_close($ftp);
 
 	$curl = array();
@@ -203,9 +233,24 @@ function upload_build_result_ftp_curl($src_dir, $target)
 		\curl_multi_add_handle ($mh, $ch);
 	}
 
+	$retry = 0;
 	do {
-		\curl_multi_exec($mh,$active);
-	} while ($active);
+		$err = 0;
+		do {
+			\curl_multi_exec($mh,$active);
+			$info = curl_multi_info_read($mh);
+			if ($info !== false) {
+				curl_multi_remove_handle($mh, $info['handle']);
+				if ($info['result'] != 0)  {
+					$err = 1;
+//					echo curl_getinfo($info['handle'], CURLINFO_EFFECTIVE_URL) . "\n";
+//					echo curl_error($info['handle']) . "\n\n";
+					curl_multi_add_handle($mh, $info['handle']);
+				}
+			}
+		} while ($active);
+		$retry++;
+	} while ($err != 0 && $retry < 10);
 
 	foreach ($curl as $ch) {
 		\curl_multi_remove_handle($mh, $ch);
