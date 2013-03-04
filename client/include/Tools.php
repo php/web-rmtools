@@ -131,8 +131,7 @@ function upload_file_curl($src, $target) // SAZ - Like upload_file(), but using 
 	$ftp_user = $user_snaps;
 	$ftp_password = $password;
 
-	$filename = basename($src);
-	$remoteurl = "ftps://${ftp_user}:${ftp_password}@${ftp_server}/${target}/${filename}";
+	$remoteurl = "ftps://${ftp_user}:${ftp_password}@${ftp_server}/${target}";
 	$fp = fopen($src, "rb");
 
 	$ch = curl_init();
