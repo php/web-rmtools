@@ -114,10 +114,16 @@ if ($force || $branch->hasNewRevision()) {
 			}
 			if ($branch->config->getPGO() == 1)  {
 				if ($build->archive_path) {
-					echo "Running pgo_controller.ps1 with PGI build at $build->archive_path, ver=$branch_name\n";
+					echo "Running pgo_controller.ps1 with PGI build at $build->archive_path, ver=$branch_name, opcache=0\n";
 					$cmd = 'c:\windows\system32\WindowsPowerShell\v1.0\powershell.exe -NonInteractive -Command C:\php-sdk\pgo-build\pgo_controller.ps1 -PHPBUILD '. $build->archive_path . ' -PHPVER ' . $branch_name;
 					$pgolog = rm\exec_single_log($cmd);
 					print_r($pgolog);
+					if ( preg_match('/5\.5/', $branch_name) )  {
+						echo "Running pgo_controller.ps1 with PGI build at $build->archive_path, ver=$branch_name, opcache=1\n";
+						$cmd = 'c:\windows\system32\WindowsPowerShell\v1.0\powershell.exe -NonInteractive -Command C:\php-sdk\pgo-build\pgo_controller.ps1 -PHPBUILD '. $build->archive_path . ' -PHPVER ' . $branch_name . ' -OPCACHE 1';
+						$pgolog = rm\exec_single_log($cmd);
+						print_r($pgolog);
+					}
 
 					echo "Creating PGO build\n";
 					try {
