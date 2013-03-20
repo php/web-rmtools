@@ -105,8 +105,10 @@ Function setup-apache( $phppath="", $ver = "2.4" )  {
 	if ( (test-path $conffile) -eq $false )  {
 		return $false
 	}
-}
 
+	$( winrs -r:$SERVER rmdir "c:\apps\$APACHE_DIR\php_deps" )
+	$( winrs -r:$SERVER mklink /d "c:\apps\$APACHE_DIR\php_deps" "$RemoteBaseDir\$phppath" )
+}
 
 #
 ## Description: Configure PHP for IIS.
@@ -155,4 +157,16 @@ function php-configure( $phppath="", $phpini="" )  {
 			$line | out-file -encoding ASCII -append "$WebSvrPHPLoc/$phppath/php.ini"
 		}
 	}
+	if ( $OPCACHE -eq 1 )  {
+		$contents = (get-content "$WebSvrPHPLoc/$phppath/php.ini")
+		out-file -encoding ASCII -Force "$WebSvrPHPLoc/$phppath/php.ini"
+		Foreach ( $line in $contents )  {
+			if ( $line -match "^zend_extension=php_opcache" )  {
+				$line = "zend_extension=`"$phpdir/$phppath/ext/php_opcache.dll`""
+			}
+			$line | out-file -encoding ASCII -append "$WebSvrPHPLoc/$phppath/php.ini"
+		}
+	}
+
+	return $true
 }

@@ -9,9 +9,9 @@
 #
 ## Example: pgo_controller.ps1 -PHPBUILD C:\obj\ts-windows-vc9-x86\Release_TS\php-5.4.0RC6-dev-Win32-VC9-x86.zip -PHPVER php-5.4
 
-Param( $PHPBUILD="", $PHPVER="", $APACHEVER="2.4" )
+Param( $PHPBUILD="", $PHPVER="", $APACHEVER="2.4", $OPCACHE=0 )
 if ( ($PHPBUILD -eq "") -or ($PHPVER -eq "") )  {
-	write-output "Usage: pgo_controller.ps1 -PHPBUILD <path_to_.zip> -PHPVER <php_ver> [-APACHEVER <ver>]"
+	write-output "Usage: pgo_controller.ps1 -PHPBUILD <path_to_.zip> -PHPVER <php_ver> [-APACHEVER <ver>] [-OPCACHE 0|1]"
 	exit
 }
 
@@ -27,7 +27,7 @@ if ( $APACHEVER -eq "2.4" ) {
     $APACHE_DIR = "Apache2"
 }
 
-$SERVER = "php-pgo02"
+$SERVER = "SERVERNAME"
 $WebSvrPHPLoc = "\\$SERVER\pgo"
 $WebSvrApacheLoc = "\\$SERVER\$APACHE_DIR"
 $RemoteBaseDir = "C:\pgo"
@@ -116,6 +116,9 @@ else  {
 
 if ( $PHPBUILD -match "nts" )  {
 	$phpini = "$BaseDir/ini/$PHPVER-pgo-nts.ini"
+	if ( $OPCACHE -eq 1 )  {
+		$phpini = "$BaseDir/ini/$PHPVER-pgo-nts-cache.ini"
+	}
 	if ( (php-configure $build $phpini) -eq $false )  {
 		logger "PGP Controller: php-configure() returned error: $build, $phpini"
 		remove-lock $lockfile
@@ -133,6 +136,9 @@ if ( $PHPBUILD -match "nts" )  {
 }
 else  {
 	$phpini = "$BaseDir/ini/$PHPVER-pgo-ts.ini"
+	if ( $OPCACHE -eq 1 )  {
+		$phpini = "$BaseDir/ini/$PHPVER-pgo-ts-cache.ini"
+	}
 	if ( (test-path "$exts\php_apc.dll") -eq $true )  {
 		$phpini = "$BaseDir/ini/$PHPVER-pgo-ts-apc.ini"
 	}
@@ -158,10 +164,14 @@ Start-Sleep -s 10
 
 ## Collect the .pgc files
 $LocalBuildDir = $PHPBUILD -replace "$build\.zip", ''
-remove-item "$LocalBuildDir/*.pgc" -force
-copy-item -force "$WebSvrPHPLoc/$build/*.pgc" -destination $LocalBuildDir
-copy-item -force "$WebSvrPHPLoc/$build/ext/*.pgc" -destination $LocalBuildDir
+if ( $OPCACHE -eq 1 )  {
+	copy-item -force "$WebSvrPHPLoc/$build/ext/php_opcache*.pgc" -destination $LocalBuildDir
+}
+else  {
+	remove-item "$LocalBuildDir/*.pgc" -force
+	copy-item -force "$WebSvrPHPLoc/$build/*.pgc" -destination $LocalBuildDir
+	copy-item -force "$WebSvrPHPLoc/$build/ext/*.pgc" -destination $LocalBuildDir
+}
 
 ## Remove lock
 remove-lock $lockfile
-
