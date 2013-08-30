@@ -32,7 +32,7 @@ class PeclBuildVC {
 	{
 		$this->branch = $branch;
 		$this->build_name = $build_name;
-		$this->obj_dir = $branch->config->getBuildDir() . '/' . $this->build_name;
+		$this->obj_dir = $branch->config->getBuildDir() . '/' . $branch->config->getBranch() . '-' . $this->build_name;
 		$this->compiler = $branch->config->builds[$build_name]['compiler'];
 		$this->architecture = $branch->config->builds[$build_name]['arch'];
 		$this->thread_safe = (boolean)$branch->config->builds[$build_name]['thread_safe'];
@@ -88,6 +88,11 @@ class PeclBuildVC {
 	function setSourceDir($src_dir)
 	{
 		$this->build_dir = $src_dir;
+	}
+
+	function getSourceDir()
+	{
+		return $this->build_dir;
 	}
 
 	private function addLogsToArchive()

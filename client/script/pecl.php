@@ -2,6 +2,7 @@
 include __DIR__ . '/../data/config.php';
 include __DIR__ . '/../include/PeclBranch.php';
 include __DIR__ . '/../include/Tools.php';
+include __DIR__ . '/../include/PeclExt.php';
 
 use rmtools as rm;
 
@@ -14,18 +15,6 @@ $branch_name = $argv[1];
 $ext_tgz = $argv[2];
 $config_path = __DIR__ . '/../data/config/pecl/' . $branch_name . '.ini';
 
-if (!file_exists($ext_tgz)) {
-	echo "'$ext_tgz' does not exist\n";
-	exit(3);
-}
-if ('.tgz' != substr($ext_tgz, -4)) {
-	echo "Pecl package should end with .tgz\n";
-	exit(3);
-}
-$tmp = explode('-', basename($ext_tgz, '.tgz'));
-$ext_name = $tmp[0];
-$ext_ver = $tmp[1];
-unset($tmp);
 
 $branch = new rm\PeclBranch($config_path);
 
@@ -54,14 +43,16 @@ foreach ($builds as $build_name) {
 
 	$build = $branch->createBuildInstance($build_name);
 
+	try {
+		$ext = new rm\PeclExt($ext_tgz, $build);
+	} catch (Exception $e) {
+		echo $e->getMessage() . "\n";
+		exit(3);
+	}
+
 	// looks like php_http-2.0.0beta4-5.3-nts-vc9-x86
-	$ext_build_name = 'php_' . $ext_name
-			. '-' . $ext_ver 
-			. '-' . $branch_name
-			. '-' . ($build->thread_safe ? 'ts' : 'nts')
-			. '-' . $build->compiler
-			. '-' . $build->architecture;
-	
+	$ext_build_name = $ext->getPackageName();
+
 	echo "Starting build for $ext_build_name\n";
 	echo "running build in <$build_src_path>\n";
 
@@ -76,6 +67,7 @@ foreach ($builds as $build_name) {
 
 	try {
 		$build->setSourceDir($build_src_path);
+		$ext->putSourcesIntoBranch();exit();
 		$build->buildconf();
 		if ($branch->config->getPGO() == 1)  {
 			echo "Creating PGI build\n";
@@ -86,8 +78,7 @@ foreach ($builds as $build_name) {
 		}
 		$build->make();
 		$html_make_log = $build->getMakeLogParsed();
-		continue;	
-		$build->makeArchive();
+		//$build->makeArchive();
 	} catch (Exception $e) {
 		echo $e->getMessage() . "\n";
 		echo $build->log_buildconf;
@@ -96,29 +87,15 @@ foreach ($builds as $build_name) {
 
 	/* PGO stuff would come here */
 
-	$stats = $build->getStats();
-
-	$json_filename = $build_config['name'] . '.json';
-
-	$json_data = array(
-		'stats' => $stats,
-		'has_php_pkg'   => file_exists($build->archive_path),
-		'has_debug_pkg' => file_exists($build->debug_path),
-		'has_devel_pkg' => file_exists($build->devel_path),
-		'has_test_pkg' => file_exists($build->test_path),
-	);
+	/*$stats = $build->getStats();
 
 	if ($stats['error'] > 0) {
 		$has_build_errors = true;
-		$build_errors[$build_config['name']] = $build->compiler_log_parser->getErrors();
-		$json_data['build_error'] = $build_errors[$build_config['name']];
 	}
 
-	$json = json_encode($json_data);
-	file_put_contents($toupload_dir . '/' . $json_filename, $json);
-	rm\upload_build_result_ftp_curl($toupload_dir, $branch_name . '/r' . $last_rev);
-			$build->clean();
-	rmdir($build_src_path);
+	rm\upload_build_result_ftp_curl($toupload_dir, $branch_name . '/r' . $last_rev);*/
+	$build->clean();
+	//rmdir($build_src_path);
 }
 
 /*Upload the branch DB */

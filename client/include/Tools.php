@@ -298,3 +298,36 @@ function send_error_notification($branch_name, $build_entries, $previous_revisio
 		return mail($to, $subject, $body, $headers, $params);
 	}
 }
+
+function copy_r($from, $to)
+{
+	if (is_dir($from)) {
+		if (!file_exists($to)) {
+			mkdir($to);
+		}
+		$objs = scandir($from);
+		foreach ($objs as $child) {
+			if ('.' == $child || '..' == $child) {
+				continue;
+			}
+
+			if (is_dir("$from/$child")) {
+				if (!copy_r("$from/$child", "$to/$child")) {
+					return false;
+				}
+			} else {
+				if (!copy("$from/$child", "$to/$child")) {
+					return false;
+				}
+			}
+		}
+
+		return true;
+
+	} else if (is_file($from)) {
+		return copy($from, $to);
+	}
+
+	return false;
+}
+
