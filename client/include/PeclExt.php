@@ -33,6 +33,7 @@ class PeclExt
 		$this->version = $tmp[1];
 
 		if (!$this->name || !$this->version) {
+			/* XXX do unpack here already and get the name/version data */
 			throw new \Exception("Couldn't parse extension name or version from the filename");
 		}
 
@@ -94,7 +95,6 @@ class PeclExt
 			$this->package_xml->loadXML(
 				file_get_contents($this->tmp_package_xml_path)
 			);
-			var_dump($this->package_xml);die;
 		}
 
 		$this->tgz_path = NULL;
