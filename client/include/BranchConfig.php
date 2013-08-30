@@ -22,6 +22,7 @@ class BranchConfig {
 		'Debug'		 	=> 'debug',
 		'Appver' 		=> 'appver',
 		'BuildSrcSubdir'	=> 'build_src_subdir',
+		'PeclDepsBase'	=> 'pecl_deps_base',
 	);
 
 	function __construct($path)
