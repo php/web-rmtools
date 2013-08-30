@@ -14,9 +14,10 @@ class PeclExt
 	protected $tar_cmd = 'c:\apps\git\bin\tar.exe';
 	protected $gzip_cmd = 'c:\apps\git\bin\gzip.exe';
 	protected $zip_cmd = 'c:\php-sdk\bin\zip.exe';
-	protected $tmp_extract = NULL;
-	protected $tmp_package_xml = NULL;
+	protected $tmp_extract_path = NULL;
+	protected $tmp_package_xml_path = NULL;
 	protected $ext_dir_in_src_path = NULL;
+	protected $package_xml = NULL;
 
 	public function __construct($tgz_path, $build)
 	{
@@ -85,26 +86,31 @@ class PeclExt
 
 		chdir($old_cwd);
 
-		$this->tmp_extract = realpath($tmp_path . '/' .  basename($this->tgz_path, '.tgz'));
+		$this->tmp_extract_path = realpath($tmp_path . '/' .  basename($this->tgz_path, '.tgz'));
 
 		if (file_exists($tmp_path . DIRECTORY_SEPARATOR . 'package.xml')) {
-			$this->tmp_package_xml = $tmp_path . DIRECTORY_SEPARATOR . 'package.xml';
+			$this->tmp_package_xml_path = $tmp_path . DIRECTORY_SEPARATOR . 'package.xml';
+			$this->package_xml = new \DOMDocument;
+			$this->package_xml->loadXML(
+				file_get_contents($this->tmp_package_xml_path)
+			);
+			var_dump($this->package_xml);die;
 		}
 
 		$this->tgz_path = NULL;
 
-		return $this->tmp_extract;
+		return $this->tmp_extract_path;
 	}
 
 	public function putSourcesIntoBranch()
 	{
-		if (!$this->tmp_extract) {
-			$this->tmp_extract = $this->unpack();
+		if (!$this->tmp_extract_path) {
+			$this->tmp_extract_path = $this->unpack();
 		}
 		$ext_dir = $this->build->getSourceDir() . DIRECTORY_SEPARATOR . 'ext';
 
 		$this->ext_dir_in_src_path = $ext_dir . DIRECTORY_SEPARATOR . $this->name;
-		$res = copy_r($this->tmp_extract, $this->ext_dir_in_src_path);
+		$res = copy_r($this->tmp_extract_path, $this->ext_dir_in_src_path);
 		if (!$res) {
 			throw new \Exception("Failed to copy to '{$this->ext_dir_in_src_path}'");
 		}
@@ -175,11 +181,11 @@ class PeclExt
 
 	public function cleanup()
 	{
-		if ($this->tmp_extract) {
-			rmdir_rf(dirname($this->tmp_extract));
+		if ($this->tmp_extract_path) {
+			rmdir_rf(dirname($this->tmp_extract_path));
 		}
-		/*if ($this->tmp_package_xml) {
-			unlink($this->tmp_package_xml);
+		/*if ($this->tmp_package_xml_path) {
+			unlink($this->tmp_package_xml_path);
 		}*/
 		if ($this->ext_dir_in_src_path) {
 			rmdir_rf($this->ext_dir_in_src_path);
@@ -188,11 +194,11 @@ class PeclExt
 
 	public function check()
 	{
-		if (!$this->tmp_extract) {
+		if (!$this->tmp_extract_path) {
 			throw new \Exception("Tarball isn't yet extracted");
 		}
 
-		if (!file_exists($this->tmp_extract . DIRECTORY_SEPARATOR . 'config.w32')) {
+		if (!file_exists($this->tmp_extract_path . DIRECTORY_SEPARATOR . 'config.w32')) {
 			throw new \Exception("config.w32 not found");
 		}
 	}
