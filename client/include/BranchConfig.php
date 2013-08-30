@@ -21,6 +21,7 @@ class BranchConfig {
 		'PGO' 			=> 'pgo',
 		'Debug'		 	=> 'debug',
 		'Appver' 		=> 'appver',
+		'BuildSrcSubdir'	=> 'build_src_subdir',
 	);
 
 	function __construct($path)
