@@ -107,13 +107,15 @@ foreach ($builds as $build_name) {
 	}
 
 	try {
-		$ext->preparePackage();
+		$pkg_file = $ext->preparePackage();
 	} catch (Exception $e) {
 		echo $e->getMessage() . "\n";
 	}
 
 	/*rm\upload_build_result_ftp_curl($toupload_dir, $branch_name . '/r' . $last_rev);*/
+	/* XXX mail the logs */
 
+	/* XXX remove $toupload_dir */
 	$build->clean();
 	$ext->cleanup();
 }

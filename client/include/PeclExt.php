@@ -136,14 +136,27 @@ class PeclExt
 		$target = TMP_DIR . DIRECTORY_SEPARATOR . $this->getPackageName();
 
 		$dll_name = 'php_' . $this->name . '.dll';
-		if (!copy($base . DIRECTORY_SEPARATOR . $dll_name, $target . DIRECTORY_SEPARATOR . $dll_name)) {
+		$dll_file = $target . DIRECTORY_SEPARATOR . $dll_name;
+		if (!copy($base . DIRECTORY_SEPARATOR . $dll_name, $dll_file)) {
 			throw new \Exception("Couldn't copy '$dll_name' into '$target'");
 		}
 		
 		$pdb_name = 'php_' . $this->name . '.pdb';
-		if (!copy($base . DIRECTORY_SEPARATOR . $pdb_name, $target . DIRECTORY_SEPARATOR . $pdb_name)) {
+		$pdb_file = $target . DIRECTORY_SEPARATOR . $pdb_name;
+		if (!copy($base . DIRECTORY_SEPARATOR . $pdb_name, $pdb_file)) {
 			throw new \Exception("Couldn't copy '$pdb_name' into '$target'");
 		}
+
+
+		/* pack */
+		$zip_file = TMP_DIR . DIRECTORY_SEPARATOR . $this->getPackageName() . '.zip';
+		$zip_cmd = $this->zip_cmd . ' -9 -D -j ' . $zip_file . ' ' . $dll_file . ' ' . $pdb_file;
+		system($zip_cmd, $status);
+		if ($status) {
+			throw new \Exception("Couldn't zip files for $zip_file");
+		}
+
+		return $zip_file;
 	}
 
 	public function __call($name, $args)
