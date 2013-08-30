@@ -216,4 +216,9 @@ class PeclBuildVC {
 	{
 
 	}
+
+	function getObjDir()
+	{
+		return $this->obj_dir;
+	}
 }

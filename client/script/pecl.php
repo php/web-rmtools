@@ -32,7 +32,6 @@ if (!is_dir($build_dir_parent)) {
 
 $builds = $branch->getBuildList('windows');
 
-$has_build_errors = false;
 $build_errors = array();
 
 /* Each windows configuration from the ini for the given PHP version will be built */
@@ -67,36 +66,58 @@ foreach ($builds as $build_name) {
 
 	try {
 		$build->setSourceDir($build_src_path);
-		$ext->putSourcesIntoBranch();exit();
+
+		$ext->unpack();
+		$ext->check();
+		$ext->putSourcesIntoBranch();
+
+	} catch (Exception $e) {
+		echo $e->getMessage() . "\n";
+		$ext->cleanup();
+		exit(3);
+	}
+
+	try {
 		$build->buildconf();
 		if ($branch->config->getPGO() == 1)  {
 			echo "Creating PGI build\n";
-			$build->configure(' "--enable-pgi" ');
+			$build->configure(' "--enable-pgi" ' . $ext->getConfigureLine());
 		}
 		else {
-			$build->configure();
+			$build->configure($ext->getConfigureLine());
 		}
 		$build->make();
 		$html_make_log = $build->getMakeLogParsed();
-		//$build->makeArchive();
 	} catch (Exception $e) {
 		echo $e->getMessage() . "\n";
 		echo $build->log_buildconf;
 	}
-	continue;
 
 	/* PGO stuff would come here */
 
-	/*$stats = $build->getStats();
+	$log_base = $toupload_dir . '/logs';
+	file_put_contents($log_base . '/buildconf-' . $ext->getPackageName() . '.txt', $build->log_buildconf);
+	file_put_contents($log_base . '/configure-' . $ext->getPackageName() . '.txt', $build->log_configure);
+	file_put_contents($log_base . '/make-' . $ext->getPackageName() . '.txt', $build->log_make);
+
+	$stats = $build->getStats();
 
 	if ($stats['error'] > 0) {
-		$has_build_errors = true;
+		file_put_contents($log_base . '/error-' . $ext->getPackageName() . '.txt', $build->compiler_log_parser->getErrors());
 	}
 
-	rm\upload_build_result_ftp_curl($toupload_dir, $branch_name . '/r' . $last_rev);*/
+	try {
+		$ext->preparePackage();
+	} catch (Exception $e) {
+		echo $e->getMessage() . "\n";
+	}
+
+	/*rm\upload_build_result_ftp_curl($toupload_dir, $branch_name . '/r' . $last_rev);*/
+
 	$build->clean();
-	//rmdir($build_src_path);
+	$ext->cleanup();
 }
+
 
 /*Upload the branch DB */
 /*$try = 0;

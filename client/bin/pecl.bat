@@ -86,3 +86,4 @@ del c:\php-sdk\locks\pecl.lock >> %LOG_FILE% 2<&1
 
 :EXIT_LOCKED
 echo .
+

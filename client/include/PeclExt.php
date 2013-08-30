@@ -13,6 +13,10 @@ class PeclExt
 	protected $build;
 	protected $tar_cmd = 'c:\apps\git\bin\tar.exe';
 	protected $gzip_cmd = 'c:\apps\git\bin\gzip.exe';
+	protected $zip_cmd = 'c:\php-sdk\bin\zip.exe';
+	protected $tmp_extract = NULL;
+	protected $tmp_package_xml = NULL;
+	protected $ext_dir_in_src_path = NULL;
 
 	public function __construct($tgz_path, $build)
 	{
@@ -48,14 +52,13 @@ class PeclExt
 
 	public function unpack()
 	{
-		$tmp_path =  TMP_DIR . '/' . $this->getPackageName();
+		$tmp_path =  TMP_DIR . '/' . $this->getPackageName() . '-unpack';
 		if (!file_exists($tmp_path) && !mkdir($tmp_path)) {
 			throw new \Exception("Couldn't create temporary dir");
 		}
 
-
 		$tmp_name =  $tmp_path . '/' . basename($this->tgz_path);
-		if (!rename($this->tgz_path, $tmp_name)) {
+		if (!copy($this->tgz_path, $tmp_name)) {
 			throw new \Exception("Couldn't move the tarball to '$tmp_name'");
 		}
 
@@ -82,26 +85,65 @@ class PeclExt
 
 		chdir($old_cwd);
 
-		$ret = realpath($tmp_path . '/' .  basename($this->tgz_path, '.tgz'));
+		$this->tmp_extract = realpath($tmp_path . '/' .  basename($this->tgz_path, '.tgz'));
+
+		if (file_exists($tmp_path . DIRECTORY_SEPARATOR . 'package.xml')) {
+			$this->tmp_package_xml = $tmp_path . DIRECTORY_SEPARATOR . 'package.xml';
+		}
 
 		$this->tgz_path = NULL;
 
-		return $ret;
+		return $this->tmp_extract;
 	}
 
 	public function putSourcesIntoBranch()
 	{
-		$tmp_path = $this->unpack();
+		if (!$this->tmp_extract) {
+			$this->tmp_extract = $this->unpack();
+		}
 		$ext_dir = $this->build->getSourceDir() . DIRECTORY_SEPARATOR . 'ext';
 
-		$this_ext_dir_path = $ext_dir . DIRECTORY_SEPARATOR . $this->name;
-		$res = copy_r($tmp_path, $this_ext_dir_path);
+		$this->ext_dir_in_src_path = $ext_dir . DIRECTORY_SEPARATOR . $this->name;
+		$res = copy_r($this->tmp_extract, $this->ext_dir_in_src_path);
 		if (!$res) {
-			throw new \Exception("Failed to copy to '$this_ext_dir_path'");
+			throw new \Exception("Failed to copy to '{$this->ext_dir_in_src_path}'");
 		}
-		rmdir_rf($tmp_path);
 
-		return $this_ext_dir_path;
+		return $this->ext_dir_in_src_path;
+	}
+
+	public function getConfigureLine()
+	{
+		/* XXX check if it's enable or with,
+			what deps it has
+			what additional options it has
+			what non core exts it deps on 
+		*/
+
+		$ret = '';
+
+		$ret = ' "--enable-' . $this->name . '=shared" ';
+
+
+		return $ret;
+	}
+
+	public function preparePackage()
+	{
+		/* XXX check if there are any dep dll/pdb to put together */
+		$sub = $this->build->thread_safe ? 'Release_TS' : 'Release';
+		$base = $this->build->getObjDir() . DIRECTORY_SEPARATOR . $sub;
+		$target = TMP_DIR . DIRECTORY_SEPARATOR . $this->getPackageName();
+
+		$dll_name = 'php_' . $this->name . '.dll';
+		if (!copy($base . DIRECTORY_SEPARATOR . $dll_name, $target . DIRECTORY_SEPARATOR . $dll_name)) {
+			throw new \Exception("Couldn't copy '$dll_name' into '$target'");
+		}
+		
+		$pdb_name = 'php_' . $this->name . '.pdb';
+		if (!copy($base . DIRECTORY_SEPARATOR . $pdb_name, $target . DIRECTORY_SEPARATOR . $pdb_name)) {
+			throw new \Exception("Couldn't copy '$pdb_name' into '$target'");
+		}
 	}
 
 	public function __call($name, $args)
@@ -117,4 +159,29 @@ class PeclExt
 
 		throw new \Exception("Unknown dynamic method called");
 	}
+
+	public function cleanup()
+	{
+		if ($this->tmp_extract) {
+			rmdir_rf(dirname($this->tmp_extract));
+		}
+		/*if ($this->tmp_package_xml) {
+			unlink($this->tmp_package_xml);
+		}*/
+		if ($this->ext_dir_in_src_path) {
+			rmdir_rf($this->ext_dir_in_src_path);
+		}
+	}
+
+	public function check()
+	{
+		if (!$this->tmp_extract) {
+			throw new \Exception("Tarball isn't yet extracted");
+		}
+
+		if (!file_exists($this->tmp_extract . DIRECTORY_SEPARATOR . 'config.w32')) {
+			throw new \Exception("config.w32 not found");
+		}
+	}
 }
+
