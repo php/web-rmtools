@@ -97,14 +97,13 @@ foreach ($builds as $build_name) {
 		}
 
 		if (!preg_match(',^\|\s+' . $ext->getName() . '\s+\|\s+shared\s+\|,Sm', $build->log_configure)) {
-			throw new Exception($ext->getName() . 'is not enabled, skip make phase');
+			throw new Exception($ext->getName() . ' is not enabled, skip make phase');
 		}
 
 		$build->make();
 		//$html_make_log = $build->getMakeLogParsed();
 	} catch (Exception $e) {
 		echo $e->getMessage() . "\n";
-		echo $build->log_buildconf;
 	}
 
 	/* XXX PGO stuff would come here */
@@ -132,6 +131,8 @@ foreach ($builds as $build_name) {
 	$build->clean();
 	$ext->cleanup();
 	/*rm\rmdir_rf($toupload_dir);*/
+
+	echo "\n";
 }
 
 echo "Done.\n";

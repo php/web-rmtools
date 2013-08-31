@@ -146,15 +146,15 @@ class PeclExt
 				}
 				$extra_lib[] = $some_lib_path;	
 
-				/* Many libs put headers into include and include/somelib, so lets cover both */
 				$some_lib_inc_path =  $lib_path . DIRECTORY_SEPARATOR . 'include';
 				if (!file_exists($some_lib_inc_path)) {
 					throw new \Exception("Path '$some_lib_inc_path' doesn't exist");
 				}
-
 				$extra_inc[] = $some_lib_inc_path;	
-				if (file_exists($some_lib_inc_path . DIRECTORY_SEPARATOR . $lib)) {
-					$extra_inc[] = $some_lib_inc_path . DIRECTORY_SEPARATOR . $lib;	
+
+				$dirs = glob("$some_lib_inc_path/*", GLOB_ONLYDIR);
+				foreach ($dirs as $dir) {
+					$extra_inc[] = $dir;
 				}
 			}
 
