@@ -32,8 +32,6 @@ if (!is_dir($build_dir_parent)) {
 
 $builds = $branch->getBuildList('windows');
 
-$build_errors = array();
-
 /* Each windows configuration from the ini for the given PHP version will be built */
 foreach ($builds as $build_name) {
 
@@ -46,14 +44,12 @@ foreach ($builds as $build_name) {
 		$ext = new rm\PeclExt($ext_tgz, $build);
 	} catch (Exception $e) {
 		echo $e->getMessage() . "\n";
-		exit(3);
+		continue;
 	}
 
 	// looks like php_http-2.0.0beta4-5.3-nts-vc9-x86
 	$ext_build_name = $ext->getPackageName();
 
-	echo "Starting build for $ext_build_name\n";
-	echo "running build in <$build_src_path>\n";
 
 	$toupload_dir = TMP_DIR . '/' . $ext_build_name;
 	if (!is_dir($toupload_dir)) {
@@ -64,6 +60,8 @@ foreach ($builds as $build_name) {
 		mkdir($toupload_dir . '/logs', 0655, true);
 	}
 
+	echo "Preparing to build '$ext_build_name'\n";
+
 	try {
 		$build->setSourceDir($build_src_path);
 
@@ -73,27 +71,38 @@ foreach ($builds as $build_name) {
 
 	} catch (Exception $e) {
 		echo $e->getMessage() . "\n";
+		$build->clean();
 		$ext->cleanup();
-		exit(3);
+		/*rm\rmdir_rf($toupload_dir);*/
+
+		/* XXX mail the ext dev what the error was, if it's something in the check
+			phase like missing config.w32, it's interesting for sure.
+			and no sense to continue as something in ext setup went wrong */
+		continue;
 	}
 
+	echo "Running build in <$build_src_path>\n";
 	try {
+
 		$build->buildconf();
+
+		$ext_conf_line = $ext->getConfigureLine();
+		echo "Extension specific config: $ext_conf_line\n";
 		if ($branch->config->getPGO() == 1)  {
 			echo "Creating PGI build\n";
-			$build->configure(' "--enable-pgi" ' . $ext->getConfigureLine());
+			$build->configure(' "--enable-pgi" ' . $ext_conf_line);
 		}
 		else {
-			$build->configure($ext->getConfigureLine());
+			$build->configure($ext_conf_line);
 		}
 		$build->make();
-		$html_make_log = $build->getMakeLogParsed();
+		//$html_make_log = $build->getMakeLogParsed();
 	} catch (Exception $e) {
 		echo $e->getMessage() . "\n";
 		echo $build->log_buildconf;
 	}
 
-	/* PGO stuff would come here */
+	/* XXX PGO stuff would come here */
 
 	$log_base = $toupload_dir . '/logs';
 	file_put_contents($log_base . '/buildconf-' . $ext->getPackageName() . '.txt', $build->log_buildconf);
@@ -113,20 +122,12 @@ foreach ($builds as $build_name) {
 	}
 
 	/*rm\upload_build_result_ftp_curl($toupload_dir, $branch_name . '/r' . $last_rev);*/
-	/* XXX mail the logs */
+	/* XXX mail the logs from above */
 
-	/* XXX remove $toupload_dir */
 	$build->clean();
 	$ext->cleanup();
+	/*rm\rmdir_rf($toupload_dir);*/
 }
-
-
-/*Upload the branch DB */
-/*$try = 0;
-do {
-	$status = rm\upload_file_curl($branch->db_path, $branch_name . '/' . basename($branch->db_path));
-	$try++;
-} while ( $status === false && $try < 10 );*/
 
 echo "Done.\n";
 

@@ -118,6 +118,70 @@ class PeclExt
 		return $this->ext_dir_in_src_path;
 	}
 
+	protected function buildConfigureLine(array $data)
+	{
+		$ret = '';
+
+		if (!isset($data['type'])
+			|| !in_array($data['type'], array('with', 'enable'))) {
+			throw new \Exception("Unknown extention configure type, expected enable/with");
+		}
+
+		$ret = ' "--' . $data['type'] . '-' . $this->name . '=shared" ';
+
+		if (isset($data['libs']) && $data['libs']) {
+			$data['libs'] = !is_array($data['libs']) ? array($data['libs']) : $data['libs'];
+			$deps_path = $this->build->branch->config->getPeclDepsBase();
+			$extra_lib = $extra_inc = array();
+
+			foreach($data['libs'] as $lib) {
+				if (!$lib) {
+					continue;
+				}
+
+				$lib_path = $deps_path . DIRECTORY_SEPARATOR . $lib;
+
+				$some_lib_path = $lib_path . DIRECTORY_SEPARATOR . 'lib';
+				if (!file_exists($some_lib_path)) {
+					throw new \Exception("Path '$some_lib_path' doesn't exist");
+				}
+				$extra_lib[] = $some_lib_path;	
+
+				/* Many libs put headers into include and include/somelib, so lets cover both */
+				$some_lib_inc_path =  $lib_path . DIRECTORY_SEPARATOR . 'include';
+				if (!file_exists($some_lib_inc_path)) {
+					throw new \Exception("Path '$some_lib_inc_path' doesn't exist");
+				}
+
+				$extra_inc[] = $some_lib_inc_path;	
+				if (file_exists($some_lib_inc_path . DIRECTORY_SEPARATOR . $lib)) {
+					$extra_inc[] = $some_lib_inc_path . DIRECTORY_SEPARATOR . $lib;	
+				}
+			}
+
+			if (!empty($extra_lib)) {
+				$ret .= ' "--with-extra-libs=' . implode(';', $extra_lib) . '" '
+					. ' "--with-extra-includes=' . implode(';', $extra_inc) . '" ';
+			}
+		}
+
+		if (isset($data['opts']) && $data['opts']) {
+			$data['opts'] = !is_array($data['opts']) ? array($data['opts']) : $data['opts'];
+			foreach($data['opts'] as $opt) {
+				if ($opt) {
+					/* XXX simple check for opt syntax */
+					$ret .= ' "' . $opt . '" ';
+				}
+			}
+		}
+
+		if (isset($data['exts']) && $data['exts']) {
+			/* TODO */
+		}
+
+		return $ret;
+	}
+
 	public function getConfigureLine()
 	{
 		/* XXX check if it's enable or with,
@@ -126,12 +190,21 @@ class PeclExt
 			what non core exts it deps on 
 		*/
 
-		$ret = '';
+		$config = NULL;
 
-		$ret = ' "--enable-' . $this->name . '=shared" ';
+		/* First look if it's on the known ext list */
+		$known_path = __DIR__ . '/../data/config/pecl/exts.ini';
+		$exts = parse_ini_file($known_path, true, INI_SCANNER_RAW);
+
+		foreach ($exts as $name => $conf) {
+			if ($name === $this->name) {
+				$config = $conf;
+			}
+		}
 
 
-		return $ret;
+		return $this->buildConfigureLine($config);
+
 	}
 
 	public function preparePackage()
