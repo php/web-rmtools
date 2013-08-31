@@ -93,10 +93,7 @@ class PeclExt
 
 		if (file_exists($tmp_path . DIRECTORY_SEPARATOR . 'package.xml')) {
 			$this->tmp_package_xml_path = $tmp_path . DIRECTORY_SEPARATOR . 'package.xml';
-			$this->package_xml = new \DOMDocument;
-			$this->package_xml->loadXML(
-				file_get_contents($this->tmp_package_xml_path)
-			);
+			$this->package_xml = new \SimpleXMLElement($this->tmp_package_xml_path, 0, true);
 		}
 
 		$this->tgz_path = NULL;
@@ -194,9 +191,9 @@ class PeclExt
 			what non core exts it deps on 
 		*/
 
-		$config = NULL;
+		$config = array();
 
-		/* First look if it's on the known ext list */
+		/* look if it's on the known ext list */
 		$known_path = __DIR__ . '/../data/config/pecl/exts.ini';
 		$exts = parse_ini_file($known_path, true, INI_SCANNER_RAW);
 
@@ -206,6 +203,22 @@ class PeclExt
 			}
 		}
 
+		/* if it's not known yet, we have to gather the info */
+		$config_w32_path = $this->tmp_extract_path . DIRECTORY_SEPARATOR . 'config.w32';
+		foreach (array('enable' => 'ARG_ENABLE', 'with' => 'ARG_WITH') as $arg => $str) {
+			if (preg_match(',' . $str .'.*' . $this->name . ',Sm', file_get_contents($config_w32_path))) {
+				$config['type'] = $arg;
+			}
+		}
+		if (!isset($config['type'])) {
+			throw new Exception("Couldn't determine whether 'with' or 'enable' configure option to use");
+		}
+
+		/* XXX Extension deps have to be checked here using
+		$this->package_xml->dependencies; */
+
+		/* XXX Library deps have to be checked using 
+		$this->tmp_extract_path . DIRECTORY_SEPARATOR . 'lib_versions.txt'; */
 
 		return $this->buildConfigureLine($config);
 
@@ -221,6 +234,9 @@ class PeclExt
 
 		$dll_name = 'php_' . $this->name . '.dll';
 		$dll_file = $target . DIRECTORY_SEPARATOR . $dll_name;
+		if (!file_exists($base . DIRECTORY_SEPARATOR . $dll_name)) {
+			throw new \Exception("'$dll_name' doesn't exist after build, build failed");
+		}
 		if (!copy($base . DIRECTORY_SEPARATOR . $dll_name, $dll_file)) {
 			throw new \Exception("Couldn't copy '$dll_name' into '$target'");
 		}
@@ -228,6 +244,9 @@ class PeclExt
 		
 		$pdb_name = 'php_' . $this->name . '.pdb';
 		$pdb_file = $target . DIRECTORY_SEPARATOR . $pdb_name;
+		if (!file_exists($base . DIRECTORY_SEPARATOR . $pdb_name)) {
+			throw new \Exception("'$pdb_name' doesn't exist after build");
+		}
 		if (!copy($base . DIRECTORY_SEPARATOR . $pdb_name, $pdb_file)) {
 			throw new \Exception("Couldn't copy '$pdb_name' into '$target'");
 		}
@@ -321,8 +340,31 @@ class PeclExt
 		}
 
 		if (!file_exists($this->tmp_extract_path . DIRECTORY_SEPARATOR . 'config.w32')) {
-			throw new \Exception("config.w32 not found");
+			throw new \Exception("config.w32 doesn't exist in the tarball");
 		}
+
+		$min_php_ver = (string)$this->package_xml->dependencies->required->php->min;
+		$max_php_ver = (string)$this->package_xml->dependencies->required->php->max;
+		$php_ver = '';
+
+		$ver_hdr = $this->build->getSourceDir() . '/main/php_version.h';
+		if(preg_match(',#define PHP_VERSION "(.*)",Sm', file_get_contents($ver_hdr), $m)) {
+			$php_ver = $m[1];
+		} else {
+			throw new \Exception("Couldn't parse PHP sources for version");
+		}
+
+		if ($min_php_ver && version_compare($php_ver, $min_php_ver) < 0) {
+			throw new \Exception("At least PHP '$min_php_ver' required, got '$php_ver'");
+		}
+
+		if ($max_php_ver && version_compare($php_ver, $max_php_ver) >= 0) {
+			throw new \Exception("At most PHP '$max_php_ver' required, got '$php_ver'");
+		}
+
+		//var_dump($php_ver, $min_php_ver, $max_php_ver, $this->package_xml->dependencies);die;
+
+
 	}
 }
 
