@@ -95,6 +95,11 @@ foreach ($builds as $build_name) {
 		else {
 			$build->configure($ext_conf_line);
 		}
+
+		if (!preg_match(',^\|\s+' . $ext->getName() . '\s+\|\s+shared\s+\|,Sm', $build->log_configure)) {
+			throw new Exception($ext->getName() . 'is not enabled, skip make phase');
+		}
+
 		$build->make();
 		//$html_make_log = $build->getMakeLogParsed();
 	} catch (Exception $e) {

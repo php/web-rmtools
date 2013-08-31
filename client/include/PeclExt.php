@@ -14,10 +14,12 @@ class PeclExt
 	protected $tar_cmd = 'c:\apps\git\bin\tar.exe';
 	protected $gzip_cmd = 'c:\apps\git\bin\gzip.exe';
 	protected $zip_cmd = 'c:\php-sdk\bin\zip.exe';
+	protected $deplister_cmd = 'c:\apps\bin\deplister.exe';
 	protected $tmp_extract_path = NULL;
 	protected $tmp_package_xml_path = NULL;
 	protected $ext_dir_in_src_path = NULL;
 	protected $package_xml = NULL;
+	protected $configure_data = NULL;
 
 	public function __construct($tgz_path, $build)
 	{
@@ -179,6 +181,8 @@ class PeclExt
 			/* TODO */
 		}
 
+		$this->configure_data = $data;
+
 		return $ret;
 	}
 
@@ -213,23 +217,68 @@ class PeclExt
 		$sub = $this->build->thread_safe ? 'Release_TS' : 'Release';
 		$base = $this->build->getObjDir() . DIRECTORY_SEPARATOR . $sub;
 		$target = TMP_DIR . DIRECTORY_SEPARATOR . $this->getPackageName();
+		$files_to_zip = array();
 
 		$dll_name = 'php_' . $this->name . '.dll';
 		$dll_file = $target . DIRECTORY_SEPARATOR . $dll_name;
 		if (!copy($base . DIRECTORY_SEPARATOR . $dll_name, $dll_file)) {
 			throw new \Exception("Couldn't copy '$dll_name' into '$target'");
 		}
+		$files_to_zip[] = $dll_file;
 		
 		$pdb_name = 'php_' . $this->name . '.pdb';
 		$pdb_file = $target . DIRECTORY_SEPARATOR . $pdb_name;
 		if (!copy($base . DIRECTORY_SEPARATOR . $pdb_name, $pdb_file)) {
 			throw new \Exception("Couldn't copy '$pdb_name' into '$target'");
 		}
+		$files_to_zip[] = $pdb_file;
+
+		/* Walk the deps if any, but look for them in the lib deps folders only.
+			the deplister will for sure find something like kernel32.dll,
+			but that's not what we need. */
+		$depl_cmd = $this->deplister_cmd . ' ' . $dll_file;
+		$deps_path = $this->build->branch->config->getPeclDepsBase();
+		exec($depl_cmd, $out);
+		foreach($out as $ln) {
+			$dll_name = explode(',', $ln)[0];
+			$dll_file = $target . DIRECTORY_SEPARATOR . $dll_name;
+			$pdb_name = basename($dll_name, '.dll') . '.pdb';
+			$pdb_file = $target . DIRECTORY_SEPARATOR . $pdb_name;
+
+			foreach ($this->configure_data['libs'] as $lib) {
+				$look_for = $deps_path
+					. DIRECTORY_SEPARATOR . $lib
+					. DIRECTORY_SEPARATOR . 'bin'
+					. DIRECTORY_SEPARATOR . $dll_name;
+
+				if(file_exists($look_for)) {
+					if (!copy($look_for, $dll_file)) {
+						throw new \Exception("The dependency dll '$dll_name' "
+						. "was found but couldn't be copied into '$target'");
+					}
+					$files_to_zip[] = $dll_file;
+				}
+				
+				$look_for = $deps_path
+					. DIRECTORY_SEPARATOR . $lib
+					. DIRECTORY_SEPARATOR . 'bin'
+					. DIRECTORY_SEPARATOR . $pdb_name;
+
+
+				if(file_exists($look_for)) {
+					if (!copy($look_for, $pdb_file)) {
+						throw new \Exception("The dependency pdb '$dll_name' "
+						. "was found but couldn't be copied into '$target'");
+					}
+					$files_to_zip[] = $pdb_file;
+				}	
+			}
+		}
 
 
 		/* pack */
 		$zip_file = TMP_DIR . DIRECTORY_SEPARATOR . $this->getPackageName() . '.zip';
-		$zip_cmd = $this->zip_cmd . ' -9 -D -j ' . $zip_file . ' ' . $dll_file . ' ' . $pdb_file;
+		$zip_cmd = $this->zip_cmd . ' -9 -D -j ' . $zip_file . ' ' . implode(' ', $files_to_zip);
 		system($zip_cmd, $status);
 		if ($status) {
 			throw new \Exception("Couldn't zip files for $zip_file");
