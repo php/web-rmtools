@@ -220,7 +220,7 @@ class PeclExt
 			}
 		}
 		if (!isset($config['type'])) {
-			throw new Exception("Couldn't determine whether 'with' or 'enable' configure option to use");
+			throw new \Exception("Couldn't determine whether 'with' or 'enable' configure option to use");
 		}
 
 		/* XXX Extension deps have to be checked here using
@@ -346,6 +346,7 @@ class PeclExt
 		}
 
 		if (!file_exists($this->tmp_extract_path . DIRECTORY_SEPARATOR . 'config.w32')) {
+			$this->cleanup();
 			throw new \Exception("config.w32 doesn't exist in the tarball");
 		}
 
@@ -358,14 +359,17 @@ class PeclExt
 			if(preg_match(',#define PHP_VERSION "(.*)",Sm', file_get_contents($ver_hdr), $m)) {
 				$php_ver = $m[1];
 			} else {
+				$this->cleanup();
 				throw new \Exception("Couldn't parse PHP sources for version");
 			}
 
 			if ($min_php_ver && version_compare($php_ver, $min_php_ver) < 0) {
+				$this->cleanup();
 				throw new \Exception("At least PHP '$min_php_ver' required, got '$php_ver'");
 			}
 
 			if ($max_php_ver && version_compare($php_ver, $max_php_ver) >= 0) {
+				$this->cleanup();
 				throw new \Exception("At most PHP '$max_php_ver' required, got '$php_ver'");
 			}
 		}

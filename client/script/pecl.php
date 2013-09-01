@@ -47,6 +47,8 @@ if (!is_dir($build_dir_parent)) {
 
 $builds = $branch->getBuildList('windows');
 
+echo "Using <$ext_tgz>\n";
+
 /* Each windows configuration from the ini for the given PHP version will be built */
 foreach ($builds as $build_name) {
 
@@ -63,8 +65,6 @@ foreach ($builds as $build_name) {
 	} catch (Exception $e) {
 		echo $e->getMessage() . "\n";
 		$build->clean();
-		$ext->cleanup();
-		rm\rmdir_rf($toupload_dir);
 
 		/* XXX mail the ext dev what the error was, if it's something in the check
 			phase like missing config.w32, it's interesting for sure.
