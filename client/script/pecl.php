@@ -47,6 +47,9 @@ if (!is_dir($build_dir_parent)) {
 
 $builds = $branch->getBuildList('windows');
 
+/* be optimistic */
+$build_error = 0;
+
 echo "Using <$ext_tgz>\n";
 
 /* Each windows configuration from the ini for the given PHP version will be built */
@@ -65,6 +68,7 @@ foreach ($builds as $build_name) {
 	} catch (Exception $e) {
 		echo $e->getMessage() . "\n";
 		$build->clean();
+		$build_error++;
 
 		/* XXX mail the ext dev what the error was, if it's something in the check
 			phase like missing config.w32, it's interesting for sure.
@@ -109,6 +113,7 @@ foreach ($builds as $build_name) {
 		//$html_make_log = $build->getMakeLogParsed();
 	} catch (Exception $e) {
 		echo $e->getMessage() . "\n";
+		$build_error++;
 	}
 
 	/* XXX PGO stuff would come here */
@@ -128,6 +133,7 @@ foreach ($builds as $build_name) {
 		$pkg_file = $ext->preparePackage();
 	} catch (Exception $e) {
 		echo $e->getMessage() . "\n";
+		$build_error++;
 	}
 
 	/*rm\upload_build_result_ftp_curl($toupload_dir, $branch_name . '/r' . $last_rev);*/
@@ -141,4 +147,6 @@ foreach ($builds as $build_name) {
 }
 
 echo "Done.\n";
+
+exit($build_error);
 

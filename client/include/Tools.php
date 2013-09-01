@@ -331,3 +331,13 @@ function copy_r($from, $to)
 	return false;
 }
 
+function xmail($from, $to, $subject, $text, array $attachment = array())
+{
+	$header = array();
+	$boundary = '-----=' . md5(uniqid(mt_rand(), 1));
+
+	$header[] = "MIME-Version: 1.0";
+	$header[] = "Content-Type: multipart/mixed;";
+	$header[] = "boundary=\"$boundary\"";
+}
+
