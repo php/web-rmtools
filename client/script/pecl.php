@@ -6,15 +6,30 @@ include __DIR__ . '/../include/PeclExt.php';
 
 use rmtools as rm;
 
-if ($argc < 3 || $argc > 4) {
-	echo "Usage: snapshot <config name> </path/to/ext/tgz>\n";
-	exit();
+
+$shortopts = NULL; //"c:p:mu";
+$longopts = array("config:", "package:", "mail", "upload");
+
+$options = getopt($shortopts, $longopts);
+
+$branch_name = isset($options['config']) ? $options['config'] : NULL;
+$ext_tgz = isset($options['package']) ? $options['package'] : NULL;
+$mail_maintainers = isset($options['mail']);
+$upload = isset($options['upload']);
+
+if (NULL == $branch_name || NULL == $ext_tgz) {
+	echo "Usage: pecl.php [OPTION] ...\n";
+	echo "  --config     Configuration file name without suffix, required.\n";
+	echo "  --package    Path to the PECL package, required.\n";
+	echo "  --mail       Send build logs to the extension maintainers, optional\n";
+	echo "  --upload     Upload the builds to the windows.hpp.net, optional\n";
+	echo "\n";
+	echo "Example: pecl --config=php55_x64 --package=c:\pecl_in_pkg\some-1.0.0.tgz\n";
+	echo "\n";
+	exit(0);
 }
 
-$branch_name = $argv[1];
-$ext_tgz = $argv[2];
 $config_path = __DIR__ . '/../data/config/pecl/' . $branch_name . '.ini';
-
 
 $branch = new rm\PeclBranch($config_path);
 
@@ -39,6 +54,7 @@ foreach ($builds as $build_name) {
 	$log = rm\exec_single_log('mklink /J ' . $build_src_path . ' ' . $build_src_path);
 
 	$build = $branch->createBuildInstance($build_name);
+	$build->setSourceDir($build_src_path);
 
 	try {
 		$ext = new rm\PeclExt($ext_tgz, $build);
@@ -63,10 +79,6 @@ foreach ($builds as $build_name) {
 	echo "Preparing to build '$ext_build_name'\n";
 
 	try {
-		$build->setSourceDir($build_src_path);
-
-		$ext->unpack();
-		$ext->check();
 		$ext->putSourcesIntoBranch();
 
 	} catch (Exception $e) {

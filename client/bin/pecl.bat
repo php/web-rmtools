@@ -74,10 +74,10 @@ SET VC11_X64_SHELL=%comspec% /k ""C:\Program Files (x86)\Microsoft Visual Studio
 REM Run pecl.php
 SET BISON_SIMPLE=c:\php-sdk\bin\bison.simple
 rem XXX iterate the c:\pecl_in_pkg here and delete the packages after successful build
-c:\php-sdk\php\php.exe %BAT_DIR%\..\script\pecl.php pecl55_x64 C:\pecl_in_pkg\amqp-1.2.0.tgz 
-rem c:\php-sdk\php\php.exe %BAT_DIR%\..\script\pecl.php pecl55_x86 C:\pecl_in_pkg\dio-0.0.7.tgz 
-rem c:\php-sdk\php\php.exe %BAT_DIR%\..\script\pecl.php pecl54 C:\pecl_in_pkg\dio-0.0.7.tgz 
-rem c:\php-sdk\php\php.exe %BAT_DIR%\..\script\pecl.php pecl53 C:\pecl_in_pkg\dio-0.0.7.tgz 
+c:\php-sdk\php\php.exe %BAT_DIR%\..\script\pecl.php --config=pecl55_x64 --package=C:\pecl_in_pkg\amqp-1.2.0.tgz 
+c:\php-sdk\php\php.exe %BAT_DIR%\..\script\pecl.php --config=pecl55_x86 --package=C:\pecl_in_pkg\amqp-1.2.0.tgz 
+c:\php-sdk\php\php.exe %BAT_DIR%\..\script\pecl.php --config=pecl54 --package=C:\pecl_in_pkg\amqp-1.2.0.tgz 
+c:\php-sdk\php\php.exe %BAT_DIR%\..\script\pecl.php --config=pecl53 --package=C:\pecl_in_pkg\amqp-1.2.0.tgz 
 SET PATH=%OLD_PATH%
 
 echo Done.>> %LOG_FILE%
