@@ -171,6 +171,8 @@ class PeclExt
 				$ret .= ' "--with-extra-libs=' . implode(';', $extra_lib) . '" '
 					. ' "--with-extra-includes=' . implode(';', $extra_inc) . '" ';
 			}
+		} else {
+			$data['libs'] = array();
 		}
 
 		if (isset($data['opts']) && $data['opts']) {
@@ -181,10 +183,14 @@ class PeclExt
 					$ret .= ' "' . $opt . '" ';
 				}
 			}
+		} else {
+			$data['opts'] = array();
 		}
 
 		if (isset($data['exts']) && $data['exts']) {
 			/* TODO */
+		} else {
+			$data['exts'] = array();
 		}
 
 		$this->configure_data = $data;
