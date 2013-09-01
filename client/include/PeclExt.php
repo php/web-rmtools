@@ -16,7 +16,6 @@ class PeclExt
 	protected $zip_cmd = 'c:\php-sdk\bin\zip.exe';
 	protected $deplister_cmd = 'c:\apps\bin\deplister.exe';
 	protected $tmp_extract_path = NULL;
-	protected $tmp_package_xml_path = NULL;
 	protected $ext_dir_in_src_path = NULL;
 	protected $package_xml = NULL;
 	protected $configure_data = NULL;
@@ -29,18 +28,29 @@ class PeclExt
 			throw new \Exception("Pecl package should end with .tgz");
 		}
 
-		/* Should open package.xml then and retry, but normally the below should work. */
-		$tmp = explode('-', basename($tgz_path, '.tgz'));
-		$this->name = $tmp[0];
-		$this->version = $tmp[1];
-
-		if (!$this->name || !$this->version) {
-			/* XXX do unpack here already and get the name/version data */
-			throw new \Exception("Couldn't parse extension name or version from the filename");
-		}
-
 		$this->tgz_path = $tgz_path;
 		$this->build = $build;
+
+		$this->unpack();
+		$this->check();
+
+		/* Setup some stuff */
+		if ($this->package_xml) {
+			$this->name = (string)$this->package_xml->name;
+			$this->version = (string)$this->package_xml->version->release;
+		}
+
+		if (!$this->name || !$this->version) {
+			/* This is the fallback if there's no package.xml  */
+			$tmp = explode('-', basename($tgz_path, '.tgz'));
+			$this->name = !$this->name ?: $tmp[0];
+			$this->version = !$this->version ?: $tmp[1];
+
+			if (!$this->name || !$this->version) {
+				throw new \Exception("Couldn't parse extension name or version from the filename");
+			}
+		}
+
 	}
 
 	public function getPackageName()
@@ -54,9 +64,11 @@ class PeclExt
 			. '-' . $this->build->architecture;
 	}
 
+	/* XXX support more compression formats, for now tgz only*/
 	public function unpack()
 	{
-		$tmp_path =  TMP_DIR . '/' . $this->getPackageName() . '-unpack';
+		$tmp_path = tempnam(TMP_DIR, 'unpack');
+		unlink($tmp_path);
 		if (!file_exists($tmp_path) && !mkdir($tmp_path)) {
 			throw new \Exception("Couldn't create temporary dir");
 		}
@@ -92,8 +104,8 @@ class PeclExt
 		$this->tmp_extract_path = realpath($tmp_path . '/' .  basename($this->tgz_path, '.tgz'));
 
 		if (file_exists($tmp_path . DIRECTORY_SEPARATOR . 'package.xml')) {
-			$this->tmp_package_xml_path = $tmp_path . DIRECTORY_SEPARATOR . 'package.xml';
-			$this->package_xml = new \SimpleXMLElement($this->tmp_package_xml_path, 0, true);
+			$package_xml_path = $tmp_path . DIRECTORY_SEPARATOR . 'package.xml';
+			$this->package_xml = new \SimpleXMLElement($package_xml_path, 0, true);
 		}
 
 		$this->tgz_path = NULL;
@@ -103,9 +115,6 @@ class PeclExt
 
 	public function putSourcesIntoBranch()
 	{
-		if (!$this->tmp_extract_path) {
-			$this->tmp_extract_path = $this->unpack();
-		}
 		$ext_dir = $this->build->getSourceDir() . DIRECTORY_SEPARATOR . 'ext';
 
 		$this->ext_dir_in_src_path = $ext_dir . DIRECTORY_SEPARATOR . $this->name;
@@ -325,9 +334,6 @@ class PeclExt
 		if ($this->tmp_extract_path) {
 			rmdir_rf(dirname($this->tmp_extract_path));
 		}
-		/*if ($this->tmp_package_xml_path) {
-			unlink($this->tmp_package_xml_path);
-		}*/
 		if ($this->ext_dir_in_src_path) {
 			rmdir_rf($this->ext_dir_in_src_path);
 		}
@@ -343,27 +349,26 @@ class PeclExt
 			throw new \Exception("config.w32 doesn't exist in the tarball");
 		}
 
-		$min_php_ver = (string)$this->package_xml->dependencies->required->php->min;
-		$max_php_ver = (string)$this->package_xml->dependencies->required->php->max;
-		$php_ver = '';
+		if ($this->package_xml) {
+			$min_php_ver = (string)$this->package_xml->dependencies->required->php->min;
+			$max_php_ver = (string)$this->package_xml->dependencies->required->php->max;
+			$php_ver = '';
 
-		$ver_hdr = $this->build->getSourceDir() . '/main/php_version.h';
-		if(preg_match(',#define PHP_VERSION "(.*)",Sm', file_get_contents($ver_hdr), $m)) {
-			$php_ver = $m[1];
-		} else {
-			throw new \Exception("Couldn't parse PHP sources for version");
+			$ver_hdr = $this->build->getSourceDir() . '/main/php_version.h';
+			if(preg_match(',#define PHP_VERSION "(.*)",Sm', file_get_contents($ver_hdr), $m)) {
+				$php_ver = $m[1];
+			} else {
+				throw new \Exception("Couldn't parse PHP sources for version");
+			}
+
+			if ($min_php_ver && version_compare($php_ver, $min_php_ver) < 0) {
+				throw new \Exception("At least PHP '$min_php_ver' required, got '$php_ver'");
+			}
+
+			if ($max_php_ver && version_compare($php_ver, $max_php_ver) >= 0) {
+				throw new \Exception("At most PHP '$max_php_ver' required, got '$php_ver'");
+			}
 		}
-
-		if ($min_php_ver && version_compare($php_ver, $min_php_ver) < 0) {
-			throw new \Exception("At least PHP '$min_php_ver' required, got '$php_ver'");
-		}
-
-		if ($max_php_ver && version_compare($php_ver, $max_php_ver) >= 0) {
-			throw new \Exception("At most PHP '$max_php_ver' required, got '$php_ver'");
-		}
-
-		//var_dump($php_ver, $min_php_ver, $max_php_ver, $this->package_xml->dependencies);die;
-
 
 	}
 }

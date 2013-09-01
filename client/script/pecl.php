@@ -50,6 +50,8 @@ $builds = $branch->getBuildList('windows');
 /* Each windows configuration from the ini for the given PHP version will be built */
 foreach ($builds as $build_name) {
 
+	echo "Preparing to build \n";
+
 	$build_src_path = realpath($build_dir_parent . DIRECTORY_SEPARATOR . $branch->config->getBuildSrcSubdir());
 	$log = rm\exec_single_log('mklink /J ' . $build_src_path . ' ' . $build_src_path);
 
@@ -60,12 +62,18 @@ foreach ($builds as $build_name) {
 		$ext = new rm\PeclExt($ext_tgz, $build);
 	} catch (Exception $e) {
 		echo $e->getMessage() . "\n";
+		$build->clean();
+		$ext->cleanup();
+		rm\rmdir_rf($toupload_dir);
+
+		/* XXX mail the ext dev what the error was, if it's something in the check
+			phase like missing config.w32, it's interesting for sure.
+			and no sense to continue as something in ext setup went wrong */
 		continue;
 	}
 
 	// looks like php_http-2.0.0beta4-5.3-nts-vc9-x86
 	$ext_build_name = $ext->getPackageName();
-
 
 	$toupload_dir = TMP_DIR . '/' . $ext_build_name;
 	if (!is_dir($toupload_dir)) {
@@ -76,25 +84,10 @@ foreach ($builds as $build_name) {
 		mkdir($toupload_dir . '/logs', 0655, true);
 	}
 
-	echo "Preparing to build '$ext_build_name'\n";
-
-	try {
-		$ext->putSourcesIntoBranch();
-
-	} catch (Exception $e) {
-		echo $e->getMessage() . "\n";
-		$build->clean();
-		$ext->cleanup();
-		/*rm\rmdir_rf($toupload_dir);*/
-
-		/* XXX mail the ext dev what the error was, if it's something in the check
-			phase like missing config.w32, it's interesting for sure.
-			and no sense to continue as something in ext setup went wrong */
-		continue;
-	}
-
+ 	echo "Configured for '$ext_build_name'\n";
 	echo "Running build in <$build_src_path>\n";
 	try {
+		$ext->putSourcesIntoBranch();
 
 		$build->buildconf();
 
@@ -142,7 +135,7 @@ foreach ($builds as $build_name) {
 
 	$build->clean();
 	$ext->cleanup();
-	/*rm\rmdir_rf($toupload_dir);*/
+	rm\rmdir_rf($toupload_dir);
 
 	echo "\n";
 }
