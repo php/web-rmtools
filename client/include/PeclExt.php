@@ -340,9 +340,23 @@ class PeclExt
 		if ($this->tmp_extract_path) {
 			rmdir_rf(dirname($this->tmp_extract_path));
 		}
+
 		if ($this->ext_dir_in_src_path) {
 			rmdir_rf($this->ext_dir_in_src_path);
 		}
+
+
+		/* XXX don't do it yet as we don't mail yet and don't upload. 
+		   XXX also have to be sure it was mailed and uploaded first */
+		/*$ext_pack = TMP_DIR . DIRECTORY_SEPARATOR . $this->getPackageName() . '.zip';
+		if (file_exists($ext_pack) {
+			unlink($ext_pack);
+		}
+
+		$log_pack = TMP_DIR . DIRECTORY_SEPARATOR . $this->getPackageName() . '-logs' . '.zip';
+		if (file_exists($log_pack) {
+			unlink($log_pack);
+		}*/
 	}
 
 	public function check()
@@ -380,6 +394,26 @@ class PeclExt
 			}
 		}
 
+	}
+
+	public function mailLogs(array $logs)
+	{
+		foreach($logs as $k => $log) {
+			if (!$log || !file_exists($log) || !is_file($log) || !is_readable($log)) {
+				unset($logs[$k]);
+			}
+		}
+
+		$zip_file = TMP_DIR . DIRECTORY_SEPARATOR . $this->getPackageName() . '-logs' . '.zip';
+		$zip_cmd = $this->zip_cmd . ' -9 -D -j ' . $zip_file . ' ' . implode(' ', $logs);
+		system($zip_cmd, $status);
+		if ($status) {
+			throw new \Exception("Couldn't zip logs for $zip_file, cmd was '$zip_cmd'");
+		}
+
+		// $from is pecl@win
+		// $to is ext lead from package.xml
+		//xmail($from, $to, $subject, $text, $logs);
 	}
 }
 

@@ -347,6 +347,10 @@ function xmail($from, $to, $subject, $text, array $attachment = array())
 	$mail[] = $boundary;
 
 	foreach($attachment as $att) {
+		if (!$att || !file_exists(!$att) || !is_file($att) || !is_readable($att)) {
+			continue;
+		}
+
 		$fname = basename($att);
 		$fsize = filesize($att);
 		if (function_exists('mime_content_type')) {

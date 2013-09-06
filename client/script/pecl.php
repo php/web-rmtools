@@ -67,6 +67,15 @@ foreach ($builds as $build_name) {
 		$ext = new rm\PeclExt($ext_tgz, $build);
 	} catch (Exception $e) {
 		echo $e->getMessage() . "\n";
+
+		rm\xmail(
+			'pecl@windows',
+			'ab@php.net', /* XXX try to get dev mails from the package.xml */
+			'PECL windows build system: ' . basename($ext_tgz),
+			"PECL build failed before it could start for the reasons below:\n\n" .
+			$e->getMessage()
+		);
+
 		$build->clean();
 		$build_error++;
 
@@ -119,25 +128,44 @@ foreach ($builds as $build_name) {
 	/* XXX PGO stuff would come here */
 
 	$log_base = $toupload_dir . '/logs';
-	file_put_contents($log_base . '/buildconf-' . $ext->getPackageName() . '.txt', $build->log_buildconf);
-	file_put_contents($log_base . '/configure-' . $ext->getPackageName() . '.txt', $build->log_configure);
-	file_put_contents($log_base . '/make-' . $ext->getPackageName() . '.txt', $build->log_make);
+	$buildconf_log_fname = $log_base . '/buildconf-' . $ext->getPackageName() . '.txt';
+	$configure_log_fname = $log_base . '/configure-' . $ext->getPackageName() . '.txt';
+	$make_log_fname = $log_base . '/make-' . $ext->getPackageName() . '.txt';
+	$error_log_fname = NULL;
+
+	file_put_contents($buildconf_log_fname, $build->log_buildconf);
+	file_put_contents($configure_log_fname, $build->log_configure);
+	file_put_contents($make_log_fname, $build->log_make);
 
 	$stats = $build->getStats();
 
 	if ($stats['error'] > 0) {
-		file_put_contents($log_base . '/error-' . $ext->getPackageName() . '.txt', $build->compiler_log_parser->getErrors());
+		$error_log_fname = $log_base . '/error-' . $ext->getPackageName() . '.txt';
+		file_put_contents($error_log_fname, $build->compiler_log_parser->getErrors());
 	}
 
 	try {
 		$pkg_file = $ext->preparePackage();
+
 	} catch (Exception $e) {
 		echo $e->getMessage() . "\n";
 		$build_error++;
 	}
 
 	/*rm\upload_build_result_ftp_curl($toupload_dir, $branch_name . '/r' . $last_rev);*/
-	/* XXX mail the logs from above */
+
+	try {
+		$ext->mailLogs(
+			array(
+				$buildconf_log_fname,
+				$configure_log_fname,
+				$make_log_fname,
+				$error_log_fname,
+			)
+		);
+	} catch (Exception $e) {
+		echo $e->getMessage() . "\n";
+	}
 
 	$build->clean();
 	$ext->cleanup();
