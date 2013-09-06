@@ -333,11 +333,36 @@ function copy_r($from, $to)
 
 function xmail($from, $to, $subject, $text, array $attachment = array())
 {
-	$header = array();
-	$boundary = '-----=' . md5(uniqid(mt_rand(), 1));
+	$header = $mail = array();
+	$boundary = '--' . md5(uniqid(mt_rand(), 1));
 
 	$header[] = "MIME-Version: 1.0";
-	$header[] = "Content-Type: multipart/mixed;";
-	$header[] = "boundary=\"$boundary\"";
+	$header[] = "From: $from";
+
+	$mail[] = "Content-Type: multipart/mixed; boundary=\"$boundary\"";
+	$mail[] = $boundary;
+	$mail[] = "Content-Type: text/plain; charset=latin1";
+	$mail[] = "Content-Transfer-Encoding: 7bit\r\n";
+	$mail[] = "$text\r\n";
+	$mail[] = $boundary;
+
+	foreach($attachment as $att) {
+		$fname = basename($att);
+		$fsize = filesize($att);
+		if (function_exists('mime_content_type')) {
+			$mime_type = mime_content_type($att);
+		} else {
+			$mime_type = 'application/octet-stream';
+		}
+		$raw = file_get_contents($att);
+
+		$mail[] = "Content-Type: $mime_type; name=\"$fname\"";
+		$mail[] = "Content-Transfer-Encoding: base64";
+		$mail[] = "Content-Disposition: attachment; filename=\"$fname\"; size=\"$fsize\"\r\n";
+		$mail[] = chunk_split(base64_encode($raw)) . "\r\n";
+		$mail[] = $boundary;
+	}
+
+	return mail($to, $subject, implode("\r\n", $mail), implode("\r\n", $header));
 }
 
