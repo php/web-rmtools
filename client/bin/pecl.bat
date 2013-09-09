@@ -72,12 +72,15 @@ SET VC11_X64_LIBPATH=C:\Windows\Microsoft.NET\Framework64\v4.0.30319;C:\Windows\
 SET VC11_X64_SHELL=%comspec% /k ""C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\vcvarsall.bat"" amd64
 
 REM Run pecl.php
+set PECL_PHP_CMD=c:\php-sdk\php\php.exe -d extension_dir=c:\php-sdk\php\ext -d extension=php_openssl.dll -d extension=php_curl.dll
 SET BISON_SIMPLE=c:\php-sdk\bin\bison.simple
 rem XXX iterate the c:\pecl_in_pkg here and delete the packages after successful build
-c:\php-sdk\php\php.exe -d extension_dir=c:\php-sdk\php\ext -d extension=php_openssl.dll -d extension=php_curl.dll %BAT_DIR%\..\script\pecl.php --config=pecl55_x64 --package=C:\pecl_in_pkg\amqp-1.2.0.tgz 
-c:\php-sdk\php\php.exe -d extension_dir=c:\php-sdk\php\ext -d extension=php_openssl.dll -d extension=php_curl.dll %BAT_DIR%\..\script\pecl.php --config=pecl55_x86 --package=C:\pecl_in_pkg\amqp-1.2.0.tgz 
-c:\php-sdk\php\php.exe -d extension_dir=c:\php-sdk\php\ext -d extension=php_openssl.dll -d extension=php_curl.dll %BAT_DIR%\..\script\pecl.php --config=pecl54 --package=C:\pecl_in_pkg\amqp-1.2.0.tgz 
-c:\php-sdk\php\php.exe -d extension_dir=c:\php-sdk\php\ext -d extension=php_openssl.dll -d extension=php_curl.dll %BAT_DIR%\..\script\pecl.php --config=pecl53 --package=C:\pecl_in_pkg\amqp-1.2.0.tgz 
+@ECHO ON
+%PECL_PHP_CMD% %BAT_DIR%\..\script\pecl.php --config=pecl55_x64 %* >> %LOG_FILE% 2<&1
+%PECL_PHP_CMD% %BAT_DIR%\..\script\pecl.php --config=pecl55_x86 %* >> %LOG_FILE% 2<&1
+%PECL_PHP_CMD% %BAT_DIR%\..\script\pecl.php --config=pecl54 %* >> %LOG_FILE% 2<&1
+%PECL_PHP_CMD% %BAT_DIR%\..\script\pecl.php --config=pecl53 %* >> %LOG_FILE% 2<&1
+@ECHO OFF
 SET PATH=%OLD_PATH%
 
 echo Done.>> %LOG_FILE%
