@@ -43,11 +43,27 @@ class PeclExt
 		if (!$this->name || !$this->version) {
 			/* This is the fallback if there's no package.xml  */
 			$tmp = explode('-', basename($tgz_path, '.tgz'));
-			$this->name = !$this->name ?: $tmp[0];
-			$this->version = !$this->version ?: $tmp[1];
+			$this->name = !$this->name ? $tmp[0] : $this->name;
+			$this->version = !$this->version ? $tmp[1] : $this->version;
 
 			if (!$this->name || !$this->version) {
 				throw new \Exception("Couldn't parse extension name or version neither from package.xml nor from the filename");
+			}
+		}
+
+		$config = $this->getPackageConfig();
+		/* this ext is known*/
+		if (is_array($config)) {
+			/* Correct the case where the package.xml contains different name than the config option.
+			   That's currently the case with zendopcache vs opcache. */
+			if (isset($config['real_name']) && $this->name != $config['real_name']) {
+				$new_path = dirname($this->tmp_extract_path) . '/' . $config['real_name'] . '-' . $this->version;
+				if (!rename($this->tmp_extract_path, $new_path)) {
+					throw new Exception('Package name conflict, different names in package.xml and config.w32. Tried to solve but failed.');
+				}
+
+				$this->tmp_extract_path = $new_path;
+				$this->name = $config['real_name'];
 			}
 		}
 
@@ -198,17 +214,10 @@ class PeclExt
 		return $ret;
 	}
 
-	public function getConfigureLine()
+	public function getPackageConfig()
 	{
-		/* XXX check if it's enable or with,
-			what deps it has
-			what additional options it has
-			what non core exts it deps on 
-		*/
+		$config = NULL;
 
-		$config = array();
-
-		/* look if it's on the known ext list */
 		$known_path = __DIR__ . '/../data/config/pecl/exts.ini';
 		$exts = parse_ini_file($known_path, true, INI_SCANNER_RAW);
 
@@ -218,25 +227,42 @@ class PeclExt
 			}
 		}
 
+		return $config;
+	}
+
+	public function getConfigureLine()
+	{
+		/* XXX check if it's enable or with,
+			what deps it has
+			what additional options it has
+			what non core exts it deps on 
+		*/
+
+		/* look if it's on the known ext list */
+		$config = $this->getPackageConfig();
+
 		/* if it's not known yet, we have to gather the info */
-		$config_w32_path = $this->tmp_extract_path . DIRECTORY_SEPARATOR . 'config.w32';
-		foreach (array('enable' => 'ARG_ENABLE', 'with' => 'ARG_WITH') as $arg => $str) {
-			if (preg_match(',' . $str .'.*' . $this->name . ',Sm', file_get_contents($config_w32_path))) {
-				$config['type'] = $arg;
+		if (!$config) {
+			$config = array();
+
+			$config_w32_path = $this->tmp_extract_path . DIRECTORY_SEPARATOR . 'config.w32';
+			foreach (array('enable' => 'ARG_ENABLE', 'with' => 'ARG_WITH') as $arg => $str) {
+				if (preg_match(',' . $str .'.*' . $this->name . ',Sm', file_get_contents($config_w32_path))) {
+					$config['type'] = $arg;
+				}
 			}
-		}
-		if (!isset($config['type'])) {
-			throw new \Exception("Couldn't determine whether 'with' or 'enable' configure option to use");
-		}
+			if (!isset($config['type'])) {
+				throw new \Exception("Couldn't determine whether 'with' or 'enable' configure option to use");
+			}
 
-		/* XXX Extension deps have to be checked here using
-		$this->package_xml->dependencies; */
+			/* XXX Extension deps have to be checked here using
+			$this->package_xml->dependencies; */
 
-		/* XXX Library deps have to be checked using 
-		$this->tmp_extract_path . DIRECTORY_SEPARATOR . 'lib_versions.txt'; */
+			/* XXX Library deps have to be checked using 
+			$this->tmp_extract_path . DIRECTORY_SEPARATOR . 'lib_versions.txt'; */
+		}
 
 		return $this->buildConfigureLine($config);
-
 	}
 
 	public function preparePackage()
