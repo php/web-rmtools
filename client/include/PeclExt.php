@@ -47,7 +47,7 @@ class PeclExt
 			$this->version = !$this->version ?: $tmp[1];
 
 			if (!$this->name || !$this->version) {
-				throw new \Exception("Couldn't parse extension name or version from the filename");
+				throw new \Exception("Couldn't parse extension name or version neither from package.xml nor from the filename");
 			}
 		}
 
@@ -415,5 +415,6 @@ class PeclExt
 		// $to is ext lead from package.xml
 		//xmail($from, $to, $subject, $text, $logs);
 	}
+
 }
 

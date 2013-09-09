@@ -152,8 +152,18 @@ foreach ($builds as $build_name) {
 		$build_error++;
 	}
 
-	/*rm\upload_build_result_ftp_curl($toupload_dir, $branch_name . '/r' . $last_rev);*/
+	if ($upload) {
+		echo "Uploading '$pkg_file'\n";
+		/* XXX check if the path will be correct with the login */
+		$target = '/pecl/releases/' .  $ext->getName() . '/' . $ext->getVersion();
+		if (rm\upload_pecl_pkg_ftp_curl($pkg_file, $target)) {
+			echo "upload success\n";
+		} else {
+			echo "upload failed\n";
+		}
+	}
 
+	echo "Mailing logs";
 	try {
 		$ext->mailLogs(
 			array(

@@ -370,3 +370,103 @@ function xmail($from, $to, $subject, $text, array $attachment = array())
 	return mail($to, $subject, implode("\r\n", $mail), implode("\r\n", $header));
 }
 
+function upload_pecl_pkg_ftp_curl($files, $target)
+{
+	include __DIR__ . '/../data/config/credentials_ftps.php';
+
+	$ftp = ftp_connect($ftp_server);
+	if (!$ftp) {
+		echo "Cannot connect to $ftp_server\n";
+		return false;
+	}
+	$login_result = ftp_login($ftp, $user_downloads, $password);
+	if (!$login_result) {
+		return false;
+	}
+	
+	$try = 0;
+	do {
+		$status = ftp_make_directory($ftp, $target);
+		$try++;
+	} while ( $status === false && $try < 10 );
+	ftp_close($ftp);
+
+	$curl = array();
+
+	$ftp_path   = $target;
+	$ftp_user   = $user_downloads;
+	$ftp_password   = $password;
+
+	if ($ftp_path[0] != '/') {
+		$ftp_path = '/' . $ftp_path;
+	}
+	$mh = \curl_multi_init();
+
+	//$files = glob($src_dir . '/*.{zip,json}', GLOB_BRACE);
+	$files = is_array($files) ? $u : array($files);
+	foreach ($files as $i => $local_file) {
+
+		$curl[$i] = $ch =  \curl_init();
+		$fp = fopen($local_file, "rb");
+		$local_file = basename($local_file);
+
+		$remoteurl = "ftps://${ftp_user}:${ftp_password}@${ftp_server}${ftp_path}/${local_file}";
+
+		\curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
+		\curl_setopt($ch, CURLOPT_URL, $remoteurl);
+		\curl_setopt($ch, CURLOPT_UPLOAD, 1);
+		\curl_setopt($ch, CURLOPT_INFILE, $fp);
+		\curl_setopt($ch , CURLOPT_USERPWD, $ftp_user . ':' . $ftp_password);
+
+		\curl_multi_add_handle ($mh, $ch);
+	}
+
+	/*$files = glob($src_dir . '/logs/*.*');
+	$offset = $i + 1;
+	foreach ($files as $i => $local_file) {
+
+		$ch = $curl[$offset + $i] = \curl_init();
+		$fp = fopen($local_file, "rb");
+		$local_file = basename($local_file);
+
+		$remoteurl = "ftps://${ftp_user}:${ftp_password}@${ftp_server}${ftp_path}/logs/${local_file}";
+
+		\curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
+		\curl_setopt($ch, CURLOPT_URL, $remoteurl);
+		\curl_setopt($ch, CURLOPT_UPLOAD, 1);
+		\curl_setopt($ch, CURLOPT_INFILE, $fp);
+		\curl_setopt($ch , CURLOPT_USERPWD, $ftp_user . ':' . $ftp_password);
+
+		\curl_multi_add_handle ($mh, $ch);
+	}*/
+
+	$retry = 0;
+	do {
+		$err = 0;
+		do {
+			\curl_multi_exec($mh,$active);
+			$info = curl_multi_info_read($mh);
+			if ($info !== false) {
+				curl_multi_remove_handle($mh, $info['handle']);
+				if ($info['result'] != 0)  {
+					$err = 1;
+//					echo curl_getinfo($info['handle'], CURLINFO_EFFECTIVE_URL) . "\n";
+//					echo curl_error($info['handle']) . "\n\n";
+					curl_multi_add_handle($mh, $info['handle']);
+				}
+			}
+		} while ($active);
+		$retry++;
+	} while ($err != 0 && $retry < 10);
+
+	foreach ($curl as $ch) {
+		\curl_multi_remove_handle($mh, $ch);
+		if (\curl_errno($ch) != 0) {
+			echo \curl_error($ch) . "\n";
+		}
+		\curl_close($ch);
+	}
+	//\curl_multi_close($mh);
+    return true;
+}
+
