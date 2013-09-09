@@ -67,6 +67,9 @@ class PeclExt
 			}
 		}
 
+		$this->name = strtolower($this->name);
+		$this->version = strtolower($this->version);
+
 	}
 
 	public function getPackageName()
