@@ -8,7 +8,7 @@ use rmtools as rm;
 
 
 $shortopts = NULL; //"c:p:mu";
-$longopts = array("config:", "package:", "mail", "upload");
+$longopts = array("config:", "package:", "mail", "upload", "is-snap");
 
 $options = getopt($shortopts, $longopts);
 
@@ -16,6 +16,7 @@ $branch_name = isset($options['config']) ? $options['config'] : NULL;
 $ext_tgz = isset($options['package']) ? $options['package'] : NULL;
 $mail_maintainers = isset($options['mail']);
 $upload = isset($options['upload']);
+$is_snap = isset($options['is-snap']);
 
 if (NULL == $branch_name || NULL == $ext_tgz) {
 	echo "Usage: pecl.php [OPTION] ...\n";
@@ -23,6 +24,7 @@ if (NULL == $branch_name || NULL == $ext_tgz) {
 	echo "  --package    Path to the PECL package, required.\n";
 	echo "  --mail       Send build logs to the extension maintainers, optional\n";
 	echo "  --upload     Upload the builds to the windows.hpp.net, optional\n";
+	echo "  --is-snap    The package is a snapshot, so it'll be uploaded to snaps, not releases, optional\n";
 	echo "\n";
 	echo "Example: pecl --config=php55_x64 --package=c:\pecl_in_pkg\some-1.0.0.tgz\n";
 	echo "\n";
