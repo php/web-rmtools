@@ -370,7 +370,7 @@ function xmail($from, $to, $subject, $text, array $attachment = array())
 	return mail($to, $subject, implode("\r\n", $mail), implode("\r\n", $header));
 }
 
-function upload_pecl_pkg_ftp_curl($files, $target)
+function upload_pecl_pkg_ftp_curl($files, $logs, $target)
 {
 	include __DIR__ . '/../data/config/credentials_ftps.php';
 
@@ -379,14 +379,14 @@ function upload_pecl_pkg_ftp_curl($files, $target)
 		echo "Cannot connect to $ftp_server\n";
 		return false;
 	}
-	$login_result = ftp_login($ftp, $user_downloads, $password);
+	$login_result = ftp_login($ftp, $user_pecl, $password_pecl);
 	if (!$login_result) {
 		return false;
 	}
 	
 	$try = 0;
 	do {
-		$status = ftp_make_directory($ftp, $target);
+		$status = ftp_make_directory($ftp, $target . '/logs/');
 		$try++;
 	} while ( $status === false && $try < 10 );
 	ftp_close($ftp);
@@ -394,16 +394,16 @@ function upload_pecl_pkg_ftp_curl($files, $target)
 	$curl = array();
 
 	$ftp_path   = $target;
-	$ftp_user   = $user_downloads;
-	$ftp_password   = $password;
+	$ftp_user   = $user_pecl;
+	$ftp_password   = $password_pecl;
 
 	if ($ftp_path[0] != '/') {
 		$ftp_path = '/' . $ftp_path;
 	}
 	$mh = \curl_multi_init();
 
-	//$files = glob($src_dir . '/*.{zip,json}', GLOB_BRACE);
-	$files = is_array($files) ? $u : array($files);
+	$files = is_array($files) ? $files : array($files);
+	$offset = 0;
 	foreach ($files as $i => $local_file) {
 
 		$curl[$i] = $ch =  \curl_init();
@@ -419,10 +419,10 @@ function upload_pecl_pkg_ftp_curl($files, $target)
 		\curl_setopt($ch , CURLOPT_USERPWD, $ftp_user . ':' . $ftp_password);
 
 		\curl_multi_add_handle ($mh, $ch);
+		$offset++;
 	}
 
-	/*$files = glob($src_dir . '/logs/*.*');
-	$offset = $i + 1;
+	$files = is_array($logs) ? $logs : array($logs);
 	foreach ($files as $i => $local_file) {
 
 		$ch = $curl[$offset + $i] = \curl_init();
@@ -438,7 +438,7 @@ function upload_pecl_pkg_ftp_curl($files, $target)
 		\curl_setopt($ch , CURLOPT_USERPWD, $ftp_user . ':' . $ftp_password);
 
 		\curl_multi_add_handle ($mh, $ch);
-	}*/
+	}
 
 	$retry = 0;
 	do {

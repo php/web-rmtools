@@ -364,7 +364,7 @@ class PeclExt
 		throw new \Exception("Unknown dynamic method called");
 	}
 
-	public function cleanup()
+	public function cleanup($flag0 = false)
 	{
 		if ($this->tmp_extract_path) {
 			rmdir_rf(dirname($this->tmp_extract_path));
@@ -375,17 +375,15 @@ class PeclExt
 		}
 
 
-		/* XXX don't do it yet as we don't mail yet and don't upload. 
-		   XXX also have to be sure it was mailed and uploaded first */
-		/*$ext_pack = TMP_DIR . DIRECTORY_SEPARATOR . $this->getPackageName() . '.zip';
-		if (file_exists($ext_pack) {
+		$ext_pack = TMP_DIR . DIRECTORY_SEPARATOR . $this->getPackageName() . '.zip';
+		if ($flag0 && file_exists($ext_pack)) {
 			unlink($ext_pack);
 		}
 
 		$log_pack = TMP_DIR . DIRECTORY_SEPARATOR . $this->getPackageName() . '-logs' . '.zip';
-		if (file_exists($log_pack) {
+		if ($flag0 && file_exists($log_pack)) {
 			unlink($log_pack);
-		}*/
+		}
 	}
 
 	public function check()
@@ -425,7 +423,7 @@ class PeclExt
 
 	}
 
-	public function mailLogs(array $logs)
+	public function packLogs(array $logs)
 	{
 		foreach($logs as $k => $log) {
 			if (!$log || !file_exists($log) || !is_file($log) || !is_readable($log)) {
@@ -439,6 +437,12 @@ class PeclExt
 		if ($status) {
 			throw new \Exception("Couldn't zip logs for $zip_file, cmd was '$zip_cmd'");
 		}
+
+		return $zip_file;
+	}
+
+	public function mailMaintainers(array $logs)
+	{
 
 		// $from is pecl@win
 		// $to is ext lead from package.xml

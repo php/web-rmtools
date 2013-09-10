@@ -50,12 +50,14 @@ if (!is_dir($build_dir_parent)) {
 $builds = $branch->getBuildList('windows');
 
 /* be optimistic */
-$build_error = 0;
+$was_errors = false;
 
 echo "Using <$ext_tgz>\n";
 
 /* Each windows configuration from the ini for the given PHP version will be built */
 foreach ($builds as $build_name) {
+
+	$build_error = 0;
 
 	echo "Preparing to build \n";
 
@@ -79,7 +81,7 @@ foreach ($builds as $build_name) {
 		);
 
 		$build->clean();
-		$build_error++;
+		$was_errors = true;
 
 		/* XXX mail the ext dev what the error was, if it's something in the check
 			phase like missing config.w32, it's interesting for sure.
@@ -147,27 +149,16 @@ foreach ($builds as $build_name) {
 	}
 
 	try {
+		echo "Packaging the binaries\n";
 		$pkg_file = $ext->preparePackage();
-
 	} catch (Exception $e) {
 		echo $e->getMessage() . "\n";
 		$build_error++;
 	}
 
-	if ($upload) {
-		echo "Uploading '$pkg_file'\n";
-		/* XXX check if the path will be correct with the login */
-		$target = '/pecl/releases/' .  $ext->getName() . '/' . $ext->getVersion();
-		if (rm\upload_pecl_pkg_ftp_curl($pkg_file, $target)) {
-			echo "upload success\n";
-		} else {
-			echo "upload failed\n";
-		}
-	}
-
-	echo "Mailing logs";
 	try {
-		$ext->mailLogs(
+		echo "Packaging the logs\n";
+		$logs_zip = $ext->packLogs(
 			array(
 				$buildconf_log_fname,
 				$configure_log_fname,
@@ -177,16 +168,57 @@ foreach ($builds as $build_name) {
 		);
 	} catch (Exception $e) {
 		echo $e->getMessage() . "\n";
+		$build_error++;
 	}
 
+	$upload_success = true;
+	if ($upload) {
+		try {
+			$root = $is_snap ? 'snaps' : 'releases';
+			$target = '/' . $root . '/' .  $ext->getName() . '/' . $ext->getVersion();
+
+			$pkgs_to_upload = $build_error ? array() : array($pkg_file);
+
+			if ($build_error) {
+				echo "Uploading logs\n";
+			} else {
+				echo "Uploading '$pkg_file' and logs\n";
+			}
+
+			if ($build_error && !isset($logs_zip)) {
+				throw new Exception("Logs wasn't packaged, nothing to upload");
+			}
+
+			if (rm\upload_pecl_pkg_ftp_curl($pkgs_to_upload, array($logs_zip), $target)) {
+				echo "Upload succeeded\n";
+			} else {
+				echo "Upload failed\n";
+			}
+		} catch (Exception $e) {
+			echo $e->getMessage();
+			$upload_success = false;
+		}
+	}
+
+	if (0 && $mail_maintainers) {
+		echo "Mailing logs";
+		try {
+			$ext->mailLogs(array($logs_zip));
+		} catch (Exception $e) {
+			echo $e->getMessage() . "\n";
+		}
+	} 
+
 	$build->clean();
-	$ext->cleanup();
+	$ext->cleanup($upload_success);
 	rm\rmdir_rf($toupload_dir);
 
 	echo "\n";
+
+	$was_errors = $was_errors || $build_error > 0;
 }
 
 echo "Done.\n";
 
-exit($build_error);
+exit((int)$was_errors);
 
