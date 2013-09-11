@@ -75,9 +75,8 @@ foreach ($builds as $build_name) {
 		rm\xmail(
 			'pecl@windows',
 			'ab@php.net', /* XXX try to get dev mails from the package.xml */
-			'PECL windows build system: ' . basename($ext_tgz),
-			"PECL build failed before it could start for the reasons below:\n\n"
-			$e->getMessage()
+			'[PECL-DEV] Windows build: ' . basename($ext_tgz),
+			"PECL build failed before it could start for the reasons below:\n\n" . $e->getMessage()
 		);
 
 		$build->clean();
@@ -203,7 +202,7 @@ foreach ($builds as $build_name) {
 	if (0 && $mail_maintainers) {
 		echo "Mailing logs";
 		try {
-			$ext->mailLogs(array($logs_zip));
+			$ext->mailMaintainers(0 == $build_error, array($logs_zip));
 		} catch (Exception $e) {
 			echo $e->getMessage() . PHP_EOL;
 		}

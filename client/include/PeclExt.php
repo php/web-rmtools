@@ -441,12 +441,28 @@ class PeclExt
 		return $zip_file;
 	}
 
-	public function mailMaintainers(array $logs)
+	public function mailMaintainers($success, array $logs)
 	{
+		$url = 'http://windows.php.net/downloads/pecl/' . $this->name . '/' . $this->version;
+		if ($success) {
+			$msg = "PECL Windows build succeeded\n\n";
+			$msg .= "The package was uploaded to $url/" . $this->getPackageName() . ".zip\n";
+		} else {
+			$msg = "PECL Windows build failed\n\n";
 
-		// $from is pecl@win
-		// $to is ext lead from package.xml
-		//xmail($from, $to, $subject, $text, $logs);
+		}
+		$msg .= "For logs see $url/logs/" . $this->getPackageName() . "-logs.zip\n";
+
+		$msg . "\nHave a nice day\n";
+
+		rm\xmail(
+			'pecl@windows',
+			'ab@php.net', /* XXX try to get dev mails from the package.xml */
+			'[PECL-DEV] Windows build: ' . $this->name . '-' . $this->version,
+			$msg,
+			$logs
+		);
+
 	}
 
 }
