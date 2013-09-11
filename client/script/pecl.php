@@ -19,15 +19,15 @@ $upload = isset($options['upload']);
 $is_snap = isset($options['is-snap']);
 
 if (NULL == $branch_name || NULL == $ext_tgz) {
-	echo "Usage: pecl.php [OPTION] ...\n";
-	echo "  --config     Configuration file name without suffix, required.\n";
-	echo "  --package    Path to the PECL package, required.\n";
-	echo "  --mail       Send build logs to the extension maintainers, optional\n";
-	echo "  --upload     Upload the builds to the windows.hpp.net, optional\n";
-	echo "  --is-snap    The package is a snapshot, so it'll be uploaded to snaps, not releases, optional\n";
-	echo "\n";
-	echo "Example: pecl --config=php55_x64 --package=c:\pecl_in_pkg\some-1.0.0.tgz\n";
-	echo "\n";
+	echo "Usage: pecl.php [OPTION] ..." . PHP_EOL;
+	echo "  --config     Configuration file name without suffix, required." . PHP_EOL;
+	echo "  --package    Path to the PECL package, required." . PHP_EOL;
+	echo "  --mail       Send build logs to the extension maintainers, optional." . PHP_EOL;
+	echo "  --upload     Upload the builds to the windows.hpp.net, optional." . PHP_EOL;
+	echo "  --is-snap    The package is a snapshot, so it'll be uploaded to snaps, not releases, optional." . PHP_EOL;
+	echo PHP_EOL;
+	echo "Example: pecl --config=php55_x64 --package=c:\pecl_in_pkg\some-1.0.0.tgz" . PHP_EOL;
+	echo PHP_EOL;
 	exit(0);
 }
 
@@ -37,13 +37,13 @@ $branch = new rm\PeclBranch($config_path);
 
 $branch_name = $branch->config->getName();
 
-echo "Running <$config_path>\n";
-echo "\t$branch_name\n";
+echo "Running <$config_path>" . PHP_EOL;
+echo "\t$branch_name" . PHP_EOL;
 
 $build_dir_parent = $branch->config->getBuildLocation();
 
 if (!is_dir($build_dir_parent)) {
-	echo "Invalid build location <$build_dir_parent>\n";
+	echo "Invalid build location <$build_dir_parent>" . PHP_EOL;
 	exit(-1);
 }
 
@@ -52,14 +52,14 @@ $builds = $branch->getBuildList('windows');
 /* be optimistic */
 $was_errors = false;
 
-echo "Using <$ext_tgz>\n";
+echo "Using <$ext_tgz>" . PHP_EOL;
 
 /* Each windows configuration from the ini for the given PHP version will be built */
 foreach ($builds as $build_name) {
 
 	$build_error = 0;
 
-	echo "Preparing to build \n";
+	echo "Preparing to build" . PHP_EOL;
 
 	$build_src_path = realpath($build_dir_parent . DIRECTORY_SEPARATOR . $branch->config->getBuildSrcSubdir());
 	$log = rm\exec_single_log('mklink /J ' . $build_src_path . ' ' . $build_src_path);
@@ -70,13 +70,13 @@ foreach ($builds as $build_name) {
 	try {
 		$ext = new rm\PeclExt($ext_tgz, $build);
 	} catch (Exception $e) {
-		echo $e->getMessage() . "\n";
+		echo $e->getMessage() . PHP_EOL;
 
 		rm\xmail(
 			'pecl@windows',
 			'ab@php.net', /* XXX try to get dev mails from the package.xml */
 			'PECL windows build system: ' . basename($ext_tgz),
-			"PECL build failed before it could start for the reasons below:\n\n" .
+			"PECL build failed before it could start for the reasons below:\n\n"
 			$e->getMessage()
 		);
 
@@ -101,17 +101,17 @@ foreach ($builds as $build_name) {
 		mkdir($toupload_dir . '/logs', 0655, true);
 	}
 
- 	echo "Configured for '$ext_build_name'\n";
-	echo "Running build in <$build_src_path>\n";
+ 	echo "Configured for '$ext_build_name'" . PHP_EOL;
+	echo "Running build in <$build_src_path>" . PHP_EOL;
 	try {
 		$ext->putSourcesIntoBranch();
 
 		$build->buildconf();
 
 		$ext_conf_line = $ext->getConfigureLine();
-		echo "Extension specific config: $ext_conf_line\n";
+		echo "Extension specific config: $ext_conf_line" . PHP_EOL;
 		if ($branch->config->getPGO() == 1)  {
-			echo "Creating PGI build\n";
+			echo "Creating PGI build" . PHP_EOL;
 			$build->configure(' "--enable-pgi" ' . $ext_conf_line);
 		}
 		else {
@@ -125,7 +125,7 @@ foreach ($builds as $build_name) {
 		$build->make();
 		//$html_make_log = $build->getMakeLogParsed();
 	} catch (Exception $e) {
-		echo $e->getMessage() . "\n";
+		echo $e->getMessage() . PHP_EOL;
 		$build_error++;
 	}
 
@@ -149,15 +149,15 @@ foreach ($builds as $build_name) {
 	}
 
 	try {
-		echo "Packaging the binaries\n";
+		echo "Packaging the binaries" . PHP_EOL;
 		$pkg_file = $ext->preparePackage();
 	} catch (Exception $e) {
-		echo $e->getMessage() . "\n";
+		echo $e->getMessage() . PHP_EOL;
 		$build_error++;
 	}
 
 	try {
-		echo "Packaging the logs\n";
+		echo "Packaging the logs" . PHP_EOL;
 		$logs_zip = $ext->packLogs(
 			array(
 				$buildconf_log_fname,
@@ -167,7 +167,7 @@ foreach ($builds as $build_name) {
 			)
 		);
 	} catch (Exception $e) {
-		echo $e->getMessage() . "\n";
+		echo $e->getMessage() . PHP_EOL;
 		$build_error++;
 	}
 
@@ -180,9 +180,9 @@ foreach ($builds as $build_name) {
 			$pkgs_to_upload = $build_error ? array() : array($pkg_file);
 
 			if ($build_error) {
-				echo "Uploading logs\n";
+				echo "Uploading logs" . PHP_EOL;
 			} else {
-				echo "Uploading '$pkg_file' and logs\n";
+				echo "Uploading '$pkg_file' and logs" . PHP_EOL;
 			}
 
 			if ($build_error && !isset($logs_zip)) {
@@ -190,9 +190,9 @@ foreach ($builds as $build_name) {
 			}
 
 			if (rm\upload_pecl_pkg_ftp_curl($pkgs_to_upload, array($logs_zip), $target)) {
-				echo "Upload succeeded\n";
+				echo "Upload succeeded" . PHP_EOL;
 			} else {
-				echo "Upload failed\n";
+				echo "Upload failed" . PHP_EOL;
 			}
 		} catch (Exception $e) {
 			echo $e->getMessage();
@@ -205,7 +205,7 @@ foreach ($builds as $build_name) {
 		try {
 			$ext->mailLogs(array($logs_zip));
 		} catch (Exception $e) {
-			echo $e->getMessage() . "\n";
+			echo $e->getMessage() . PHP_EOL;
 		}
 	} 
 
@@ -213,12 +213,12 @@ foreach ($builds as $build_name) {
 	$ext->cleanup($upload_success);
 	rm\rmdir_rf($toupload_dir);
 
-	echo "\n";
+	echo  PHP_EOL;
 
 	$was_errors = $was_errors || $build_error > 0;
 }
 
-echo "Done.\n";
+echo "Done." . PHP_EOL;
 
 exit((int)$was_errors);
 
