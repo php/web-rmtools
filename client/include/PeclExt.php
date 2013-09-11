@@ -36,8 +36,8 @@ class PeclExt
 
 		/* Setup some stuff */
 		if ($this->package_xml) {
-			$this->name = (string)$this->package_xml->name;
-			$this->version = (string)$this->package_xml->version->release;
+			$this->name = $this->getPackageXmlProperty("name");
+			$this->version = $this->getPackageXmlProperty("version", "release");
 		}
 
 		if (!$this->name || !$this->version) {
@@ -67,7 +67,7 @@ class PeclExt
 			}
 		}
 
-		$this->name = strtolower($this->name);
+		$this->name = str_replace('_', '-', strtolower($this->name));
 		$this->version = strtolower($this->version);
 
 	}
@@ -398,8 +398,8 @@ class PeclExt
 		}
 
 		if ($this->package_xml) {
-			$min_php_ver = (string)$this->package_xml->dependencies->required->php->min;
-			$max_php_ver = (string)$this->package_xml->dependencies->required->php->max;
+			$min_php_ver = $this->getPackageXmlProperty("dependencies", "required", "php", "min");
+			$max_php_ver = $this->getPackageXmlProperty("dependencies", "required", "php", "max");
 			$php_ver = '';
 
 			$ver_hdr = $this->build->getSourceDir() . '/main/php_version.h';
@@ -465,5 +465,33 @@ class PeclExt
 
 	}
 
+	protected function getPackageXmlProperty()
+	{
+		if (!$this->package_xml) {
+			return NULL;
+		}
+
+		$list = func_get_args();
+		$last = func_get_arg(func_num_args()-1);
+
+		$current = $this->package_xml;
+		foreach ($list as $prop) {
+			if (!isset($current->$prop)) {
+				return NULL;
+			}
+
+			if ($prop == $last) {
+				return $current->$prop;
+			}
+
+			/* if the $prop isn't an object and isn't last,
+			no way to iterate the remaining chain*/
+			if (is_object($current->$prop)) {
+				$current = $current->$prop;
+			} else {
+				return NULL;
+			}
+		}
+	}
 }
 
