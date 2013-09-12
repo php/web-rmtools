@@ -61,6 +61,7 @@ class PeclExt
 				foreach (array('ARG_ENABLE', 'ARG_WITH') as $str) {
 					if (preg_match("/$str\s*\(\s*('|\")([a-z0-9_]+)('|\")\s*,/Sm", file_get_contents($config_w32_path), $m)) {
 						$this->name = $m[2];
+						break;
 					}
 				}
 			}
@@ -326,8 +327,9 @@ class PeclExt
 
 			$config_w32_path = $this->tmp_extract_path . DIRECTORY_SEPARATOR . 'config.w32';
 			foreach (array('enable' => 'ARG_ENABLE', 'with' => 'ARG_WITH') as $arg => $str) {
-				if (preg_match(',' . $str .'.*' . $this->name . ',Sm', file_get_contents($config_w32_path))) {
+				if (preg_match(',' . $str .'.*' . str_replace('_', '-', $this->name) . ',Sm', file_get_contents($config_w32_path))) {
 					$config['type'] = $arg;
+					break;
 				}
 			}
 			if (!isset($config['type'])) {
