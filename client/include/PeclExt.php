@@ -52,12 +52,21 @@ class PeclExt
 
 		if (!$this->name || !$this->version) {
 			/* This is the fallback if there's no package.xml  */
-			$tmp = explode('-', $this->pkg_basename);
-			$this->name = !$this->name ? $tmp[0] : $this->name;
-			$this->version = !$this->version ? $tmp[1] : $this->version;
+			if (!$this->name) {
+				$config_w32_path = $this->tmp_extract_path . DIRECTORY_SEPARATOR . 'config.w32';
+				foreach (array('ARG_ENABLE', 'ARG_WITH') as $str) {
+					if (preg_match("/$str\s*\(\s*('|\")([a-z0-9_]+)('|\")\s*,/Sm", file_get_contents($config_w32_path), $m)) {
+						$this->name = $m[2];
+					}
+				}
+			}
 
-			if (!$this->name || !$this->version) {
-				throw new \Exception("Couldn't parse extension name or version neither from package.xml nor from the filename");
+			if (!$this->name) {
+				throw new \Exception("Couldn't reliably determine the package name, please fix or add package.xml");
+			}
+
+			if (!$this->version) {
+				$this->version = date('Ymd');
 			}
 		}
 
