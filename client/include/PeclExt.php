@@ -122,8 +122,14 @@ class PeclExt
 
 		$this->tmp_extract_path = realpath($tmp_path . '/' .  basename($this->tgz_path, '.tgz'));
 
+		$package_xml_path = NULL;
 		if (file_exists($tmp_path . DIRECTORY_SEPARATOR . 'package.xml')) {
 			$package_xml_path = $tmp_path . DIRECTORY_SEPARATOR . 'package.xml';
+		} else if (file_exists($tmp_path . DIRECTORY_SEPARATOR . 'package2.xml')) {
+			$package_xml_path = $tmp_path . DIRECTORY_SEPARATOR . 'package2.xml';
+		}
+
+		if ($package_xml_path) {
 			$this->package_xml = new \SimpleXMLElement($package_xml_path, 0, true);
 		}
 
