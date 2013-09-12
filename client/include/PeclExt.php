@@ -7,7 +7,7 @@ include_once __DIR__ . '/../include/PeclBranch.php';
 
 class PeclExt
 {
-	protected $tgz_path;
+	protected $pgk_path;
 	protected $name;
 	protected $version;
 	protected $build;
@@ -20,15 +20,15 @@ class PeclExt
 	protected $package_xml = NULL;
 	protected $configure_data = NULL;
 
-	public function __construct($tgz_path, $build)
+	public function __construct($pgk_path, $build)
 	{
-		if (!file_exists($tgz_path)) {
-			throw new \Exception("'$tgz_path' does not exist");
-		} else if ('.tgz' != substr($tgz_path, -4)) {
+		if (!file_exists($pgk_path)) {
+			throw new \Exception("'$pgk_path' does not exist");
+		} else if ('.tgz' != substr($pgk_path, -4)) {
 			throw new \Exception("Pecl package should end with .tgz");
 		}
 
-		$this->tgz_path = $tgz_path;
+		$this->pgk_path = $pgk_path;
 		$this->build = $build;
 
 		$this->unpack();
@@ -42,7 +42,7 @@ class PeclExt
 
 		if (!$this->name || !$this->version) {
 			/* This is the fallback if there's no package.xml  */
-			$tmp = explode('-', basename($tgz_path, '.tgz'));
+			$tmp = explode('-', basename($pgk_path, '.tgz'));
 			$this->name = !$this->name ? $tmp[0] : $this->name;
 			$this->version = !$this->version ? $tmp[1] : $this->version;
 
@@ -92,12 +92,12 @@ class PeclExt
 			throw new \Exception("Couldn't create temporary dir");
 		}
 
-		$tmp_name =  $tmp_path . '/' . basename($this->tgz_path);
-		if (!copy($this->tgz_path, $tmp_name)) {
+		$tmp_name =  $tmp_path . '/' . basename($this->pgk_path);
+		if (!copy($this->pgk_path, $tmp_name)) {
 			throw new \Exception("Couldn't move the tarball to '$tmp_name'");
 		}
 
-		$tar_name =  basename($this->tgz_path, '.tgz') . '.tar';
+		$tar_name =  basename($this->pgk_path, '.tgz') . '.tar';
 
 		/* The tar/gzip versions from the msys package won't work properly with
 		the windows paths, but they will if running those just in the current dir.*/
@@ -105,7 +105,7 @@ class PeclExt
 
 		chdir($tmp_path);
 
-		$gzip_cmd = $this->gzip_cmd . ' -df ' . basename($this->tgz_path);
+		$gzip_cmd = $this->gzip_cmd . ' -df ' . basename($this->pgk_path);
 		system($gzip_cmd, $ret);
 		if ($ret) {
 			throw new \Exception("Failed to guzip the tarball");
@@ -120,7 +120,7 @@ class PeclExt
 
 		chdir($old_cwd);
 
-		$this->tmp_extract_path = realpath($tmp_path . '/' .  basename($this->tgz_path, '.tgz'));
+		$this->tmp_extract_path = realpath($tmp_path . '/' .  basename($this->pgk_path, '.tgz'));
 
 		$package_xml_path = NULL;
 		if (file_exists($tmp_path . DIRECTORY_SEPARATOR . 'package.xml')) {
@@ -133,7 +133,7 @@ class PeclExt
 			$this->package_xml = new \SimpleXMLElement($package_xml_path, 0, true);
 		}
 
-		$this->tgz_path = NULL;
+		$this->pgk_path = NULL;
 
 		return $this->tmp_extract_path;
 	}

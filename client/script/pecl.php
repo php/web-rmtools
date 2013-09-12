@@ -13,12 +13,12 @@ $longopts = array("config:", "package:", "mail", "upload", "is-snap");
 $options = getopt($shortopts, $longopts);
 
 $branch_name = isset($options['config']) ? $options['config'] : NULL;
-$ext_tgz = isset($options['package']) ? $options['package'] : NULL;
+$pkg_path = isset($options['package']) ? $options['package'] : NULL;
 $mail_maintainers = isset($options['mail']);
 $upload = isset($options['upload']);
 $is_snap = isset($options['is-snap']);
 
-if (NULL == $branch_name || NULL == $ext_tgz) {
+if (NULL == $branch_name || NULL == $pkg_path) {
 	echo "Usage: pecl.php [OPTION] ..." . PHP_EOL;
 	echo "  --config     Configuration file name without suffix, required." . PHP_EOL;
 	echo "  --package    Path to the PECL package, required." . PHP_EOL;
@@ -52,7 +52,7 @@ $builds = $branch->getBuildList('windows');
 /* be optimistic */
 $was_errors = false;
 
-echo "Using <$ext_tgz>" . PHP_EOL;
+echo "Using <$pkg_path>" . PHP_EOL;
 
 /* Each windows configuration from the ini for the given PHP version will be built */
 foreach ($builds as $build_name) {
@@ -68,14 +68,14 @@ foreach ($builds as $build_name) {
 	$build->setSourceDir($build_src_path);
 
 	try {
-		$ext = new rm\PeclExt($ext_tgz, $build);
+		$ext = new rm\PeclExt($pkg_path, $build);
 	} catch (Exception $e) {
 		echo $e->getMessage() . PHP_EOL;
 
 		rm\xmail(
 			'pecl@windows',
 			'ab@php.net', /* XXX try to get dev mails from the package.xml */
-			'[PECL-DEV] Windows build: ' . basename($ext_tgz),
+			'[PECL-DEV] Windows build: ' . basename($pkg_path),
 			"PECL build failed before it could start for the reasons below:\n\n" . $e->getMessage()
 		);
 
