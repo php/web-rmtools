@@ -16,6 +16,7 @@ class PeclExt
 	protected $tar_cmd = 'c:\apps\git\bin\tar.exe';
 	protected $gzip_cmd = 'c:\apps\git\bin\gzip.exe';
 	protected $zip_cmd = 'c:\php-sdk\bin\zip.exe';
+	protected $unzip_cmd = 'c:\php-sdk\bin\unzip.exe';
 	protected $deplister_cmd = 'c:\apps\bin\deplister.exe';
 	protected $tmp_extract_path = NULL;
 	protected $ext_dir_in_src_path = NULL;
@@ -34,8 +35,11 @@ class PeclExt
 		} else if ('.tar.gz' == substr($pgk_path, -7)) {
 			$this->pkg_basename = basename($pgk_path, '.tar.gz');
 			$this->pkg_comp = 'tgz';
+		} else if ('.zip' == substr($pgk_path, -4)) {
+			$this->pkg_basename = basename($pgk_path, '.zip');
+			$this->pkg_comp = 'zip';
 		} else {
-			throw new \Exception("Unsupported compression format, please pass tgz or tar.gz");
+			throw new \Exception("Unsupported compression format, please pass tgz, tar.gz or zip");
 		}
 
 		$this->pgk_path = $pgk_path;
@@ -110,9 +114,9 @@ class PeclExt
 			throw new \Exception("Couldn't create temporary dir");
 		}
 
-		$tmp_name =  $tmp_path . '/' . basename($this->pgk_path);
+		$tmp_name =  $tmp_path . DIRECTORY_SEPARATOR . basename($this->pgk_path);
 		if (!copy($this->pgk_path, $tmp_name)) {
-			throw new \Exception("Couldn't move the tarball to '$tmp_name'");
+			throw new \Exception("Couldn't copy the tarball to '$tmp_name'");
 		}
 
 		$tar_name = $this->pkg_basename . '.tar';
@@ -123,13 +127,13 @@ class PeclExt
 
 		chdir($tmp_path);
 
-		$gzip_cmd = $this->gzip_cmd . ' -df ' . basename($this->pgk_path);
+		$gzip_cmd = $this->gzip_cmd . ' -df ' . escapeshellarg(basename($this->pgk_path));
 		system($gzip_cmd, $ret);
 		if ($ret) {
 			throw new \Exception("Failed to guzip the tarball");
 		}
 
-		$tar_cmd = $this->tar_cmd . ' -xf ' . $tar_name;
+		$tar_cmd = $this->tar_cmd . ' -xf ' . escapeshellarg($tar_name);
 		system($tar_cmd, $ret);
 		if ($ret) {
 			throw new \Exception("Failed to guzip the tarball");
@@ -141,12 +145,32 @@ class PeclExt
 		return $tmp_path;
 	}
 
-	/* XXX support more compression formats, for now tgz only*/
+	public function uncompressZip()
+	{
+		$tmp_path = tempnam(TMP_DIR, 'unpack');
+		unlink($tmp_path);
+		if (!file_exists($tmp_path) && !mkdir($tmp_path)) {
+			throw new \Exception("Couldn't create temporary dir");
+		}
+
+		$unzip_cmd = $this->unzip_cmd . ' ' . escapeshellarg($this->pgk_path) . ' -d ' . $tmp_path;
+		system($unzip_cmd, $ret);
+		if ($ret) {
+			throw new \Exception("Failed to unzip the package");
+		}
+
+		return $tmp_path;
+	}
+
 	public function unpack()
 	{
 		switch ($this->pkg_comp) {
 			case 'tgz':
 				$tmp_path = $this->uncompressTgz();
+			break;
+
+			case 'zip':
+				$tmp_path = $this->uncompressZip();
 			break;
 
 			default:
