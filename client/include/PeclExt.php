@@ -8,6 +8,8 @@ include_once __DIR__ . '/../include/PeclBranch.php';
 class PeclExt
 {
 	protected $pgk_path;
+	protected $pkg_basename;
+	protected $pkg_comp;
 	protected $name;
 	protected $version;
 	protected $build;
@@ -24,8 +26,16 @@ class PeclExt
 	{
 		if (!file_exists($pgk_path)) {
 			throw new \Exception("'$pgk_path' does not exist");
-		} else if ('.tgz' != substr($pgk_path, -4)) {
-			throw new \Exception("Pecl package should end with .tgz");
+		} 
+		
+		if ('.tgz' == substr($pgk_path, -4)) {
+			$this->pkg_basename = basename($pgk_path, '.tgz');
+			$this->pkg_comp = 'tgz';
+		} else if ('.tar.gz' == substr($pgk_path, -7)) {
+			$this->pkg_basename = basename($pgk_path, '.tar.gz');
+			$this->pkg_comp = 'tgz';
+		} else {
+			throw new \Exception("Unsupported compression format, please pass tgz or tar.gz");
 		}
 
 		$this->pgk_path = $pgk_path;
@@ -42,7 +52,7 @@ class PeclExt
 
 		if (!$this->name || !$this->version) {
 			/* This is the fallback if there's no package.xml  */
-			$tmp = explode('-', basename($pgk_path, '.tgz'));
+			$tmp = explode('-', $this->pkg_basename);
 			$this->name = !$this->name ? $tmp[0] : $this->name;
 			$this->version = !$this->version ? $tmp[1] : $this->version;
 
@@ -83,8 +93,7 @@ class PeclExt
 			. '-' . $this->build->architecture;
 	}
 
-	/* XXX support more compression formats, for now tgz only*/
-	public function unpack()
+	public function uncompressTgz()
 	{
 		$tmp_path = tempnam(TMP_DIR, 'unpack');
 		unlink($tmp_path);
@@ -97,7 +106,7 @@ class PeclExt
 			throw new \Exception("Couldn't move the tarball to '$tmp_name'");
 		}
 
-		$tar_name =  basename($this->pgk_path, '.tgz') . '.tar';
+		$tar_name = $this->pkg_basename . '.tar';
 
 		/* The tar/gzip versions from the msys package won't work properly with
 		the windows paths, but they will if running those just in the current dir.*/
@@ -120,13 +129,41 @@ class PeclExt
 
 		chdir($old_cwd);
 
-		$this->tmp_extract_path = realpath($tmp_path . '/' .  basename($this->pgk_path, '.tgz'));
+		return $tmp_path;
+	}
+
+	/* XXX support more compression formats, for now tgz only*/
+	public function unpack()
+	{
+		switch ($this->pkg_comp) {
+			case 'tgz':
+				$tmp_path = $this->uncompressTgz();
+			break;
+
+			default:
+				throw new \Exception("Unsupported compression");
+		}
+
+		if (file_exists(realpath($tmp_path . '/' . $this->pkg_basename))) {
+			/* This covers the case when the source is in a subdir within a package,
+			thats native pecl, git.php.net export too. Github should work too, whereby
+			they don't export version and dir names aren't always usable by us. In that
+			case is important that the package.xml is inside the source. */
+			$this->tmp_extract_path = realpath($tmp_path . '/' . $this->pkg_basename);
+		} else {
+			/* If one manually packed the source into the root of archive, so be.*/
+			$this->tmp_extract_path = realpath($tmp_path);
+		}
 
 		$package_xml_path = NULL;
 		if (file_exists($tmp_path . DIRECTORY_SEPARATOR . 'package.xml')) {
 			$package_xml_path = $tmp_path . DIRECTORY_SEPARATOR . 'package.xml';
 		} else if (file_exists($tmp_path . DIRECTORY_SEPARATOR . 'package2.xml')) {
 			$package_xml_path = $tmp_path . DIRECTORY_SEPARATOR . 'package2.xml';
+		} else if (file_exists($this->tmp_extract_path . DIRECTORY_SEPARATOR . 'package.xml')) {
+			$package_xml_path = $this->tmp_extract_path . DIRECTORY_SEPARATOR . 'package.xml';
+		} else if (file_exists($this->tmp_extract_path . DIRECTORY_SEPARATOR . 'package2.xml')) {
+			$package_xml_path = $this->tmp_extract_path . DIRECTORY_SEPARATOR . 'package2.xml';
 		}
 
 		if ($package_xml_path) {
