@@ -178,6 +178,8 @@ class PeclExt
 				throw new \Exception("Unsupported compression");
 		}
 
+		/* XXX what if we would look for subdirs containing config.w32? The subdir
+		where the file is has to be the root of the source tree. */
 		if (file_exists(realpath($tmp_path . '/' . $this->pkg_basename))) {
 			/* This covers the case when the source is in a subdir within a package,
 			thats native pecl, git.php.net export too. Github should work too, whereby
