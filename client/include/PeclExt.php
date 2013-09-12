@@ -55,7 +55,7 @@ class PeclExt
 		/* this ext is known*/
 		if (is_array($config)) {
 			/* Correct the case where the package.xml contains different name than the config option.
-			   That's currently the case with zendopcache vs opcache. */
+			   That's currently the case with zendopcache vs opcache and pecl_http vs. http. */
 			if (isset($config['real_name']) && $this->name != $config['real_name']) {
 				$new_path = dirname($this->tmp_extract_path) . '/' . $config['real_name'] . '-' . $this->version;
 				if (!rename($this->tmp_extract_path, $new_path)) {
@@ -67,7 +67,7 @@ class PeclExt
 			}
 		}
 
-		$this->name = str_replace('_', '-', strtolower($this->name));
+		$this->name = strtolower($this->name);
 		$this->version = strtolower($this->version);
 
 	}
@@ -154,7 +154,7 @@ class PeclExt
 			throw new \Exception("Unknown extention configure type, expected enable/with");
 		}
 
-		$ret = ' "--' . $data['type'] . '-' . $this->name . '=shared" ';
+		$ret = ' "--' . $data['type'] . '-' . str_replace('_', '-', $this->name) . '=shared" ';
 
 		if (isset($data['libs']) && $data['libs']) {
 			$data['libs'] = !is_array($data['libs']) ? array($data['libs']) : $data['libs'];
