@@ -24,7 +24,7 @@ class PeclExt
 	protected $configure_data = NULL;
 	protected $non_core_ext_deps = array();
 
-	public function __construct($pgk_path, $build)
+	public function __construct($pgk_path, $build, $force_name = NULL, $force_version = NULL)
 	{
 		if (!file_exists($pgk_path)) {
 			throw new \Exception("'$pgk_path' does not exist");
@@ -49,13 +49,19 @@ class PeclExt
 		$this->unpack();
 		$this->check();
 
+
+		$this->name = $force_name;
+		$this->version = $force_version;
+
 		/* Setup some stuff */
-		if ($this->package_xml) {
+		if (!$this->name && $this->package_xml) {
 			$this->name = (string)$this->getPackageXmlProperty("name");
+		}
+		if (!$this->version && $this->package_xml) {
 			$this->version = (string)$this->getPackageXmlProperty("version", "release");
 		}
 
-		if (!$this->name || !$this->version) {
+		if (!$this->name) {
 			/* This is the fallback if there's no package.xml  */
 			if (!$this->name) {
 				$config_w32_path = $this->tmp_extract_path . DIRECTORY_SEPARATOR . 'config.w32';
@@ -67,13 +73,13 @@ class PeclExt
 				}
 			}
 
+			/* give up */
 			if (!$this->name) {
 				throw new \Exception("Couldn't reliably determine the package name, please fix or add package.xml");
 			}
-
-			if (!$this->version) {
-				$this->version = date('Ymd');
-			}
+		}
+		if (!$this->version) {
+			$this->version = date('Ymd');
 		}
 
 		$config = $this->getPackageConfig();
