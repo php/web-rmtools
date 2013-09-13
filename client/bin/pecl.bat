@@ -17,15 +17,22 @@ set RMTOOLS_BASE_DIR=c:\php-sdk\rmtools-client
 
 set PECL_PHP_CMD=c:\php-sdk\php\php.exe -d extension_dir=c:\php-sdk\php\ext -d extension=php_openssl.dll -d extension=php_curl.dll -d date.timezone=UTC
 
-if "%1"=="" (
-	echo ==========================================================
-	echo This is the PECL build batch script. You can see the help
-	echo output of the underlaying worker below. Note that you have
-	echo to ommit the --config option when running this batch.
-	echo ==========================================================
-	%PECL_PHP_CMD% %BAT_DIR%\..\script\pecl.php
-	GOTO EXIT_LOCKED
-)
+if "%1"=="" goto :help
+if "%1"=="--help" goto :help
+if "%1"=="-h" goto :help
+if "%1"=="/?" goto :help
+goto :skip_help
+
+:help
+echo ==========================================================
+echo This is the PECL build batch script. You can see the help
+echo output of the underlaying worker below. Note that you have
+echo to ommit the --config option when running this batch.
+echo ==========================================================
+%PECL_PHP_CMD% %BAT_DIR%\..\script\pecl.php
+GOTO EXIT_LOCKED
+
+:skip_help
 
 IF EXIST c:\php-sdk\locks\pecl.lock (
 ECHO Snapshot script is already running.
