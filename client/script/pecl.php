@@ -69,6 +69,7 @@ foreach ($builds as $build_name) {
 
 	try {
 		$ext = new rm\PeclExt($pkg_path, $build);
+		$ext->setupNonCoreExtDeps();
 	} catch (Exception $e) {
 		echo $e->getMessage() . PHP_EOL;
 

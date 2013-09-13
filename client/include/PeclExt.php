@@ -22,6 +22,7 @@ class PeclExt
 	protected $ext_dir_in_src_path = NULL;
 	protected $package_xml = NULL;
 	protected $configure_data = NULL;
+	protected $non_core_ext_deps = array();
 
 	public function __construct($pgk_path, $build)
 	{
@@ -286,7 +287,13 @@ class PeclExt
 		}
 
 		if (isset($data['exts']) && $data['exts']) {
-			/* TODO */
+			if (empty($this->non_core_ext_deps)) {
+				 $this->setupNonCoreExtDeps();
+			}
+			if (!empty($this->non_core_ext_deps)) {
+				$ret .= ' ';
+				$ret .= $this->getNonCoreExtDepsConfLines();
+			}
 		} else {
 			$data['exts'] = array();
 		}
@@ -464,6 +471,8 @@ class PeclExt
 		if ($flag0 && file_exists($log_pack)) {
 			unlink($log_pack);
 		}
+
+		$this->cleanupNonCoreExtDeps();
 	}
 
 	public function check()
@@ -571,6 +580,93 @@ class PeclExt
 			} else {
 				return NULL;
 			}
+		}
+	}
+
+	public function setupNonCoreExtDeps()
+	{
+		$config = $this->getPackageConfig();
+		if (!$config) {
+			/* XXX read non core ext deps from the package.xml maybe? */
+			return;
+		}
+
+		if (!isset($config['exts']) || !is_array($config['exts'])) {
+			continue;
+		}
+
+		$path = $this->build->branch->config->getPeclNonCoreExtDepsBase();
+
+		foreach($config["exts"] as $name) {
+			if (!$name) {
+				continue;
+			}
+
+			$pkgs = glob("$path/*");
+
+			if (!$pkgs) {
+				continue;
+			}
+
+			foreach ($pkgs as $pkg) {
+				$ext = new PeclExt($pkg, $this->build);
+
+				if (strtolower($ext->getName()) == strtolower($name)
+					&& !isset($this->non_core_ext_deps[$ext->getName])
+					/* Avoid an ext having itself as dep */
+					&& strtolower($ext->getName()) != strtolower($this->name)) {
+
+					$ext->setupNonCoreExtDeps();
+					$ext->putSourcesIntoBranch();
+
+					$this->non_core_ext_deps[$ext->getName()] = $ext;
+				} else {
+					$ext->cleanup();
+					unset($ext);
+				}
+			}
+		}
+
+		return $this->non_core_ext_deps;
+	}
+
+	/* the simple variant, all the usual non core exts will be built on each run. */
+	/*public function setupNonCoreExtDeps()
+	{
+		$path = $this->build->branch->config->getPeclNonCoreExtDepsBase();
+
+		$pkgs = glob("$path/*");
+
+		foreach($pkgs as $pkg) {
+			$ext = new PeclExt($pkg, $this->build);
+
+			if ($ext->getName() != $this->name) {
+				$ext->putSourcesIntoBranch();
+
+				$this->non_core_ext_deps[$ext->getName()] = $ext;
+			} else {
+				$ext->cleanup();
+				unset($ext);
+			}
+		}
+	}*/
+
+	public function getNonCoreExtDepsConfLines()
+	{
+		$ret = array();
+
+		foreach ($this->non_core_ext_deps as $ext) {
+			$ret[] = $ext->getConfigureLine();
+		}
+	
+		return implode(' ', $ret);
+	}
+
+
+	protected function cleanupNonCoreExtDeps()
+	{
+		foreach ($this->non_core_ext_deps as $ext) {
+			$ext->cleanup();
 		}
 	}
 }
