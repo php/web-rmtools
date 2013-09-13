@@ -110,7 +110,7 @@ class PeclExt
 
 	public function uncompressTgz()
 	{
-		$tmp_path = tempnam(TMP_DIR, 'unpack');
+		$tmp_path = tempnam(TMP_DIR, 'pecl');
 		unlink($tmp_path);
 		if (!file_exists($tmp_path) && !mkdir($tmp_path)) {
 			throw new \Exception("Couldn't create temporary dir");
@@ -149,7 +149,7 @@ class PeclExt
 
 	public function uncompressZip()
 	{
-		$tmp_path = tempnam(TMP_DIR, 'unpack');
+		$tmp_path = tempnam(TMP_DIR, 'pecl');
 		unlink($tmp_path);
 		if (!file_exists($tmp_path) && !mkdir($tmp_path)) {
 			throw new \Exception("Couldn't create temporary dir");
@@ -454,7 +454,11 @@ class PeclExt
 	public function cleanup($flag0 = false)
 	{
 		if ($this->tmp_extract_path) {
-			rmdir_rf(dirname($this->tmp_extract_path));
+			$path = dirname($this->tmp_extract_path);
+			if (strtolower(realpath(TMP_DIR)) == strtolower(realpath($path))) {
+				$path = $this->tmp_extract_path;
+			}
+			rmdir_rf($path);
 		}
 
 		if ($this->ext_dir_in_src_path) {
@@ -538,7 +542,6 @@ class PeclExt
 			$msg .= "The package was uploaded to $url/" . $this->getPackageName() . ".zip\n";
 		} else {
 			$msg = "PECL Windows build failed\n\n";
-
 		}
 		$msg .= "For logs see $url/logs/" . $this->getPackageName() . "-logs.zip\n";
 
@@ -612,7 +615,7 @@ class PeclExt
 				$ext = new PeclExt($pkg, $this->build);
 
 				if (strtolower($ext->getName()) == strtolower($name)
-					&& !isset($this->non_core_ext_deps[$ext->getName])
+					&& !isset($this->non_core_ext_deps[$ext->getName()])
 					/* Avoid an ext having itself as dep */
 					&& strtolower($ext->getName()) != strtolower($this->name)) {
 
@@ -626,6 +629,7 @@ class PeclExt
 				}
 			}
 		}
+
 
 		return $this->non_core_ext_deps;
 	}
@@ -665,8 +669,9 @@ class PeclExt
 
 	protected function cleanupNonCoreExtDeps()
 	{
-		foreach ($this->non_core_ext_deps as $ext) {
+		foreach ($this->non_core_ext_deps as $name => &$ext) {
 			$ext->cleanup();
+			unset($ext);
 		}
 	}
 }

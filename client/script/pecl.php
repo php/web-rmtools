@@ -213,6 +213,9 @@ foreach ($builds as $build_name) {
 	$ext->cleanup($upload_success);
 	rm\rmdir_rf($toupload_dir);
 
+	unset($ext);
+	unset($build);
+
 	echo  PHP_EOL;
 
 	$was_errors = $was_errors || $build_error > 0;
