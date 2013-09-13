@@ -1,4 +1,5 @@
 @ECHO OFF
+
 SET BAT_DIR=%~dp0
 
 set yyyy=%date:~6,4%
@@ -13,6 +14,18 @@ set cur_date=%yyyy%%mm%%dd%-%hh%%nn%%ss%
 
 set LOG_FILE=c:\php-sdk\logs\task-pecl-%cur_date%.log
 set RMTOOLS_BASE_DIR=c:\php-sdk\rmtools-client
+
+set PECL_PHP_CMD=c:\php-sdk\php\php.exe -d extension_dir=c:\php-sdk\php\ext -d extension=php_openssl.dll -d extension=php_curl.dll -d date.timezone=UTC
+
+if "%1"=="" (
+	echo ==========================================================
+	echo This is the PECL build batch script. You can see the help
+	echo output of the underlaying worker below. Note that you have
+	echo to ommit the --config option when running this batch.
+	echo ==========================================================
+	%PECL_PHP_CMD% %BAT_DIR%\..\script\pecl.php
+	GOTO EXIT_LOCKED
+)
 
 IF EXIST c:\php-sdk\locks\pecl.lock (
 ECHO Snapshot script is already running.
@@ -72,7 +85,6 @@ SET VC11_X64_LIBPATH=C:\Windows\Microsoft.NET\Framework64\v4.0.30319;C:\Windows\
 SET VC11_X64_SHELL=%comspec% /k ""C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\vcvarsall.bat"" amd64
 
 REM Run pecl.php
-set PECL_PHP_CMD=c:\php-sdk\php\php.exe -d extension_dir=c:\php-sdk\php\ext -d extension=php_openssl.dll -d extension=php_curl.dll -d date.timezone=UTC
 SET BISON_SIMPLE=c:\php-sdk\bin\bison.simple
 rem XXX iterate the c:\pecl_in_pkg here and delete the packages after successful build
 @ECHO ON

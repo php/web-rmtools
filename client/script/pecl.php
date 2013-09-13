@@ -8,7 +8,7 @@ use rmtools as rm;
 
 
 $shortopts = NULL; //"c:p:mu";
-$longopts = array("config:", "package:", "mail", "upload", "is-snap");
+$longopts = array("config:", "package:", "mail", "upload", "is-snap", "force-name:", "force-version:");
 
 $options = getopt($shortopts, $longopts);
 
@@ -17,14 +17,18 @@ $pkg_path = isset($options['package']) ? $options['package'] : NULL;
 $mail_maintainers = isset($options['mail']);
 $upload = isset($options['upload']);
 $is_snap = isset($options['is-snap']);
+$force_name = isset($options['force-name']) ? $options['force-name'] : NULL;
+$force_version = isset($options['force-version']) ? $options['force-version'] : NULL;
 
 if (NULL == $branch_name || NULL == $pkg_path) {
 	echo "Usage: pecl.php [OPTION] ..." . PHP_EOL;
-	echo "  --config     Configuration file name without suffix, required." . PHP_EOL;
-	echo "  --package    Path to the PECL package, required." . PHP_EOL;
-	echo "  --mail       Send build logs to the extension maintainers, optional." . PHP_EOL;
-	echo "  --upload     Upload the builds to the windows.hpp.net, optional." . PHP_EOL;
-	echo "  --is-snap    The package is a snapshot, so it'll be uploaded to snaps, not releases, optional." . PHP_EOL;
+	echo "  --config         Configuration file name without suffix, required." . PHP_EOL;
+	echo "  --package        Path to the PECL package, required." . PHP_EOL;
+	echo "  --mail           Send build logs to the extension maintainers, optional." . PHP_EOL;
+	echo "  --upload         Upload the builds to the windows.hpp.net, optional." . PHP_EOL;
+	echo "  --is-snap        We upload to releases by default, but this one goes to snaps, optional." . PHP_EOL;
+	echo "  --force-name     Force this name instead of reading the package data, optional." . PHP_EOL;
+	echo "  --force-version  Force this name instead of reading the package data, optional." . PHP_EOL;
 	echo PHP_EOL;
 	echo "Example: pecl --config=php55_x64 --package=c:\pecl_in_pkg\some-1.0.0.tgz" . PHP_EOL;
 	echo PHP_EOL;
@@ -68,7 +72,7 @@ foreach ($builds as $build_name) {
 	$build->setSourceDir($build_src_path);
 
 	try {
-		$ext = new rm\PeclExt($pkg_path, $build);
+		$ext = new rm\PeclExt($pkg_path, $build, $force_name, $force_version);
 		$ext->setupNonCoreExtDeps();
 	} catch (Exception $e) {
 		echo $e->getMessage() . PHP_EOL;
