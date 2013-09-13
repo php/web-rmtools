@@ -51,8 +51,8 @@ class PeclExt
 
 		/* Setup some stuff */
 		if ($this->package_xml) {
-			$this->name = $this->getPackageXmlProperty("name");
-			$this->version = $this->getPackageXmlProperty("version", "release");
+			$this->name = (string)$this->getPackageXmlProperty("name");
+			$this->version = (string)$this->getPackageXmlProperty("version", "release");
 		}
 
 		if (!$this->name || !$this->version) {
@@ -491,8 +491,8 @@ class PeclExt
 		}
 
 		if ($this->package_xml) {
-			$min_php_ver = $this->getPackageXmlProperty("dependencies", "required", "php", "min");
-			$max_php_ver = $this->getPackageXmlProperty("dependencies", "required", "php", "max");
+			$min_php_ver = (string)$this->getPackageXmlProperty("dependencies", "required", "php", "min");
+			$max_php_ver = (string)$this->getPackageXmlProperty("dependencies", "required", "php", "max");
 			$php_ver = '';
 
 			$ver_hdr = $this->build->getSourceDir() . '/main/php_version.h';

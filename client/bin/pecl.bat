@@ -72,7 +72,7 @@ SET VC11_X64_LIBPATH=C:\Windows\Microsoft.NET\Framework64\v4.0.30319;C:\Windows\
 SET VC11_X64_SHELL=%comspec% /k ""C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\vcvarsall.bat"" amd64
 
 REM Run pecl.php
-set PECL_PHP_CMD=c:\php-sdk\php\php.exe -d extension_dir=c:\php-sdk\php\ext -d extension=php_openssl.dll -d extension=php_curl.dll
+set PECL_PHP_CMD=c:\php-sdk\php\php.exe -d extension_dir=c:\php-sdk\php\ext -d extension=php_openssl.dll -d extension=php_curl.dll -d date.timezone=UTC
 SET BISON_SIMPLE=c:\php-sdk\bin\bison.simple
 rem XXX iterate the c:\pecl_in_pkg here and delete the packages after successful build
 @ECHO ON
