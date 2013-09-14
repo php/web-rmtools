@@ -199,14 +199,14 @@ class PeclExt
 		}
 
 		$package_xml_path = NULL;
-		if (file_exists($tmp_path . DIRECTORY_SEPARATOR . 'package.xml')) {
-			$package_xml_path = $tmp_path . DIRECTORY_SEPARATOR . 'package.xml';
-		} else if (file_exists($tmp_path . DIRECTORY_SEPARATOR . 'package2.xml')) {
+		if (file_exists($tmp_path . DIRECTORY_SEPARATOR . 'package2.xml')) {
 			$package_xml_path = $tmp_path . DIRECTORY_SEPARATOR . 'package2.xml';
-		} else if (file_exists($this->tmp_extract_path . DIRECTORY_SEPARATOR . 'package.xml')) {
-			$package_xml_path = $this->tmp_extract_path . DIRECTORY_SEPARATOR . 'package.xml';
+		} else if (file_exists($tmp_path . DIRECTORY_SEPARATOR . 'package.xml')) {
+			$package_xml_path = $tmp_path . DIRECTORY_SEPARATOR . 'package.xml';
 		} else if (file_exists($this->tmp_extract_path . DIRECTORY_SEPARATOR . 'package2.xml')) {
 			$package_xml_path = $this->tmp_extract_path . DIRECTORY_SEPARATOR . 'package2.xml';
+		} else if (file_exists($this->tmp_extract_path . DIRECTORY_SEPARATOR . 'package.xml')) {
+			$package_xml_path = $this->tmp_extract_path . DIRECTORY_SEPARATOR . 'package.xml';
 		}
 
 		if ($package_xml_path) {
