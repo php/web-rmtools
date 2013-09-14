@@ -7,7 +7,7 @@ include_once __DIR__ . '/../include/PeclBranch.php';
 
 class PeclExt
 {
-	protected $pgk_path;
+	protected $pkg_path;
 	protected $pkg_basename;
 	protected $pkg_comp;
 	protected $name;
@@ -24,31 +24,34 @@ class PeclExt
 	protected $configure_data = NULL;
 	protected $non_core_ext_deps = array();
 
-	public function __construct($pgk_path, $build, $force_name = NULL, $force_version = NULL)
+	public function __construct($pkg_path, $build)
 	{
-		if (!file_exists($pgk_path)) {
-			throw new \Exception("'$pgk_path' does not exist");
+		if (!file_exists($pkg_path)) {
+			throw new \Exception("'$pkg_path' does not exist");
 		} 
 		
-		if ('.tgz' == substr($pgk_path, -4)) {
-			$this->pkg_basename = basename($pgk_path, '.tgz');
+		if ('.tgz' == substr($pkg_path, -4)) {
+			$this->pkg_basename = basename($pkg_path, '.tgz');
 			$this->pkg_comp = 'tgz';
-		} else if ('.tar.gz' == substr($pgk_path, -7)) {
-			$this->pkg_basename = basename($pgk_path, '.tar.gz');
+		} else if ('.tar.gz' == substr($pkg_path, -7)) {
+			$this->pkg_basename = basename($pkg_path, '.tar.gz');
 			$this->pkg_comp = 'tgz';
-		} else if ('.zip' == substr($pgk_path, -4)) {
-			$this->pkg_basename = basename($pgk_path, '.zip');
+		} else if ('.zip' == substr($pkg_path, -4)) {
+			$this->pkg_basename = basename($pkg_path, '.zip');
 			$this->pkg_comp = 'zip';
 		} else {
 			throw new \Exception("Unsupported compression format, please pass tgz, tar.gz or zip");
 		}
 
-		$this->pgk_path = $pgk_path;
+		$this->pkg_path = $pkg_path;
 		$this->build = $build;
 
+	}
+
+	public function init($force_name = NULL, $force_version = NULL)
+	{
 		$this->unpack();
 		$this->check();
-
 
 		$this->name = $force_name;
 		$this->version = $force_version;
@@ -100,7 +103,6 @@ class PeclExt
 
 		$this->name = strtolower($this->name);
 		$this->version = strtolower($this->version);
-
 	}
 
 	public function getPackageName()
@@ -122,8 +124,8 @@ class PeclExt
 			throw new \Exception("Couldn't create temporary dir");
 		}
 
-		$tmp_name =  $tmp_path . DIRECTORY_SEPARATOR . basename($this->pgk_path);
-		if (!copy($this->pgk_path, $tmp_name)) {
+		$tmp_name =  $tmp_path . DIRECTORY_SEPARATOR . basename($this->pkg_path);
+		if (!copy($this->pkg_path, $tmp_name)) {
 			throw new \Exception("Couldn't copy the tarball to '$tmp_name'");
 		}
 
@@ -135,7 +137,7 @@ class PeclExt
 
 		chdir($tmp_path);
 
-		$gzip_cmd = $this->gzip_cmd . ' -df ' . escapeshellarg(basename($this->pgk_path));
+		$gzip_cmd = $this->gzip_cmd . ' -df ' . escapeshellarg(basename($this->pkg_path));
 		system($gzip_cmd, $ret);
 		if ($ret) {
 			throw new \Exception("Failed to guzip the tarball");
@@ -161,7 +163,7 @@ class PeclExt
 			throw new \Exception("Couldn't create temporary dir");
 		}
 
-		$unzip_cmd = $this->unzip_cmd . ' ' . escapeshellarg($this->pgk_path) . ' -d ' . $tmp_path;
+		$unzip_cmd = $this->unzip_cmd . ' ' . escapeshellarg($this->pkg_path) . ' -d ' . $tmp_path;
 		system($unzip_cmd, $ret);
 		if ($ret) {
 			throw new \Exception("Failed to unzip the package");
@@ -213,7 +215,7 @@ class PeclExt
 			$this->package_xml = new \SimpleXMLElement($package_xml_path, 0, true);
 		}
 
-		$this->pgk_path = NULL;
+		$this->pkg_path = NULL;
 
 		return $this->tmp_extract_path;
 	}
@@ -540,23 +542,43 @@ class PeclExt
 		return $zip_file;
 	}
 
-	public function mailMaintainers($success, array $logs)
+	public function getToEmail()
 	{
-		$url = 'http://windows.php.net/downloads/pecl/' . $this->name . '/' . $this->version;
-		if ($success) {
-			$msg = "PECL Windows build succeeded\n\n";
-			$msg .= "The package was uploaded to $url/" . $this->getPackageName() . ".zip\n";
-		} else {
-			$msg = "PECL Windows build failed\n\n";
+		$to = NULL;
+		$leads = $this->getPackageXmlProperty("lead");
+		foreach ($leads as $lead) {
+			if ((string)$lead->active == 'yes') {
+				$to = (string)$lead->email;
+			}
 		}
-		$msg .= "For logs see $url/logs/" . $this->getPackageName() . "-logs.zip\n";
 
-		$msg . "\nHave a nice day\n";
+		return $to;
+	}
 
-		rm\xmail(
-			'pecl@windows',
-			'ab@php.net', /* XXX try to get dev mails from the package.xml */
-			'[PECL-DEV] Windows build: ' . $this->name . '-' . $this->version,
+	public function mailMaintainers($success, $is_snap, array $logs, $force_email = NULL)
+	{
+		$seg = $is_snap ? 'snaps' : 'releases';
+		$url = 'http://windows.php.net/downloads/pecl/' . $seg . '/' . $this->name . '/' . $this->version;
+
+		if ($success) {
+			$msg = "PECL Windows build for " . $this->getPackageName() . " succeeded\n\n";
+			$msg .= "The package was uploaded to $url/" . $this->getPackageName() . ".zip\n\n";
+		} else {
+			$msg = "PECL Windows build for " . $this->getPackageName() . " failed\n\n";
+		}
+		$msg .= "The logs was uploaded to $url/logs/" . $this->getPackageName() . "-logs.zip\n\n";
+		if (!$success) {
+			$msg .= "Please look into the logs for what's to be fixed. ";
+			$msg .= "You can ask for help on pecl-dev@lists.php.net or internals-win@lists.php.net. \n";
+		}
+		$msg .= "Have a nice day :)\n";
+
+		$to = $force_email ? $force_email : $this->getToEmail();
+
+		return xmail(
+			MAIL_FROM,
+			$to,
+			'[PECL-DEV] Windows build: ' . $this->getPackageName(),
 			$msg,
 			$logs
 		);

@@ -8,7 +8,7 @@ use rmtools as rm;
 
 
 $shortopts = NULL; //"c:p:mu";
-$longopts = array("config:", "package:", "mail", "upload", "is-snap", "force-name:", "force-version:");
+$longopts = array("config:", "package:", "mail", "upload", "is-snap", "force-name:", "force-version:", "force-email:");
 
 $options = getopt($shortopts, $longopts);
 
@@ -19,6 +19,7 @@ $upload = isset($options['upload']);
 $is_snap = isset($options['is-snap']);
 $force_name = isset($options['force-name']) ? $options['force-name'] : NULL;
 $force_version = isset($options['force-version']) ? $options['force-version'] : NULL;
+$force_email = isset($options['force-email']) ? $options['force-email'] : NULL;
 
 if (NULL == $branch_name || NULL == $pkg_path) {
 	echo "Usage: pecl.php [OPTION] ..." . PHP_EOL;
@@ -29,11 +30,15 @@ if (NULL == $branch_name || NULL == $pkg_path) {
 	echo "  --is-snap        We upload to releases by default, but this one goes to snaps, optional." . PHP_EOL;
 	echo "  --force-name     Force this name instead of reading the package data, optional." . PHP_EOL;
 	echo "  --force-version  Force this name instead of reading the package data, optional." . PHP_EOL;
+	echo "  --force-email    Send the results to this email instead of any from package.xml, optional." . PHP_EOL;
 	echo PHP_EOL;
 	echo "Example: pecl --config=php55_x64 --package=c:\pecl_in_pkg\some-1.0.0.tgz" . PHP_EOL;
 	echo PHP_EOL;
 	exit(0);
 }
+
+define('MAIL_FROM', 'pecl-dev@lists.php.net');
+define('MAIL_TO_FALLBACK', 'ab@php.net');
 
 $config_path = __DIR__ . '/../data/config/pecl/' . $branch_name . '.ini';
 
@@ -41,8 +46,8 @@ $branch = new rm\PeclBranch($config_path);
 
 $branch_name = $branch->config->getName();
 
-echo "Running <$config_path>" . PHP_EOL;
-echo "\t$branch_name" . PHP_EOL;
+echo "Run started for <$config_path>" . PHP_EOL;
+echo "Branch <$branch_name>" . PHP_EOL;
 
 $build_dir_parent = $branch->config->getBuildLocation();
 
@@ -56,7 +61,7 @@ $builds = $branch->getBuildList('windows');
 /* be optimistic */
 $was_errors = false;
 
-echo "Using <$pkg_path>" . PHP_EOL;
+echo "Using <$pkg_path>" . PHP_EOL . PHP_EOL;
 
 /* Each windows configuration from the ini for the given PHP version will be built */
 foreach ($builds as $build_name) {
@@ -72,24 +77,63 @@ foreach ($builds as $build_name) {
 	$build->setSourceDir($build_src_path);
 
 	try {
-		$ext = new rm\PeclExt($pkg_path, $build, $force_name, $force_version);
-		$ext->setupNonCoreExtDeps();
+		$ext = new rm\PeclExt($pkg_path, $build);
 	} catch (Exception $e) {
-		echo $e->getMessage() . PHP_EOL;
+		echo 'Error: ' . $e->getMessage() . PHP_EOL;
 
-		rm\xmail(
-			'pecl@windows',
-			'ab@php.net', /* XXX try to get dev mails from the package.xml */
-			'[PECL-DEV] Windows build: ' . basename($pkg_path),
-			"PECL build failed before it could start for the reasons below:\n\n" . $e->getMessage()
-		);
+		if ($mail_maintainers) {
+			rm\xmail(
+				MAIL_FROM,
+				/* no chance to have the maintainers mailto at this stage */
+				$force_email ? $force_email: MAIL_TO_FALLBACK,
+				'[PECL-DEV] Windows build: ' . basename($pkg_path),
+				"PECL build failed before it could start for the reasons below:\n\n" . $e->getMessage()
+			);
+		}
 
 		$build->clean();
 		$was_errors = true;
 
-		/* XXX mail the ext dev what the error was, if it's something in the check
-			phase like missing config.w32, it's interesting for sure.
-			and no sense to continue as something in ext setup went wrong */
+		unset($ext);
+		unset($build);
+
+		/* no sense to continue as something in ext setup went wrong */
+		continue;
+	}
+
+	try {
+		$ext->init($force_name, $force_version);
+		$ext->setupNonCoreExtDeps();
+		$ext->putSourcesIntoBranch();
+	} catch (Exception $e) {
+		echo 'Error: ' . $e->getMessage() . PHP_EOL;
+		$was_errors = true;
+
+		if ($mail_maintainers) {
+			$maintainer_mailto = $force_email;
+			if (!$maintainer_mailto) {
+				$maintainer_mailto = $ext->getToEmail();
+				if (!$maintainer_mailto) {
+					$maintainer_mailto = MAIL_TO_FALLBACK;
+				}
+			}
+
+			rm\xmail(
+				MAIL_FROM,
+				$maintainer_mailto,
+				'[PECL-DEV] Windows build: ' . basename($pkg_path),
+				"PECL build failed before it could start for the reasons below:\n\n" . $e->getMessage()
+			);
+		}
+
+		$build->clean();
+		$ext->clean();
+		$was_errors = true;
+
+		unset($ext);
+		unset($build);
+
+		/* no sense to continue as something in ext setup went wrong */
 		continue;
 	}
 
@@ -105,11 +149,9 @@ foreach ($builds as $build_name) {
 		mkdir($toupload_dir . '/logs', 0655, true);
 	}
 
- 	echo "Configured for '$ext_build_name'" . PHP_EOL;
+ 	echo "Configured for <$ext_build_name>" . PHP_EOL;
 	echo "Running build in <$build_src_path>" . PHP_EOL;
 	try {
-		$ext->putSourcesIntoBranch();
-
 		$build->buildconf();
 
 		$ext_conf_line = $ext->getConfigureLine();
@@ -129,7 +171,7 @@ foreach ($builds as $build_name) {
 		$build->make();
 		//$html_make_log = $build->getMakeLogParsed();
 	} catch (Exception $e) {
-		echo $e->getMessage() . PHP_EOL;
+		echo 'Error: ' . $e->getMessage() . PHP_EOL;
 		$build_error++;
 	}
 
@@ -156,7 +198,7 @@ foreach ($builds as $build_name) {
 		echo "Packaging the binaries" . PHP_EOL;
 		$pkg_file = $ext->preparePackage();
 	} catch (Exception $e) {
-		echo $e->getMessage() . PHP_EOL;
+		echo 'Error: ' . $e->getMessage() . PHP_EOL;
 		$build_error++;
 	}
 
@@ -171,7 +213,7 @@ foreach ($builds as $build_name) {
 			)
 		);
 	} catch (Exception $e) {
-		echo $e->getMessage() . PHP_EOL;
+		echo 'Error: ' . $e->getMessage() . PHP_EOL;
 		$build_error++;
 	}
 
@@ -199,17 +241,28 @@ foreach ($builds as $build_name) {
 				echo "Upload failed" . PHP_EOL;
 			}
 		} catch (Exception $e) {
-			echo $e->getMessage();
+			echo 'Error . ' . $e->getMessage() . PHP_EOL;
 			$upload_success = false;
 		}
 	}
 
-	if (0 && $mail_maintainers) {
-		echo "Mailing logs";
+	if ($mail_maintainers) {
+		echo "Mailing logs" . PHP_EOL;
 		try {
-			$ext->mailMaintainers(0 == $build_error, array($logs_zip));
+			$maintainer_mailto = $force_email;
+			if (!$maintainer_mailto) {
+				$maintainer_mailto = $ext->getToEmail();
+				if (!$maintainer_mailto) {
+					$maintainer_mailto = MAIL_TO_FALLBACK;
+				}
+			}
+
+			$res = $ext->mailMaintainers(0 == $build_error, $is_snap, array($logs_zip), $maintainer_mailto);
+			if (!$res) {
+				throw new \Exception("Mail operation failed");
+			}
 		} catch (Exception $e) {
-			echo $e->getMessage() . PHP_EOL;
+			echo 'Error: ' . $e->getMessage() . PHP_EOL;
 		}
 	} 
 
@@ -220,12 +273,12 @@ foreach ($builds as $build_name) {
 	unset($ext);
 	unset($build);
 
-	echo  PHP_EOL;
+	echo "Done." . PHP_EOL . PHP_EOL;
 
 	$was_errors = $was_errors || $build_error > 0;
 }
 
-echo "Done." . PHP_EOL;
+echo "Run finished." . PHP_EOL . PHP_EOL;
 
 exit((int)$was_errors);
 
