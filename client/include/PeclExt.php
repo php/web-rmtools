@@ -562,11 +562,13 @@ class PeclExt
 
 		if ($success) {
 			$msg = "PECL Windows build for " . $this->getPackageName() . " succeeded\n\n";
-			$msg .= "The package was uploaded to $url/" . $this->getPackageName() . ".zip\n\n";
+			/* $msg .= "The package was uploaded to $url/" . $this->getPackageName() . ".zip\n\n";*/
+			$msg .= "The package was uploaded to $url/\n\n";
 		} else {
 			$msg = "PECL Windows build for " . $this->getPackageName() . " failed\n\n";
 		}
-		$msg .= "The logs was uploaded to $url/logs/" . $this->getPackageName() . "-logs.zip\n\n";
+		/* No need to link the logs as we attach them. */
+		/* $msg .= "The logs was uploaded to $url/logs/" . $this->getPackageName() . "-logs.zip\n\n"; */
 		if (!$success) {
 			$msg .= "Please look into the logs for what's to be fixed. ";
 			$msg .= "You can ask for help on pecl-dev@lists.php.net or internals-win@lists.php.net. \n";
