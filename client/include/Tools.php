@@ -334,20 +334,19 @@ function copy_r($from, $to)
 function xmail($from, $to, $subject, $text, array $attachment = array())
 {
 	$header = $mail = array();
-	$boundary = '--' . md5(uniqid(mt_rand(), 1));
+	$boundary = md5(uniqid(mt_rand(), 1));
 
 	$header[] = "MIME-Version: 1.0";
 	$header[] = "From: $from";
+	$header[] = "Content-Type: multipart/mixed;\r\n boundary=\"$boundary\"";
 
-	$mail[] = "Content-Type: multipart/mixed; boundary=\"$boundary\"";
-	$mail[] = $boundary;
+	$mail[] = '--' . $boundary;
 	$mail[] = "Content-Type: text/plain; charset=latin1";
 	$mail[] = "Content-Transfer-Encoding: 7bit\r\n";
 	$mail[] = "$text\r\n";
-	$mail[] = $boundary;
 
 	foreach($attachment as $att) {
-		if (!$att || !file_exists(!$att) || !is_file($att) || !is_readable($att)) {
+		if (!$att || !file_exists($att) || !is_file($att) || !is_readable($att)) {
 			continue;
 		}
 
@@ -360,12 +359,14 @@ function xmail($from, $to, $subject, $text, array $attachment = array())
 		}
 		$raw = file_get_contents($att);
 
+		$mail[] = '--' . $boundary;
 		$mail[] = "Content-Type: $mime_type; name=\"$fname\"";
 		$mail[] = "Content-Transfer-Encoding: base64";
 		$mail[] = "Content-Disposition: attachment; filename=\"$fname\"; size=\"$fsize\"\r\n";
 		$mail[] = chunk_split(base64_encode($raw)) . "\r\n";
-		$mail[] = $boundary;
 	}
+
+	$mail[] = '--' . $boundary . '--';
 
 	return mail($to, $subject, implode("\r\n", $mail), implode("\r\n", $header));
 }
