@@ -247,7 +247,6 @@ foreach ($builds as $build_name) {
 	}
 
 	if ($mail_maintainers) {
-		echo "Mailing logs" . PHP_EOL;
 		try {
 			$maintainer_mailto = $force_email;
 			if (!$maintainer_mailto) {
@@ -256,6 +255,8 @@ foreach ($builds as $build_name) {
 					$maintainer_mailto = MAIL_TO_FALLBACK;
 				}
 			}
+
+			echo "Mailing logs to <$maintainer_mailto>" . PHP_EOL;
 
 			$res = $ext->mailMaintainers(0 == $build_error, $is_snap, array($logs_zip), $maintainer_mailto);
 			if (!$res) {
