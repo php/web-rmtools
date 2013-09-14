@@ -26,10 +26,10 @@ if (NULL == $branch_name || NULL == $pkg_path) {
 	echo "  --config         Configuration file name without suffix, required." . PHP_EOL;
 	echo "  --package        Path to the PECL package, required." . PHP_EOL;
 	echo "  --mail           Send build logs to the extension maintainers, optional." . PHP_EOL;
-	echo "  --upload         Upload the builds to the windows.hpp.net, optional." . PHP_EOL;
+	echo "  --upload         Upload the builds to the windows.php.net, optional." . PHP_EOL;
 	echo "  --is-snap        We upload to releases by default, but this one goes to snaps, optional." . PHP_EOL;
 	echo "  --force-name     Force this name instead of reading the package data, optional." . PHP_EOL;
-	echo "  --force-version  Force this name instead of reading the package data, optional." . PHP_EOL;
+	echo "  --force-version  Force this version instead of reading the package data, optional." . PHP_EOL;
 	echo "  --force-email    Send the results to this email instead of any from package.xml, optional." . PHP_EOL;
 	echo PHP_EOL;
 	echo "Example: pecl --config=php55_x64 --package=c:\pecl_in_pkg\some-1.0.0.tgz" . PHP_EOL;
@@ -267,7 +267,7 @@ foreach ($builds as $build_name) {
 	} 
 
 	$build->clean();
-	$ext->cleanup($upload_success);
+	$ext->cleanup($upload && $upload_success);
 	rm\rmdir_rf($toupload_dir);
 
 	unset($ext);
