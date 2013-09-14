@@ -82,10 +82,14 @@ foreach ($builds as $build_name) {
 		echo 'Error: ' . $e->getMessage() . PHP_EOL;
 
 		if ($mail_maintainers) {
+			$maintainer_mailto = $force_email ? $force_email: MAIL_TO_FALLBACK;
+
+			echo "Mailing info to <$maintainer_mailto>" . PHP_EOL;
+
 			rm\xmail(
 				MAIL_FROM,
 				/* no chance to have the maintainers mailto at this stage */
-				$force_email ? $force_email: MAIL_TO_FALLBACK,
+				$maintainer_mailto,
 				'[PECL-DEV] Windows build: ' . basename($pkg_path),
 				"PECL build failed before it could start for the reasons below:\n\n" . $e->getMessage()
 			);
@@ -117,6 +121,8 @@ foreach ($builds as $build_name) {
 					$maintainer_mailto = MAIL_TO_FALLBACK;
 				}
 			}
+
+			echo "Mailing info to <$maintainer_mailto>" . PHP_EOL;
 
 			rm\xmail(
 				MAIL_FROM,
