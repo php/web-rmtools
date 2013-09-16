@@ -320,6 +320,48 @@ class PeclExt
 		return $ret;
 	}
 
+	protected function complexPkgNameMatch($cnf_name) {
+		$full_set = array(
+			$this->build->branch->config->getBranch(),
+			($this->build->thread_safe ? 'ts' : 'nts'),
+			$this->build->compiler,
+			$this->build->architecture,
+		);
+
+if (!function_exists('rmtools\combinations')) {
+		function combinations($arr, $level, &$result, $that, $curr=array()) {
+			for($i = 0; $i < count($arr); $i++) {
+				$new = array_merge($curr, array($arr[$i]));
+				if($level == 1) {
+					/* preserve order */
+					sort($new);
+					/* no repititions */
+					$new = array_unique($new);
+					$name = $that->getName() . '-' . implode('-', $new);
+					if (!in_array($name, $result)) {
+						$result[] = $name;
+					}
+				} else {
+					combinations($arr, $level - 1, $result, $that, $new);
+				}
+			}
+		}
+}
+
+		$names = array();
+		for ($i = 0; $i<count($full_set); $i++) {
+			combinations($full_set, $i+1, $names, $this);
+		}
+
+		foreach ($names as $name) {
+			if ($name === $cnf_name) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
 	public function getPackageConfig()
 	{
 		$config = NULL;
@@ -327,9 +369,20 @@ class PeclExt
 		$known_path = __DIR__ . '/../data/config/pecl/exts.ini';
 		$exts = parse_ini_file($known_path, true, INI_SCANNER_RAW);
 
+		/* Check for like myext-5.3-ts-vc9-x86 */
 		foreach ($exts as $name => $conf) {
-			if ($name === $this->name) {
+			if ($this->complexPkgNameMatch($name)) {
 				$config = $conf;
+				break;
+			}
+		}
+
+		if (!$config) {
+			foreach ($exts as $name => $conf) {
+				if ($name === $this->name) {
+					$config = $conf;
+					break;
+				}
 			}
 		}
 
