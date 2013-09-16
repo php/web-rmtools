@@ -236,13 +236,34 @@ class PeclExt
 	protected function buildConfigureLine(array $data)
 	{
 		$ret = '';
+		$ignore_main_opt = false;
 
 		if (!isset($data['type'])
 			|| !in_array($data['type'], array('with', 'enable'))) {
 			throw new \Exception("Unknown extention configure type, expected enable/with");
 		}
 
-		$ret = ' "--' . $data['type'] . '-' . str_replace('_', '-', $this->name) . '=shared" ';
+		$main_opt = '--' . $data['type'] . '-' . str_replace('_', '-', $this->name);
+
+		if (isset($data['opts']) && $data['opts']) {
+			$data['opts'] = !is_array($data['opts']) ? array($data['opts']) : $data['opts'];
+			foreach($data['opts'] as $opt) {
+				if ($opt) {
+					/* XXX simple check for opt syntax */
+					$ret .= ' "' . $opt . '" ';
+				}
+				/* the main enable/with option was overridden in the ini */
+				if (strstr($opt, "$main_opt=") !== false) {
+					$ignore_main_opt = true;
+				}
+			}
+		} else {
+			$data['opts'] = array();
+		}
+
+		if (!$ignore_main_opt) {
+			$ret .=  ' "' . $main_opt . '=shared" ';
+		}
 
 		if (isset($data['libs']) && $data['libs']) {
 			$data['libs'] = !is_array($data['libs']) ? array($data['libs']) : $data['libs'];
@@ -280,18 +301,6 @@ class PeclExt
 			}
 		} else {
 			$data['libs'] = array();
-		}
-
-		if (isset($data['opts']) && $data['opts']) {
-			$data['opts'] = !is_array($data['opts']) ? array($data['opts']) : $data['opts'];
-			foreach($data['opts'] as $opt) {
-				if ($opt) {
-					/* XXX simple check for opt syntax */
-					$ret .= ' "' . $opt . '" ';
-				}
-			}
-		} else {
-			$data['opts'] = array();
 		}
 
 		if (isset($data['exts']) && $data['exts']) {
