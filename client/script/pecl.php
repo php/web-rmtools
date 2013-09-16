@@ -133,7 +133,7 @@ foreach ($builds as $build_name) {
 		}
 
 		$build->clean();
-		$ext->clean();
+		$ext->cleanup();
 		$was_errors = true;
 
 		unset($ext);
