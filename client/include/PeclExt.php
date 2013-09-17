@@ -687,7 +687,7 @@ if (!function_exists('rmtools\combinations')) {
 		}
 
 		if (!isset($config['exts']) || !is_array($config['exts'])) {
-			continue;
+			return;
 		}
 
 		$path = $this->build->branch->config->getPeclNonCoreExtDepsBase();
