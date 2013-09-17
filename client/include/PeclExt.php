@@ -425,9 +425,59 @@ if (!function_exists('rmtools\combinations')) {
 		return $this->buildConfigureLine($config);
 	}
 
+	public function prepareAllDepDlls($dll_file, $target)
+	{
+		$ret = array();
+
+		/* Walk the deps if any, but look for them in the lib deps folders only.
+			the deplister will for sure find something like kernel32.dll,
+			but that's not what we need. */
+		$depl_cmd = $this->deplister_cmd . ' ' . $dll_file;
+		$deps_path = $this->build->branch->config->getPeclDepsBase();
+		exec($depl_cmd, $out);
+		foreach($out as $ln) {
+			$dll_name = explode(',', $ln)[0];
+			$dll_file = $target . DIRECTORY_SEPARATOR . $dll_name;
+			$pdb_name = basename($dll_name, '.dll') . '.pdb';
+			$pdb_file = $target . DIRECTORY_SEPARATOR . $pdb_name;
+
+			foreach ($this->configure_data['libs'] as $lib) {
+				$look_for = $deps_path
+					. DIRECTORY_SEPARATOR . $lib
+					. DIRECTORY_SEPARATOR . 'bin'
+					. DIRECTORY_SEPARATOR . $dll_name;
+
+				if(file_exists($look_for)) {
+					if (!copy($look_for, $dll_file)) {
+						throw new \Exception("The dependency dll '$dll_name' "
+						. "was found but couldn't be copied into '$target'");
+					}
+					$ret[] = $dll_file;
+					/* some dep dll might have another dep :) */
+					$ret = array_merge($this->prepareAllDepDlls($look_for, $target), $ret);
+				}
+				
+				$look_for = $deps_path
+					. DIRECTORY_SEPARATOR . $lib
+					. DIRECTORY_SEPARATOR . 'bin'
+					. DIRECTORY_SEPARATOR . $pdb_name;
+
+
+				if(file_exists($look_for)) {
+					if (!copy($look_for, $pdb_file)) {
+						throw new \Exception("The dependency pdb '$dll_name' "
+						. "was found but couldn't be copied into '$target'");
+					}
+					$ret[] = $pdb_file;
+				}	
+			}
+		}
+
+		return $ret;
+	}
+
 	public function preparePackage()
 	{
-		/* XXX check if there are any dep dll/pdb to put together */
 		$sub = $this->build->thread_safe ? 'Release_TS' : 'Release';
 		$base = $this->build->getObjDir() . DIRECTORY_SEPARATOR . $sub;
 		$target = TMP_DIR . DIRECTORY_SEPARATOR . $this->getPackageName();
@@ -453,48 +503,8 @@ if (!function_exists('rmtools\combinations')) {
 		}
 		$files_to_zip[] = $pdb_file;
 
-		/* Walk the deps if any, but look for them in the lib deps folders only.
-			the deplister will for sure find something like kernel32.dll,
-			but that's not what we need. */
-		$depl_cmd = $this->deplister_cmd . ' ' . $dll_file;
-		$deps_path = $this->build->branch->config->getPeclDepsBase();
-		exec($depl_cmd, $out);
-		foreach($out as $ln) {
-			$dll_name = explode(',', $ln)[0];
-			$dll_file = $target . DIRECTORY_SEPARATOR . $dll_name;
-			$pdb_name = basename($dll_name, '.dll') . '.pdb';
-			$pdb_file = $target . DIRECTORY_SEPARATOR . $pdb_name;
-
-			foreach ($this->configure_data['libs'] as $lib) {
-				$look_for = $deps_path
-					. DIRECTORY_SEPARATOR . $lib
-					. DIRECTORY_SEPARATOR . 'bin'
-					. DIRECTORY_SEPARATOR . $dll_name;
-
-				if(file_exists($look_for)) {
-					if (!copy($look_for, $dll_file)) {
-						throw new \Exception("The dependency dll '$dll_name' "
-						. "was found but couldn't be copied into '$target'");
-					}
-					$files_to_zip[] = $dll_file;
-				}
-				
-				$look_for = $deps_path
-					. DIRECTORY_SEPARATOR . $lib
-					. DIRECTORY_SEPARATOR . 'bin'
-					. DIRECTORY_SEPARATOR . $pdb_name;
-
-
-				if(file_exists($look_for)) {
-					if (!copy($look_for, $pdb_file)) {
-						throw new \Exception("The dependency pdb '$dll_name' "
-						. "was found but couldn't be copied into '$target'");
-					}
-					$files_to_zip[] = $pdb_file;
-				}	
-			}
-		}
-
+		/* get all the dep dlls recursive */
+		$files_to_zip = array_merge($this->prepareAllDepDlls($dll_file, $target), $files_to_zip);
 
 		/* pack */
 		$zip_file = TMP_DIR . DIRECTORY_SEPARATOR . $this->getPackageName() . '.zip';
