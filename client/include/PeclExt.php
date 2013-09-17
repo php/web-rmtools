@@ -705,6 +705,7 @@ if (!function_exists('rmtools\combinations')) {
 
 			foreach ($pkgs as $pkg) {
 				$ext = new PeclExt($pkg, $this->build);
+				$ext->init();
 
 				if (strtolower($ext->getName()) == strtolower($name)
 					&& !isset($this->non_core_ext_deps[$ext->getName()])
