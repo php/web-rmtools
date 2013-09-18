@@ -526,11 +526,7 @@ if (!function_exists('rmtools\combinations')) {
 		}
 
 		if (!$ext_dll_found) {
-			if (count($ext_names) > 1) {
-				$msg = "None of " . implode(',', $ext_names) . " was built, build failed";
-			} else {
-				$msg = $ext_names[0] . " was not built, build failed";
-			}
+			$msg = "No DLL for " . implode(',', $ext_names) . " was found, build failed";
 			throw new \Exception($msg);
 		}
 
