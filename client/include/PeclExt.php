@@ -483,28 +483,56 @@ if (!function_exists('rmtools\combinations')) {
 		$target = TMP_DIR . DIRECTORY_SEPARATOR . $this->getPackageName();
 		$files_to_zip = array();
 
-		$dll_name = 'php_' . $this->name . '.dll';
-		$dll_file = $target . DIRECTORY_SEPARATOR . $dll_name;
-		if (!file_exists($base . DIRECTORY_SEPARATOR . $dll_name)) {
-			throw new \Exception("'$dll_name' doesn't exist after build, build failed");
-		}
-		if (!copy($base . DIRECTORY_SEPARATOR . $dll_name, $dll_file)) {
-			throw new \Exception("Couldn't copy '$dll_name' into '$target'");
-		}
-		$files_to_zip[] = $dll_file;
-		
-		$pdb_name = 'php_' . $this->name . '.pdb';
-		$pdb_file = $target . DIRECTORY_SEPARATOR . $pdb_name;
-		if (!file_exists($base . DIRECTORY_SEPARATOR . $pdb_name)) {
-			throw new \Exception("'$pdb_name' doesn't exist after build");
-		}
-		if (!copy($base . DIRECTORY_SEPARATOR . $pdb_name, $pdb_file)) {
-			throw new \Exception("Couldn't copy '$pdb_name' into '$target'");
-		}
-		$files_to_zip[] = $pdb_file;
+		$ext_names = array($this->name);
 
-		/* get all the dep dlls recursive */
-		$files_to_zip = array_merge($this->prepareAllDepDlls($dll_file, $target), $files_to_zip);
+		/* config.w32 can contain multiple EXTENTION definitions, which would lead to 
+		multiple DLLs be built. */
+		$config_w32_path = $this->tmp_extract_path . DIRECTORY_SEPARATOR . 'config.w32';
+		$config_w32 = file_get_contents($config_w32_path);
+		if (preg_match_all("/EXTENSION\s*\(\s*('|\")([a-z0-9_]+)('|\")\s*,/Sm", $config_w32, $m, PREG_SET_ORDER)) {
+			foreach ($m as $r) {
+				if (!in_array($r[2], $ext_names)) {
+					$ext_names[] = $r[2];
+				}
+			}
+		}
+
+		$ext_dll_found = false;
+		foreach ($ext_names as $ext_name) {
+			$dll_name = 'php_' . $ext_name . '.dll';
+			$dll_file = $target . DIRECTORY_SEPARATOR . $dll_name;
+			if (!file_exists($base . DIRECTORY_SEPARATOR . $dll_name)) {
+				//throw new \Exception("'$dll_name' doesn't exist after build, build failed");
+				continue;
+			}
+			$ext_dll_found = true;
+			if (!copy($base . DIRECTORY_SEPARATOR . $dll_name, $dll_file)) {
+				throw new \Exception("Couldn't copy '$dll_name' into '$target'");
+			}
+			$files_to_zip[] = $dll_file;
+			
+			$pdb_name = 'php_' . $ext_name . '.pdb';
+			$pdb_file = $target . DIRECTORY_SEPARATOR . $pdb_name;
+			if (!file_exists($base . DIRECTORY_SEPARATOR . $pdb_name)) {
+				throw new \Exception("'$pdb_name' doesn't exist after build");
+			}
+			if (!copy($base . DIRECTORY_SEPARATOR . $pdb_name, $pdb_file)) {
+				throw new \Exception("Couldn't copy '$pdb_name' into '$target'");
+			}
+			$files_to_zip[] = $pdb_file;
+
+			/* get all the dep dlls recursive */
+			$files_to_zip = array_merge($this->prepareAllDepDlls($dll_file, $target), $files_to_zip);
+		}
+
+		if (!$ext_dll_found) {
+			if (count($ext_names) > 1) {
+				$msg = "None of " . implode(',', $ext_names) . " was built, build failed";
+			} else {
+				$msg = $ext_names[0] . " was not built, build failed";
+			}
+			throw new \Exception($msg);
+		}
 
 		/* pack */
 		$zip_file = TMP_DIR . DIRECTORY_SEPARATOR . $this->getPackageName() . '.zip';
