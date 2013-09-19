@@ -23,6 +23,7 @@ class PeclExt
 	protected $package_xml = NULL;
 	protected $configure_data = NULL;
 	protected $non_core_ext_deps = array();
+	protected $pkg_config = NULL;
 
 	public function __construct($pkg_path, $build)
 	{
@@ -92,8 +93,10 @@ class PeclExt
 			   That's currently the case with zendopcache vs opcache and pecl_http vs. http. */
 			if (isset($config['real_name']) && $this->name != $config['real_name']) {
 				$new_path = dirname($this->tmp_extract_path) . '/' . $config['real_name'] . '-' . $this->version;
+
+				rmdir_rf($new_path);
 				if (!rename($this->tmp_extract_path, $new_path)) {
-					throw new Exception('Package name conflict, different names in package.xml and config.w32. Tried to solve but failed.');
+					throw new \Exception('Package name conflict, different names in package.xml and config.w32. Tried to solve but failed.');
 				}
 
 				$this->tmp_extract_path = $new_path;
@@ -261,6 +264,8 @@ class PeclExt
 			$data['opts'] = array();
 		}
 
+		$ignore_main_opt = $ignore_main_opt || isset($data['no_conf']);
+
 		if (!$ignore_main_opt) {
 			$ret .=  ' "' . $main_opt . '=shared" ';
 		}
@@ -366,6 +371,10 @@ if (!function_exists('rmtools\combinations')) {
 	{
 		$config = NULL;
 
+		if ($this->pkg_config) {
+			return $this->pkg_config;
+		}
+
 		$known_path = __DIR__ . '/../data/config/pecl/exts.ini';
 		$exts = parse_ini_file($known_path, true, INI_SCANNER_RAW);
 
@@ -385,6 +394,8 @@ if (!function_exists('rmtools\combinations')) {
 				}
 			}
 		}
+
+		$this->pkg_config = $config;
 
 		return $config;
 	}

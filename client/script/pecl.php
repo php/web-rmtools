@@ -170,7 +170,7 @@ foreach ($builds as $build_name) {
 			$build->configure($ext_conf_line);
 		}
 
-		if (!preg_match(',^\|\s+' . $ext->getName() . '\s+\|\s+shared\s+\|,Sm', $build->log_configure)) {
+		if (!preg_match(',^\|\s+' . preg_quote($ext->getName()) . '\s+\|\s+shared\s+\|,Sm', $build->log_configure)) {
 			throw new Exception($ext->getName() . ' is not enabled, skip make phase');
 		}
 
