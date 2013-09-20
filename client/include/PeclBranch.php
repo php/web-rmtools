@@ -85,13 +85,14 @@ class PeclBranch {
 
 	function createBuildInstance($build_name)
 	{
-		$build = $this->config->getBuildFromName($build_name);
+		$build = NULL;
+		$build_config = $this->config->getBuildFromName($build_name);
 
-		if (!$build) {
+		if (!$build_config) {
 			throw new \Exception("Invalid build name <$build_name>");
 		}
 
-		$compiler	= strtolower($build['compiler']);
+		$compiler	= strtolower($build_config['compiler']);
 		switch ($compiler) {
 			case 'vc11':
 			case 'vc9':

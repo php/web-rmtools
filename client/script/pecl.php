@@ -73,10 +73,14 @@ foreach ($builds as $build_name) {
 	$build_src_path = realpath($build_dir_parent . DIRECTORY_SEPARATOR . $branch->config->getBuildSrcSubdir());
 	$log = rm\exec_single_log('mklink /J ' . $build_src_path . ' ' . $build_src_path);
 
-	$build = $branch->createBuildInstance($build_name);
-	$build->setSourceDir($build_src_path);
-
 	try {
+		$build = $branch->createBuildInstance($build_name);
+		if (!$build) {
+			throw new \Exception("Build instance failed to instantiate");
+		}
+		
+		$build->setSourceDir($build_src_path);
+
 		$ext = new rm\PeclExt($pkg_path, $build);
 	} catch (Exception $e) {
 		echo 'Error: ' . $e->getMessage() . PHP_EOL;
