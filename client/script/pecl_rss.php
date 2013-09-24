@@ -5,12 +5,13 @@ include __DIR__ . '/../include/PeclDb.php';
 
 use rmtools as rm;
 
-$longopts = array("help", "refresh", "dump-queue", "no-fetch", "force-fetch");
+$longopts = array("help", "refresh", "dump-queue", "dump-all", "no-fetch", "force-fetch");
 
 $options = getopt(NULL, $longopts);
 
 $refresh_db = isset($options['refresh']);
 $dump_queue = isset($options['dump-queue']);
+$dump_all = isset($options['dump-all']);
 $help = isset($options['help']);
 $no_fetch = isset($options['no-fetch']);
 $force_fetch = isset($options['force-fetch']);
@@ -20,6 +21,7 @@ if ($_SERVER['argc'] <= 1 || $help) {
 	echo "Usage: pecl_rss.php [OPTION] ..." . PHP_EOL;
 	echo "  --refresh       Read new data from the PECL RSS feed and save it to db, optional." . PHP_EOL;
 	echo "  --dump-queue    Dump the db rows with zero built timestamp and exit, optional." . PHP_EOL;
+	echo "  --dump-all      Dump all the db rows, optional." . PHP_EOL;
 	echo "  --no-fetch      Only update db, don't fetch. Only used with --refresh, optional." . PHP_EOL;
 	echo "  --force-fetch   Fetch all the items and reupdate db. Only used with --refresh, optional." . PHP_EOL;
 	echo "  --help          Show help and exit, optional." . PHP_EOL;
@@ -42,10 +44,15 @@ $db = new rm\PeclDb($db_path);
 
 /* --dump-queue */
 if ($dump_queue) {
-	$db->dump();
+	$db->dumpQueue();
 	exit(0);
 }
 
+/* --dump-all */
+if ($dump_all) {
+	$db->dump();
+	exit(0);
+}
 
 /* --refresh, need to wrap it all with ifs maybe*/
 echo "Refreshing the data" . PHP_EOL;
@@ -99,6 +106,13 @@ foreach($latest->item as $item) {
 					unlink($f);
 				}
 			}
+		} else if ($db->done($name, $version)) {
+			echo "<$name-$version> is already done" . PHP_EOL;
+			continue;
+		} else if ($db->exists($name, $version)) {
+			/* XXX no check if file exists here, but should be */
+			echo "<$name-$version> is already in the queue" . PHP_EOL;
+			continue;
 		}
 
 		if (!$suspects) {

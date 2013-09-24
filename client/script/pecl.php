@@ -3,6 +3,7 @@ include __DIR__ . '/../data/config.php';
 include __DIR__ . '/../include/PeclBranch.php';
 include __DIR__ . '/../include/Tools.php';
 include __DIR__ . '/../include/PeclExt.php';
+include __DIR__ . '/../include/PeclDb.php';
 
 use rmtools as rm;
 
@@ -278,12 +279,23 @@ foreach ($builds as $build_name) {
 		}
 	} 
 
+	try {
+		$db_path = __DIR__ . '/../data/pecl.sqlite';
+		$db = new rm\PeclDb($db_path);
+		$db->touch($ext->getName(), $ext->getVersion());
+	} catch (Exception $e) {
+			echo 'Error: ' . $e->getMessage() . PHP_EOL;
+	}
+
 	$build->clean();
 	$ext->cleanup($upload && $upload_success);
 	rm\rmdir_rf($toupload_dir);
 
 	unset($ext);
 	unset($build);
+	if (isset($db)) {
+		unset($db);
+	}
 
 	echo "Done." . PHP_EOL . PHP_EOL;
 

@@ -54,11 +54,16 @@ class PeclDb extends \SQLite3 {
 		$this->exec($sql);
 	}
 
-	public function exists($name, $version)
+	public function exists($name, $version, $where = '')
 	{
+		/* cant check such thing, so trust :) */
+		if ($where) {
+			$where = "AND $where";
+		}
+
 		$name = $this->escapeString($name);
 		$version = $this->escapeString($version);
-		$sql = "SELECT ts_built FROM ext_release WHERE ext_name = '$name' AND ext_version = '$version';";
+		$sql = "SELECT ts_built FROM ext_release WHERE ext_name = '$name' AND ext_version = '$version' $where;";
 
 		$res = $this->query($sql);
 
@@ -70,9 +75,21 @@ class PeclDb extends \SQLite3 {
 		return $ret;
 	}
 
-	public function dump()
+	public function done($name, $version)
 	{
-		$res = $this->query("SELECT * FROM ext_release ORDER BY ext_name, ext_version ASC");
+		/* XXX That's an assumption as the latest timestamp should be about 30 mit old. 
+		   Need to extend pecl.php to set the real statuses when in't really done */
+		return $this->exists($name, $version, "ts_built - " . time() . " > 1800");
+	}
+
+	public function dump($where = '')
+	{
+		/* cant check such thing, so trust :) */
+		if ($where) {
+			$where = "WHERE $where";
+		}
+
+		$res = $this->query("SELECT * FROM ext_release $where ORDER BY ext_name, ext_version ASC");
 		echo "DUMP ext_release " . PHP_EOL . PHP_EOL;
 		while(false !== ($row = $res->fetchArray(SQLITE3_ASSOC))) {
 			foreach ($row as $col => $val) {
@@ -81,6 +98,19 @@ class PeclDb extends \SQLite3 {
 			echo PHP_EOL;
 		}
 		$res->finalize();
+	}
+
+	public function dumpQueue()
+	{
+		$this->dump("ts_built <= 0");
+	}
+
+	public function touch($name, $version) 
+	{
+		$name = $this->escapeString($name);
+		$version = $this->escapeString($version);
+		$sql = "UPDATE ext_release SET ts_built=" . time() . " WHERE lower(ext_name) = lower('$name') AND lower(ext_version) = lower('$version');";
+		$this->exec($sql);
 	}
 }
 
