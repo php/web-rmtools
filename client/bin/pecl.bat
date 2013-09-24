@@ -2,20 +2,9 @@
 
 SET BAT_DIR=%~dp0
 
-set yyyy=%date:~6,4%
-set mm=%date:~3,2%
-set dd=%date:~0,2%
-
-set hh=%time:~0,2%
-if %hh% lss 10 (set hh=0%time:~1,1%)
-set nn=%time:~3,2%
-set ss=%time:~6,2%
-set cur_date=%yyyy%%mm%%dd%-%hh%%nn%%ss%
-
-set LOG_FILE=c:\php-sdk\logs\task-pecl-%cur_date%.log
 set RMTOOLS_BASE_DIR=c:\php-sdk\rmtools-client
 
-set PECL_PHP_CMD=c:\php-sdk\php\php.exe -d extension_dir=c:\php-sdk\php\ext -d extension=php_openssl.dll -d extension=php_curl.dll -d date.timezone=UTC
+set PECL_PHP_CMD=c:\php-sdk\php\php.exe -d extension_dir=c:\php-sdk\php\ext -d extension=php_openssl.dll -d extension=php_curl.dll -d extension=php_sqlite3.dll -d date.timezone=UTC
 
 if "%1"=="" goto :help
 if "%1"=="--help" goto :help
@@ -24,26 +13,14 @@ if "%1"=="/?" goto :help
 goto :skip_help
 
 :help
-echo ==========================================================
-echo This is the PECL build batch script. You can see the help
-echo output of the underlaying worker below. Note that you have
-echo to ommit the --config option when running this batch.
-echo ==========================================================
 %PECL_PHP_CMD% %BAT_DIR%\..\script\pecl.php
 GOTO EXIT_LOCKED
 
 :skip_help
 
-IF EXIST c:\php-sdk\locks\pecl.lock (
-ECHO Snapshot script is already running.
-GOTO EXIT_LOCKED
-)
-
-ECHO running > c:\php-sdk\locks\pecl.lock 
-
 CALL c:\php-sdk\bin\phpsdk_setvars.bat
 
-copy c:\php-sdk\rmtools.base\data\config\credentials_ftps.php %RMTOOLS_BASE_DIR%\data\config\ >> %LOG_FILE% 2<&1
+copy c:\php-sdk\rmtools.base\data\config\credentials_ftps.php %RMTOOLS_BASE_DIR%\data\config\ 
 
 REM VC9 Support
 SET PSDK_61_DIR=C:\Program Files\Microsoft SDKs\Windows\v6.1
@@ -93,18 +70,10 @@ SET VC11_X64_SHELL=%comspec% /k ""C:\Program Files (x86)\Microsoft Visual Studio
 
 REM Run pecl.php
 SET BISON_SIMPLE=c:\php-sdk\bin\bison.simple
-rem XXX iterate the c:\pecl_in_pkg here and delete the packages after successful build
 @ECHO ON
-%PECL_PHP_CMD% %BAT_DIR%\..\script\pecl.php --config=pecl55_x64 %* >> %LOG_FILE% 2<&1
-%PECL_PHP_CMD% %BAT_DIR%\..\script\pecl.php --config=pecl55_x86 %* >> %LOG_FILE% 2<&1
-%PECL_PHP_CMD% %BAT_DIR%\..\script\pecl.php --config=pecl54 %* >> %LOG_FILE% 2<&1
-%PECL_PHP_CMD% %BAT_DIR%\..\script\pecl.php --config=pecl53 %* >> %LOG_FILE% 2<&1
+%PECL_PHP_CMD% %BAT_DIR%..\script\pecl.php %*
 @ECHO OFF
 SET PATH=%OLD_PATH%
-
-echo Done.>> %LOG_FILE%
-
-del c:\php-sdk\locks\pecl.lock >> %LOG_FILE% 2<&1
 
 :EXIT_LOCKED
 echo .
