@@ -46,7 +46,8 @@ $branch = new rm\PeclBranch($config_path);
 
 $branch_name = $branch->config->getName();
 
-echo "Run started for <$config_path>" . PHP_EOL;
+echo PHP_EOL;
+echo "Run started for <" . realpath($config_path) . ">" . PHP_EOL;
 echo "Branch <$branch_name>" . PHP_EOL;
 
 $build_dir_parent = $branch->config->getBuildLocation();
