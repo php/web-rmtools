@@ -73,7 +73,7 @@ class PeclDb extends \SQLite3 {
 	public function dump()
 	{
 		$res = $this->query("SELECT * FROM ext_release ORDER BY ext_name, ext_version ASC");
-		echo "DUMP ext_release " . PHP_EOL;
+		echo "DUMP ext_release " . PHP_EOL . PHP_EOL;
 		while(false !== ($row = $res->fetchArray(SQLITE3_ASSOC))) {
 			foreach ($row as $col => $val) {
 				echo "$col=$val" . PHP_EOL;
