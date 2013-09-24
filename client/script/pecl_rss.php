@@ -5,30 +5,62 @@ include __DIR__ . '/../include/PeclDb.php';
 
 use rmtools as rm;
 
-$longopts = array("refresh-db");
+$longopts = array("help", "refresh", "dump-queue", "no-fetch", "force-fetch");
 
 $options = getopt(NULL, $longopts);
 
-$refresh_db = isset($options['']);
+$refresh_db = isset($options['refresh']);
+$dump_queue = isset($options['dump-queue']);
+$help = isset($options['help']);
+$no_fetch = isset($options['no-fetch']);
+$force_fetch = isset($options['force-fetch']);
 
-if ($_SERVER['argv'] <= 1) {
+/* --help */
+if ($_SERVER['argc'] <= 1 || $help) {
 	echo "Usage: pecl_rss.php [OPTION] ..." . PHP_EOL;
-	echo "  --refresh-db    Read new data from the PECL RSS feed and save it to db, optional" . PHP_EOL;
+	echo "  --refresh       Read new data from the PECL RSS feed and save it to db, optional." . PHP_EOL;
+	echo "  --dump-queue    Dump the db rows with zero built timestamp and exit, optional." . PHP_EOL;
+	echo "  --no-fetch      Only update db, don't fetch. Only used with --refresh, optional." . PHP_EOL;
+	echo "  --force-fetch   Fetch all the items and reupdate db. Only used with --refresh, optional." . PHP_EOL;
+	echo "  --help          Show help and exit, optional." . PHP_EOL;
 	echo PHP_EOL;
-	echo "Example: pecl_rss --refresh-db" . PHP_EOL;
+	echo "Example: pecl_rss --refresh" . PHP_EOL;
 	echo PHP_EOL;
 	exit(0);
 }
 
+if ($no_fetch && $force_fetch) {
+	echo "Decide!" . PHP_EOL;
+	sleep(3);
+	echo "Either you need fetch or not :)" . PHP_EOL;
+	exit(3);
+}
+
+
 $db_path = __DIR__ . '/../data/pecl.sqlite';
+$db = new rm\PeclDb($db_path);
+
+/* --dump-queue */
+if ($dump_queue) {
+	$db->dump();
+	exit(0);
+}
+
+
+/* --refresh, need to wrap it all with ifs maybe*/
+echo "Refreshing the data" . PHP_EOL;
 
 $rss = 'http://pecl.php.net/feeds/latest.rss';
+
+echo "Fetching $rss" . PHP_EOL;
 $latest = simplexml_load_file($rss);
 if (!isset($latest->item)) {
 	echo "No items could be found in $rss" . PHP_EOL;
 }
 
-$db = new rm\PeclDb($db_path);
+$curl = 'C:\apps\bin\curl.exe';
+$get_url_tpl = 'http://pecl.php.net/get/{name}/{version}';
+$download_dir = 'c:\pecl-in-pkg';
 
 foreach($latest->item as $item) {
 	if (!$item->title) {
@@ -43,8 +75,46 @@ foreach($latest->item as $item) {
 		continue;
 	}
 
-	if ($db->add($name, $version)) {
-		echo "Read ext <$name> of version <$version>" . PHP_EOL;
+	if (!$no_fetch) {
+		$get_url = str_replace(
+			array('{name}', '{version}'),
+			array($name, $version),
+			$get_url_tpl
+		);
+
+		$curl_cmd = $curl . ' -s -L -J -O ' . $get_url;
+		$back = getcwd();
+
+		chdir($download_dir);
+
+		$suspects = glob(strtolower($name) . "-" . strtolower($version) . "*");
+
+		if ($force_fetch) {
+			if ($db->exists($name, $version)) {
+				echo "<$name-$version> forcing download" . PHP_EOL;
+			}
+
+			foreach ($suspects as $f) {
+				if (file_exists($f)) {
+					unlink($f);
+				}
+			}
+		}
+
+		if (!$suspects) {
+			system($curl_cmd, $status);
+			if ($status) {
+				echo "<$name-$version> download failed" . PHP_EOL;
+				chdir($back);
+				continue;
+			}
+		}
+
+		chdir($back);
+	}
+
+	if (!$db->exists($name, $version) && $db->add($name, $version, $force_fetch)) {
+		echo "<$name-$version> added to the queue" . PHP_EOL;
 	}
 	/*
 	 * when need more, look here (or /r) using name and version
@@ -52,5 +122,4 @@ foreach($latest->item as $item) {
 	 */
 }
 
-$db->dump();
-
+exit(0);
