@@ -678,7 +678,7 @@ if (!function_exists('rmtools\combinations')) {
 		/* $msg .= "The logs was uploaded to $url/logs/" . $this->getPackageName() . "-logs.zip\n\n"; */
 		if (!$success) {
 			$msg .= "Please look into the logs for what's to be fixed. ";
-			$msg .= "You can ask for help on pecl-dev@lists.php.net or internals-win@lists.php.net. \n";
+			$msg .= "You can ask for help on pecl-dev@lists.php.net or internals-win@lists.php.net. \n\n";
 		}
 		$msg .= "Have a nice day :)\n";
 
