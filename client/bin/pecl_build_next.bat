@@ -7,7 +7,7 @@ SET BAT_DIR=%~dp0
 cd c:\pecl-in-pkg
 
 for /r %%i in (*) do (
-	call %BAT_DIR%pecl_build_all.bat --upload --package=%%i
+	call %BAT_DIR%pecl_build_all.bat --upload --mail --package=%%i
 	del %%i
 	goto ONLY_ONE	
 )
