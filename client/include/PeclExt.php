@@ -280,6 +280,8 @@ class PeclExt
 					continue;
 				}
 
+				$lib_conf = $this->getLibraryConfig($lib);
+
 				$lib_path = $deps_path . DIRECTORY_SEPARATOR . $lib;
 
 				$some_lib_path = $lib_path . DIRECTORY_SEPARATOR . 'lib';
@@ -294,9 +296,12 @@ class PeclExt
 				}
 				$extra_inc[] = $some_lib_inc_path;	
 
-				$dirs = glob("$some_lib_inc_path/*", GLOB_ONLYDIR);
-				foreach ($dirs as $dir) {
-					$extra_inc[] = $dir;
+				/* If expand_include not set, consider true. */
+				if (!isset($lib_conf['expand_include']) || $lib_conf['expand_include']) {
+					$dirs = glob("$some_lib_inc_path/*", GLOB_ONLYDIR);
+					foreach ($dirs as $dir) {
+						$extra_inc[] = $dir;
+					}
 				}
 			}
 
@@ -398,6 +403,20 @@ if (!function_exists('rmtools\combinations')) {
 		$this->pkg_config = $config;
 
 		return $config;
+	}
+
+	public function getLibraryConfig($name)
+	{
+		$ret = array();
+
+		$known_path = __DIR__ . '/../data/config/pecl/libs.ini';
+		$lib_conf = parse_ini_file($known_path, true, INI_SCANNER_RAW);
+
+		if (isset($lib_conf[$name]) && is_array($lib_conf[$name])) {
+			$ret = $lib_conf[$name];
+		}
+
+		return $ret;
 	}
 
 	public function getConfigureLine()
