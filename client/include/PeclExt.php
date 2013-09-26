@@ -671,10 +671,23 @@ if (!function_exists('rmtools\combinations')) {
 	public function getToEmail()
 	{
 		$to = NULL;
+		$config = $this->getPackageConfig();
+
+		if ($config) {
+			if (isset($config['no_alerts'])) {
+				return NULL;
+			}
+
+			if (isset($config['mailto']) && $config['mailto']) {
+				return $config['mailto'];
+			}
+		}
+
 		$leads = $this->getPackageXmlProperty("lead");
 		foreach ($leads as $lead) {
 			if ((string)$lead->active == 'yes') {
 				$to = (string)$lead->email;
+				break;
 			}
 		}
 
