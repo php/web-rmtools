@@ -113,6 +113,13 @@ foreach ($builds as $build_name) {
 
 	try {
 		$ext->init($force_name, $force_version);
+
+		if ($ext->sendToCoventry()) {
+			echo "As per config, ignoring <" . $ext->getName() . ">" . PHP_EOL;
+			goto Coventry;
+		}
+
+
 		$ext->setupNonCoreExtDeps();
 		$ext->putSourcesIntoBranch();
 	} catch (Exception $e) {
@@ -279,6 +286,8 @@ foreach ($builds as $build_name) {
 		}
 	} 
 
+Coventry:
+
 	try {
 		$db_path = __DIR__ . '/../data/pecl.sqlite';
 		$db = new rm\PeclDb($db_path);
@@ -289,7 +298,9 @@ foreach ($builds as $build_name) {
 
 	$build->clean();
 	$ext->cleanup($upload && $upload_success);
-	rm\rmdir_rf($toupload_dir);
+	if (isset($toupload_dir)) {
+		rm\rmdir_rf($toupload_dir);
+	}
 
 	unset($ext);
 	unset($build);

@@ -844,5 +844,13 @@ if (!function_exists('rmtools\combinations')) {
 			unset($ext);
 		}
 	}
+
+	/* ignore me */
+	public function sendToCoventry()
+	{
+		$config = $this->getPackageConfig();
+
+		return $config && isset($config['ignore']);
+	}
 }
 
