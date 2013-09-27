@@ -29,13 +29,6 @@ class PeclMail {
 		}
 	}
 
-	public function __destruct()
-	{
-		if (!$this->aggregated_sent) {
-			$this->saveState();
-		}
-	}
-
 	public function saveState()
 	{
 		$tmp = serialize($this->buffer);
@@ -59,15 +52,21 @@ class PeclMail {
 			return xmail($from, $to, $subject, $text, $attachment);
 		}
 
+		/* aggregate all the stuff below */
 		$this->buffer['to'][] = $to;
 		$this->buffer['from'][] = $from;
-		/* subject can't be aggregated anyway */
+		/* subject can't be aggregated anyway , or?*/
 		$this->buffer['subject'] = $subject;
-		$this->buffer['text'] = $this->buffer['text'] ."\n\n" . $text;
+		$this->buffer['text'] = $this->buffer['text'] ."\n" . $text;
 		$this->buffer['attachment'] = array_merge($attachment, $this->buffer['attachment']);
+
+		$this->saveState();
+
+		/* fake we've sent it */
+		return true;
 	}
 
-	public function mailAggregated($from, $to, $subject, $open, $close)
+	public function mailAggregated($from, $to, $subject, $open, $close, $with_attachment)
 	{
 		if (!$to) {
 			$to = implode(',', array_unique($this->buffer['to']));
@@ -76,6 +75,8 @@ class PeclMail {
 			$from = implode(',', array_unique($this->buffer['from']));
 		}
 		$text = "$open\n\n" . $this->buffer['text'] . "\n\n$close";
+
+		$att = $with_attachment ? $this->buffer['attachment'] : array();
 
 		$this->aggregated_sent = true;
 		

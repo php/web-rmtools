@@ -52,7 +52,6 @@ class PeclExt
 	public function init($force_name = NULL, $force_version = NULL)
 	{
 		$this->unpack();
-		$this->check();
 
 		$this->name = $force_name;
 		$this->version = $force_version;
@@ -64,6 +63,10 @@ class PeclExt
 		if (!$this->version && $this->package_xml) {
 			$this->version = (string)$this->getPackageXmlProperty("version", "release");
 		}
+
+		/* Looks a bit strange, but usually we would get a name from package.xml, if not - we're
+		   required to ->check() before trying to access config.w32 and that's a hack anyway. */
+		$this->check();
 
 		if (!$this->name) {
 			/* This is the fallback if there's no package.xml  */
@@ -699,15 +702,15 @@ if (!function_exists('rmtools\combinations')) {
 	public function mailMaintainers($success, $is_snap, array $logs, PeclMail $mailer, $force_email = NULL)
 	{
 		$seg = $is_snap ? 'snaps' : 'releases';
-		$url = 'http://windows.php.net/downloads/pecl/' . $seg . '/' . $this->name . '/' . $this->version;
+		$url = 'http://windows.php.net/downloads/pecl/' . $seg . '/' . $this->name . '/' . $this->version . '/';
 
 		if ($mailer->isAggregated()) {
 			/* NOTE we're not able to send all the build logs in an aggregated mail right now.
 			   But that's fine, they are uploaded anyway. */
 			if ($success) {
-				$msg = $this->getPackageName() . " succeeded\n\n";
+				$msg = $this->getPackageName() . " succeeded\n";
 			} else {
-				$msg = $this->getPackageName() . " failed\n\n";
+				$msg = $this->getPackageName() . " failed\n";
 			}
 		} else {
 			if ($success) {

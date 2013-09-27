@@ -72,11 +72,14 @@ $branch_name = $branch->config->getName();
 
 /* Init things if --first was given */
 if ($is_first_run) {
+	echo PHP_EOL;
 	echo "First invocation for <$pkg_path> started." . PHP_EOL . PHP_EOL;
 
 	try {
 		/* Not sure it's needed anymore, but let it persist */
 		$mailer = new rm\PeclMail($pkg_path, $aggregate_mail);
+		$mailer->saveState();
+		unset($mailer);
 	} catch (Exception $e) {
 		echo 'Error: ' . $e->getMessage() . PHP_EOL;
 		$was_errors = true;
@@ -141,15 +144,26 @@ foreach ($builds as $build_name) {
 		if ($mail_maintainers) {
 			$maintainer_mailto = $force_email ? $force_email: MAIL_TO_FALLBACK;
 
-			echo "Mailing info to <$maintainer_mailto>" . PHP_EOL;
-
-			xmail(
-				MAIL_FROM,
-				/* no chance to have the maintainers mailto at this stage */
-				$maintainer_mailto,
-				'[PECL-DEV] Windows build: ' . basename($pkg_path),
-				"PECL build failed before it could start for the reasons below:\n\n" . $e->getMessage()
-			);
+			if (!$aggregate_mail) {
+				echo "Mailing info to <$maintainer_mailto>" . PHP_EOL;
+			}
+			if ($mailer) {
+				$mailer->xmail(
+					MAIL_FROM,
+					/* no chance to have the maintainers mailto at this stage */
+					$maintainer_mailto,
+					'[PECL-DEV] Windows build: ' . basename($pkg_path),
+					$ext->getPackageName() . " not started\nReason: " . $e->getMessage()
+				);
+			} else {
+				xmail(
+					MAIL_FROM,
+					/* no chance to have the maintainers mailto at this stage */
+					$maintainer_mailto,
+					'[PECL-DEV] Windows build: ' . basename($pkg_path),
+					$ext->getPackageName() . " not started\nReason: " . $e->getMessage()
+				);
+			}
 		}
 
 		$build->clean();
@@ -186,13 +200,16 @@ foreach ($builds as $build_name) {
 				}
 			}
 
-			echo "Mailing info to <$maintainer_mailto>" . PHP_EOL;
+			
+			if (!$aggregate_mail) {
+				echo "Mailing info to <$maintainer_mailto>" . PHP_EOL;
+			}
 
-			rm\xmail(
+			$mailer->xmail(
 				MAIL_FROM,
 				$maintainer_mailto,
 				'[PECL-DEV] Windows build: ' . basename($pkg_path),
-				"PECL build failed before it could start for the reasons below:\n\n" . $e->getMessage()
+				$ext->getPackageName() . " not started\nReason: " . $e->getMessage()
 			);
 		}
 
@@ -326,7 +343,13 @@ foreach ($builds as $build_name) {
 				}
 			}
 
-			echo "Mailing logs to <$maintainer_mailto>" . PHP_EOL;
+			if (!$aggregate_mail) {
+				echo "Mailing logs to <$maintainer_mailto>" . PHP_EOL;
+			} else {
+				/* Save a couple of things so we can use them for aggregated mail */
+				$last_ext_name = $ext->getName();
+				$last_ext_version = $ext->getVersion();
+			}
 
 			$res = $ext->mailMaintainers(0 == $build_error, $is_snap, array($logs_zip), $mailer, $maintainer_mailto);
 			if (!$res) {
@@ -355,6 +378,7 @@ Coventry:
 
 	unset($ext);
 	unset($build);
+	unset($mailer);
 	if (isset($db)) {
 		unset($db);
 	}
@@ -369,20 +393,56 @@ echo "Run finished." . PHP_EOL . PHP_EOL;
 /* Cleanup things if --last was given */
 if ($is_last_run) {
 	echo "Last invocation for <$pkg_path> finished." . PHP_EOL . PHP_EOL;
-	try {
-		$mailer = new rm\PeclMail($pkg_path, $aggregate_mail);
 
-		$mailer->mailAggredated(
-			NULL,
-			NULL,
-			'[PECL-DEV] Windows build: ' . basename($pkg_path),
-			'Hi,',
-			'Have a nice day'
-		);
-		$mailer->cleanup();
-	} catch (Exception $e) {
-		echo 'Error: ' . $e->getMessage() . PHP_EOL;
-		$was_errors = true;
+	if ($aggregate_mail) {
+		try {
+			$mailer = new rm\PeclMail($pkg_path, $aggregate_mail);
+
+			echo "Sending aggregated report mail to <$maintainer_mailto>" . PHP_EOL;
+		
+			$seg = $is_snap ? 'snaps' : 'releases';
+			$url = 'http://windows.php.net/downloads/pecl/' . $seg . '/';
+			if (isset($last_ext_name) && isset($last_ext_name)) {
+				$url .= $last_ext_name . '/' . $last_ext_version . '/';
+			}
+
+
+			$from = NULL;
+			$to = NULL;
+			if (isset($last_ext_name) && isset($last_ext_name)) {
+				$subject = '[PECL-DEV] Windows build: ' . $last_ext_name . '-' . $last_ext_version;
+			} else {
+				$subject = '[PECL-DEV] Windows build: ' . basename($pkg_path);
+			}
+
+			$open = "\nFilename: " . basename($pkg_path) . "\n";
+			if (isset($last_ext_name)) {
+				$open .= "Extension name: $last_ext_name\n";
+			}
+			if (isset($last_ext_name)) {
+				$open .= "Extension version: $last_ext_version\n";
+			}
+			$open .= "Build type: " . ($is_snap ? 'snapshot' : 'release') . "\n\n";
+			$open .= "For each build combination and status please refer to the list below."; 
+
+			if ($upload) {
+				$close = "Upload status: ";
+				if ($upload_success) {
+					$close .= "succceeded\n";
+					$close .= "URL: $url\n\n";
+				} else {
+					$close .= "failed\n\n";
+				}
+			}
+			$close .= "This mail is being sent to you because you are the lead developer in package.xml\n\n";
+			$close .= "Have a nice day";
+
+			$mailer-> mailAggregated($from, $to, $subject, $open, $close, false);
+			$mailer->cleanup();
+		} catch (Exception $e) {
+			echo 'Error: ' . $e->getMessage() . PHP_EOL;
+			$was_errors = true;
+		}
 	}
 }
 
