@@ -391,6 +391,7 @@ if (!function_exists('rmtools\combinations')) {
 			}
 		}
 
+		/* XXX this here might be redundant */
 		if (!$config) {
 			foreach ($exts as $name => $conf) {
 				if ($name === $this->name) {
@@ -673,8 +674,9 @@ if (!function_exists('rmtools\combinations')) {
 		$to = NULL;
 		$config = $this->getPackageConfig();
 
+		/* override package.xml */
 		if ($config) {
-			if (isset($config['no_alerts'])) {
+			if (isset($config['no_mail'])) {
 				return NULL;
 			}
 
