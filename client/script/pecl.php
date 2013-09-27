@@ -425,6 +425,7 @@ if ($is_last_run) {
 			$open .= "Build type: " . ($is_snap ? 'snapshot' : 'release') . "\n\n";
 			$open .= "For each build combination and status please refer to the list below."; 
 
+			$close = "";
 			if ($upload) {
 				$close = "Upload status: ";
 				if ($upload_success) {

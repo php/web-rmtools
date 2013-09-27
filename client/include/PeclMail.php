@@ -76,11 +76,11 @@ class PeclMail {
 		}
 		$text = "$open\n\n" . $this->buffer['text'] . "\n\n$close";
 
-		$att = $with_attachment ? $this->buffer['attachment'] : array();
+		$attachment = $with_attachment ? $this->buffer['attachment'] : array();
 
 		$this->aggregated_sent = true;
 		
-		return xmail($from, $to, $subject, $text, $this->buffer['attachment']);
+		return xmail($from, $to, $subject, $text, $attachment);
 	}
 
 	public function setFrom($from)
