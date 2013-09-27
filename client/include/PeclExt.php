@@ -696,29 +696,39 @@ if (!function_exists('rmtools\combinations')) {
 		return $to;
 	}
 
-	public function mailMaintainers($success, $is_snap, array $logs, $force_email = NULL)
+	public function mailMaintainers($success, $is_snap, array $logs, PeclMail $mailer, $force_email = NULL)
 	{
 		$seg = $is_snap ? 'snaps' : 'releases';
 		$url = 'http://windows.php.net/downloads/pecl/' . $seg . '/' . $this->name . '/' . $this->version;
 
-		if ($success) {
-			$msg = "PECL Windows build for " . $this->getPackageName() . " succeeded\n\n";
-			/* $msg .= "The package was uploaded to $url/" . $this->getPackageName() . ".zip\n\n";*/
-			$msg .= "The package was uploaded to $url/\n\n";
+		if ($mailer->isAggregated()) {
+			/* NOTE we're not able to send all the build logs in an aggregated mail right now.
+			   But that's fine, they are uploaded anyway. */
+			if ($success) {
+				$msg = $this->getPackageName() . " succeeded\n\n";
+			} else {
+				$msg = $this->getPackageName() . " failed\n\n";
+			}
 		} else {
-			$msg = "PECL Windows build for " . $this->getPackageName() . " failed\n\n";
+			if ($success) {
+				$msg = "PECL Windows build for " . $this->getPackageName() . " succeeded\n\n";
+				/* $msg .= "The package was uploaded to $url/" . $this->getPackageName() . ".zip\n\n";*/
+				$msg .= "The package was uploaded to $url/\n\n";
+			} else {
+				$msg = "PECL Windows build for " . $this->getPackageName() . " failed\n\n";
+			}
+			/* No need to link the logs as we attach them. */
+			/* $msg .= "The logs was uploaded to $url/logs/" . $this->getPackageName() . "-logs.zip\n\n"; */
+			if (!$success) {
+				$msg .= "Please look into the logs for what's to be fixed. ";
+				$msg .= "You can ask for help on pecl-dev@lists.php.net or internals-win@lists.php.net. \n\n";
+			}
+			$msg .= "Have a nice day :)\n";
 		}
-		/* No need to link the logs as we attach them. */
-		/* $msg .= "The logs was uploaded to $url/logs/" . $this->getPackageName() . "-logs.zip\n\n"; */
-		if (!$success) {
-			$msg .= "Please look into the logs for what's to be fixed. ";
-			$msg .= "You can ask for help on pecl-dev@lists.php.net or internals-win@lists.php.net. \n\n";
-		}
-		$msg .= "Have a nice day :)\n";
 
 		$to = $force_email ? $force_email : $this->getToEmail();
 
-		return xmail(
+		return $mailer->xmail(
 			MAIL_FROM,
 			$to,
 			'[PECL-DEV] Windows build: ' . $this->getPackageName(),

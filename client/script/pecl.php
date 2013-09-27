@@ -4,12 +4,13 @@ include __DIR__ . '/../include/PeclBranch.php';
 include __DIR__ . '/../include/Tools.php';
 include __DIR__ . '/../include/PeclExt.php';
 include __DIR__ . '/../include/PeclDb.php';
+include __DIR__ . '/../include/PeclMail.php';
 
 use rmtools as rm;
 
 
 $shortopts = NULL; //"c:p:mu";
-$longopts = array("config:", "package:", "mail", "upload", "is-snap", "force-name:", "force-version:", "force-email:");
+$longopts = array("config:", "package:", "mail", "aggregate-mail", "upload", "is-snap", "first", "last", "force-name:", "force-version:", "force-email:",);
 
 $options = getopt($shortopts, $longopts);
 
@@ -21,19 +22,41 @@ $is_snap = isset($options['is-snap']);
 $force_name = isset($options['force-name']) ? $options['force-name'] : NULL;
 $force_version = isset($options['force-version']) ? $options['force-version'] : NULL;
 $force_email = isset($options['force-email']) ? $options['force-email'] : NULL;
+$aggregate_mail = isset($options['aggregate-mail']);
+$is_last_run = isset($options['last']);
+$is_first_run = isset($options['first']);
+
+$mail_maintainers = $mail_maintainers || $aggregate_mail;
 
 if (NULL == $branch_name || NULL == $pkg_path) {
 	echo "Usage: pecl.php [OPTION] ..." . PHP_EOL;
 	echo "  --config         Configuration file name without suffix, required." . PHP_EOL;
 	echo "  --package        Path to the PECL package, required." . PHP_EOL;
 	echo "  --mail           Send build logs to the extension maintainers, optional." . PHP_EOL;
+	echo "  --aggregate-mail Save data so it can be sent to extension maintainers aggregated, optional." . PHP_EOL;
 	echo "  --upload         Upload the builds to the windows.php.net, optional." . PHP_EOL;
 	echo "  --is-snap        We upload to releases by default, but this one goes to snaps, optional." . PHP_EOL;
 	echo "  --force-name     Force this name instead of reading the package data, optional." . PHP_EOL;
 	echo "  --force-version  Force this version instead of reading the package data, optional." . PHP_EOL;
 	echo "  --force-email    Send the results to this email instead of any from package.xml, optional." . PHP_EOL;
+	echo "  --first          This call is the first in the series for the same package file, optional." . PHP_EOL;
+	echo "  --last           This call is the last in the series for the same package file, optional." . PHP_EOL;
 	echo PHP_EOL;
-	echo "Example: pecl --config=php55_x64 --package=c:\pecl_in_pkg\some-1.0.0.tgz" . PHP_EOL;
+	echo "Examples: " . PHP_EOL;
+	echo PHP_EOL;
+	echo "Just build, binaries and logs will stay in TMP_DIR" . PHP_EOL;
+	echo "pecl --config=php55_x64 --package=c:\pecl_in_pkg\some-1.0.0.tgz" . PHP_EOL;
+	echo PHP_EOL;
+	echo "Build and upload to windows.php.net/pecl/releases/some/1.0.0/" . PHP_EOL;
+	echo "pecl --config=php55_x64 --upload --package=c:\pecl_in_pkg\some-1.0.0.tgz" . PHP_EOL;
+	echo PHP_EOL;
+	echo "Build, upload and mail results after each build" . PHP_EOL;
+	echo "pecl --config=php55_x64 --upload --package=c:\pecl_in_pkg\some-1.0.0.tgz" . PHP_EOL;
+	echo PHP_EOL;
+	echo "Build, upload and send an aggregated mail over both build runs" . PHP_EOL;
+	echo "pecl --config=php54 --upload --aggregate-mail --package=c:\pecl_in_pkg\some-1.0.0.tgz --first" . PHP_EOL;
+	echo "pecl --config=php55_x64 --upload --aggregate-mail --package=c:\pecl_in_pkg\some-1.0.0.tgz" . PHP_EOL;
+	echo "pecl --config=php55_x86 --upload --aggregate-mail --package=c:\pecl_in_pkg\some-1.0.0.tgz --last" . PHP_EOL;
 	echo PHP_EOL;
 	exit(0);
 }
@@ -46,6 +69,20 @@ $config_path = __DIR__ . '/../data/config/pecl/' . $branch_name . '.ini';
 $branch = new rm\PeclBranch($config_path);
 
 $branch_name = $branch->config->getName();
+
+/* Init things if --first was given */
+if ($is_first_run) {
+	echo "First invocation for <$pkg_path> started." . PHP_EOL . PHP_EOL;
+
+	try {
+		/* Not sure it's needed anymore, but let it persist */
+		$mailer = new rm\PeclMail($pkg_path, $aggregate_mail);
+	} catch (Exception $e) {
+		echo 'Error: ' . $e->getMessage() . PHP_EOL;
+		$was_errors = true;
+	}
+}
+
 
 echo PHP_EOL;
 echo "Run started for <" . realpath($config_path) . ">" . PHP_EOL;
@@ -82,8 +119,22 @@ foreach ($builds as $build_name) {
 		}
 		
 		$build->setSourceDir($build_src_path);
+	} catch (Exception $e) {
+		echo 'Error: ' . $e->getMessage() . PHP_EOL;
+		$build->clean();
+		$was_errors = true;
 
+		unset($build);
+
+		/* no sense to continue as something in ext setup went wrong */
+		/* XXX maibe a mail should be sent to ostc or alike */
+		continue;
+	}
+
+
+	try {
 		$ext = new rm\PeclExt($pkg_path, $build);
+		$mailer = new rm\PeclMail($pkg_path, $aggregate_mail);
 	} catch (Exception $e) {
 		echo 'Error: ' . $e->getMessage() . PHP_EOL;
 
@@ -92,7 +143,7 @@ foreach ($builds as $build_name) {
 
 			echo "Mailing info to <$maintainer_mailto>" . PHP_EOL;
 
-			rm\xmail(
+			xmail(
 				MAIL_FROM,
 				/* no chance to have the maintainers mailto at this stage */
 				$maintainer_mailto,
@@ -277,7 +328,7 @@ foreach ($builds as $build_name) {
 
 			echo "Mailing logs to <$maintainer_mailto>" . PHP_EOL;
 
-			$res = $ext->mailMaintainers(0 == $build_error, $is_snap, array($logs_zip), $maintainer_mailto);
+			$res = $ext->mailMaintainers(0 == $build_error, $is_snap, array($logs_zip), $mailer, $maintainer_mailto);
 			if (!$res) {
 				throw new \Exception("Mail operation failed");
 			}
@@ -314,6 +365,26 @@ Coventry:
 }
 
 echo "Run finished." . PHP_EOL . PHP_EOL;
+
+/* Cleanup things if --last was given */
+if ($is_last_run) {
+	echo "Last invocation for <$pkg_path> finished." . PHP_EOL . PHP_EOL;
+	try {
+		$mailer = new rm\PeclMail($pkg_path, $aggregate_mail);
+
+		$mailer->mailAggredated(
+			NULL,
+			NULL,
+			'[PECL-DEV] Windows build: ' . basename($pkg_path),
+			'Hi,',
+			'Have a nice day'
+		);
+		$mailer->cleanup();
+	} catch (Exception $e) {
+		echo 'Error: ' . $e->getMessage() . PHP_EOL;
+		$was_errors = true;
+	}
+}
 
 exit((int)$was_errors);
 
