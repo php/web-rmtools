@@ -426,7 +426,7 @@ if ($is_last_run) {
 			$open .= "For each build combination and status please refer to the list below."; 
 
 			$close = "";
-			if ($upload) {
+			if ($upload && isset($upload_success)) {
 				$close = "Upload status: ";
 				if ($upload_success) {
 					$close .= "succceeded\n";
