@@ -75,14 +75,16 @@ if ($is_first_run) {
 	echo PHP_EOL;
 	echo "First invocation for <$pkg_path> started." . PHP_EOL . PHP_EOL;
 
-	try {
-		/* Not sure it's needed anymore, but let it persist */
-		$mailer = new rm\PeclMail($pkg_path, $aggregate_mail);
-		$mailer->saveState();
-		unset($mailer);
-	} catch (Exception $e) {
-		echo 'Error: ' . $e->getMessage() . PHP_EOL;
-		$was_errors = true;
+	if ($aggregate_mail) {
+		try {
+			/* Not sure it's needed anymore, but let it persist */
+			$mailer = new rm\PeclMail($pkg_path, $aggregate_mail);
+			$mailer->saveState();
+			unset($mailer);
+		} catch (Exception $e) {
+			echo 'Error: ' . $e->getMessage() . PHP_EOL;
+			$was_errors = true;
+		}
 	}
 }
 
