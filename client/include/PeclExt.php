@@ -207,12 +207,13 @@ class PeclExt
 			}
 		}
 
-		/* try gnu tar first */
-		$tar_cmd = $this->tar_cmd . ' --no-same-owner --no-same-permissions -xf ' . escapeshellarg($tar_name);
+		/* try with bsdtar first */
+		$tar_cmd = $this->bsdtar_cmd . ' -xf ' . escapeshellarg($tar_name);
 		system($tar_cmd, $ret);
 		if ($ret) {
-			/* not done yet, retry with bsdtar */
-			$tar_cmd = $this->bsdtar_cmd . ' -xf ' . escapeshellarg($tar_name);
+			/* no fail yet, retry with gnu tar */
+			$tar_opts = ' --no-same-owner --no-same-permissions -xf ';
+			$tar_cmd = $this->tar_cmd . $tar_opts . escapeshellarg($tar_name);
 			system($tar_cmd, $ret);
 			if ($ret) {
 				/* definitely broken, give up */
