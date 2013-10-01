@@ -375,7 +375,7 @@ Coventry:
 	}
 
 	$build->clean();
-	$ext->cleanup($upload && $upload_success);
+	$ext->cleanup($upload && isset($upload_success) && $upload_success);
 	if (isset($toupload_dir)) {
 		rm\rmdir_rf($toupload_dir);
 	}
