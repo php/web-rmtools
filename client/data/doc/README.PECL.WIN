@@ -1,0 +1,63 @@
+
+= Prerequisites =
+
+WARNING: Concurrent builds may break the cronjobs. When running batch scripts manually ensure there's no build currently running. It's possible to run pecl.bat on a single config even if a regular build is running, to ensure is that the branches do not collide. Alternatively disable the cronjobs and ensure no build is running. Certain build configurations can be done automatically by the running cronjob when putting the package into the right directory (see folders, batch scripts, cronjobs sections).
+
+Externsion package means a regular PECL tarball or a source snapshot packaged as a tarball (uncompressed, tgz, tbz, txz) or zip. It's vital to have package.xml unless you run builds manually with --force-* options (see --help).
+
+= Folders =
+
+c:\pecl-in-pkg - incoming release packages
+c:\pecl-in-snap - incoming snapshot packages
+c:\pecl-in-pkg-nomail - incoming release packages where no mail alerts after build should be done
+c:\pecl-in-snap-nomail - incoming snap packages where no mail alerts after build should be done
+c:\pecl-dep-ext - dependency extensions. When configured for an extension, that packages will be automatically pulled into the current building source, so they are present for an extension requiring them.
+c:\pecl-dep-libs - prepared library dependencies. Regular dependencies are grouped by CRT/ARCH so they can be found automatically for a particular build type. Say C:\pecl-dep-libs\vc11\x86\GraphicsMagick will be automatically pulled for php_gmagick-1.1.2rc1-5.5-nts-vc11-x86. For special cases like the OCI8 extension just put the deps into c:\pecl-dep-libs and override the path with the options in the extension configuration.
+c:\apps - path various utilities, see the external programs section. 
+
+
+= External programs =
+
+- tar.exe
+- bsdtar.exe
+- gzip.exe
+- bzip2.exe
+- xz.exe from the xzutils
+- zip.exe
+- unzip.exe
+- deplister.exe available from the PHP sources
+
+All that programs are freely available from the internet, say gnuwin32 or msysgit projects are the first place to look. The paths to this programs are hardcoded in include/PeclExt.php class, usually they lead to somewhere in c:\apps.
+
+= PHP scripts =
+
+script/pecl.php - build worker
+script/pecl_rss.php - rss update worker
+
+Those should not be run directly.
+
+= Batch scripts =
+
+bin/pecl.bat - wrapper around script/pecl.php, builds package for one given configuration
+bin/pecl_build_all.bat - build package for a set of known configurations. The commandos are hardcoded there, currently 5.3/4/5.
+bin/pecl_build_next.bat - picks and builds the next package. The order is release, release-nomail, snap, snap-nomail (see folders section).
+bin/pecl_rss.bat - wrapper around scripts/pecl_rss.php, updates the rss database from the PECL website. The database is saved into data/pecl.sqlite .
+bin/pecl_rss_task.bat - rss update script for a cronjob. 
+
+Each of this batch scripts can be run on demand from the shell, try --help for usage options. Exception are bin/pecl_build_next.bat and bin/pecl_rss_task.bat which are supposed to be cronjob workers, but nevertheless they also can be just run on the shell. 
+
+= Cronjobs =
+
+- pecl_build_next, runs bin/pecl_build_next.bat
+- pecl_rss, runs bin/pecl_rss_task.bat
+
+The cronjob definitions ready to import are in data\config\pecl\cron.
+
+= Mailing =
+
+Two constants MAIL_FROM and MAIL_TO_FALLBACK are defined in scripts/pecl.php . Look at --help for the mailing options. 
+
+
+= PHP classes =
+TODO
+
