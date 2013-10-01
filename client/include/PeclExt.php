@@ -43,6 +43,12 @@ class PeclExt
 		} else if ('.tbz' == substr($pkg_path, -4)) {
 			$this->pkg_basename = basename($pkg_path, '.tbz');
 			$this->pkg_fmt = 'tbz';
+		} else if ('.tbz2' == substr($pkg_path, -5)) {
+			$this->pkg_basename = basename($pkg_path, '.tbz2');
+			$this->pkg_fmt = 'tbz';
+		} else if ('.tb2' == substr($pkg_path, -4)) {
+			$this->pkg_basename = basename($pkg_path, '.tb2');
+			$this->pkg_fmt = 'tbz';
 		} else if ('.tar.bz2' == substr($pkg_path, -8)) {
 			$this->pkg_basename = basename($pkg_path, '.tar.bz2');
 			$this->pkg_fmt = 'tbz';
