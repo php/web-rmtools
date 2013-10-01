@@ -32,7 +32,7 @@ if (NULL == $branch_name || NULL == $pkg_path) {
 	echo "Usage: pecl.php [OPTION] ..." . PHP_EOL;
 	echo "  --config         Configuration file name without suffix, required." . PHP_EOL;
 	echo "  --package        Path to the PECL package, required." . PHP_EOL;
-	echo "  --mail           Send build logs to the extension maintainers, optional." . PHP_EOL;
+	echo "  --mail           Send build logs to the extension maintainers, one per build, optional." . PHP_EOL;
 	echo "  --aggregate-mail Save data so it can be sent to extension maintainers aggregated, optional." . PHP_EOL;
 	echo "  --upload         Upload the builds to the windows.php.net, optional." . PHP_EOL;
 	echo "  --is-snap        We upload to releases by default, but this one goes to snaps, optional." . PHP_EOL;
