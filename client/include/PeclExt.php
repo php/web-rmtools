@@ -15,6 +15,8 @@ class PeclExt
 	protected $build;
 	protected $tar_cmd = 'c:\apps\git\bin\tar.exe';
 	protected $gzip_cmd = 'c:\apps\git\bin\gzip.exe';
+	protected $bzip2_cmd = 'c:\apps\git\bin\bzip2.exe';
+	protected $xz_cmd = 'c:\apps\xzutils\xz.exe';
 	protected $zip_cmd = 'c:\php-sdk\bin\zip.exe';
 	protected $unzip_cmd = 'c:\php-sdk\bin\unzip.exe';
 	protected $deplister_cmd = 'c:\apps\bin\deplister.exe';
@@ -37,6 +39,18 @@ class PeclExt
 		} else if ('.tar.gz' == substr($pkg_path, -7)) {
 			$this->pkg_basename = basename($pkg_path, '.tar.gz');
 			$this->pkg_comp = 'tgz';
+		} else if ('.tbz' == substr($pkg_path, -4)) {
+			$this->pkg_basename = basename($pkg_path, '.tbz');
+			$this->pkg_comp = 'tbz';
+		} else if ('.tar.bz2' == substr($pkg_path, -8)) {
+			$this->pkg_basename = basename($pkg_path, '.tar.bz2');
+			$this->pkg_comp = 'tbz';
+		} else if ('.txz' == substr($pkg_path, -4)) {
+			$this->pkg_basename = basename($pkg_path, '.txz');
+			$this->pkg_comp = 'txz';
+		} else if ('.tar.xz' == substr($pkg_path, -7)) {
+			$this->pkg_basename = basename($pkg_path, '.tar.xz');
+			$this->pkg_comp = 'txz';
 		} else if ('.zip' == substr($pkg_path, -4)) {
 			$this->pkg_basename = basename($pkg_path, '.zip');
 			$this->pkg_comp = 'zip';
@@ -122,13 +136,20 @@ class PeclExt
 			. '-' . $this->build->architecture;
 	}
 
-	public function uncompressTgz()
+	protected function createTmpUnpackDir()
 	{
 		$tmp_path = tempnam(TMP_DIR, 'pecl');
 		unlink($tmp_path);
 		if (!file_exists($tmp_path) && !mkdir($tmp_path)) {
 			throw new \Exception("Couldn't create temporary dir");
 		}
+
+		return $tmp_path;
+	}
+
+	public function uncompressTarball($format)
+	{
+		$tmp_path = $this->createTmpUnpackDir();
 
 		$tmp_name =  $tmp_path . DIRECTORY_SEPARATOR . basename($this->pkg_path);
 		if (!copy($this->pkg_path, $tmp_name)) {
@@ -143,16 +164,35 @@ class PeclExt
 
 		chdir($tmp_path);
 
-		$gzip_cmd = $this->gzip_cmd . ' -df ' . escapeshellarg(basename($this->pkg_path));
-		system($gzip_cmd, $ret);
+		switch ($format) {
+			case 'tgz':
+				$uncmd = $this->gzip_cmd;
+				$unopts = "-df";
+				break;
+				
+			case 'tbz':
+				$uncmd = $this->bzip2_cmd;
+				$unopts = "-df";
+				break;
+
+			case 'txz':
+				$uncmd = $this->xz_cmd;
+				$unopts = "-df";
+				break;
+
+			default:
+				throw new \Exception("Unsupported compression format '$format'");
+		}
+		$uncompress_cmd = $uncmd . ' ' . $unopts . ' ' . escapeshellarg(basename($this->pkg_path));
+		system($uncompress_cmd, $ret);
 		if ($ret) {
-			throw new \Exception("Failed to guzip the tarball");
+			throw new \Exception("Failed to gunzip the tarball");
 		}
 
 		$tar_cmd = $this->tar_cmd . ' -xf ' . escapeshellarg($tar_name);
 		system($tar_cmd, $ret);
 		if ($ret) {
-			throw new \Exception("Failed to guzip the tarball");
+			throw new \Exception("Failed to untar the tarball");
 		}
 		unlink($tar_name);
 
@@ -163,11 +203,7 @@ class PeclExt
 
 	public function uncompressZip()
 	{
-		$tmp_path = tempnam(TMP_DIR, 'pecl');
-		unlink($tmp_path);
-		if (!file_exists($tmp_path) && !mkdir($tmp_path)) {
-			throw new \Exception("Couldn't create temporary dir");
-		}
+		$tmp_path = $this->createTmpUnpackDir();
 
 		$unzip_cmd = $this->unzip_cmd . ' ' . escapeshellarg($this->pkg_path) . ' -d ' . $tmp_path;
 		system($unzip_cmd, $ret);
@@ -182,7 +218,7 @@ class PeclExt
 	{
 		switch ($this->pkg_comp) {
 			case 'tgz':
-				$tmp_path = $this->uncompressTgz();
+				$tmp_path = $this->uncompressTarball($this->pkg_comp);
 			break;
 
 			case 'zip':
@@ -190,7 +226,7 @@ class PeclExt
 			break;
 
 			default:
-				throw new \Exception("Unsupported compression");
+				throw new \Exception("Unsupported package format");
 		}
 
 		/* XXX what if we would look for subdirs containing config.w32? The subdir

@@ -149,6 +149,7 @@ foreach ($builds as $build_name) {
 			if (!$aggregate_mail) {
 				echo "Mailing info to <$maintainer_mailto>" . PHP_EOL;
 			}
+			/* Not initialized yet, so no ->getPackageName() */
 			if ($mailer) {
 				$mailer->xmail(
 					MAIL_FROM,
@@ -169,6 +170,7 @@ foreach ($builds as $build_name) {
 		}
 
 		$build->clean();
+		$ext->cleanup();
 		$was_errors = true;
 
 		unset($ext);
