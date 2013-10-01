@@ -9,11 +9,12 @@ class PeclExt
 {
 	protected $pkg_path;
 	protected $pkg_basename;
-	protected $pkg_comp;
+	protected $pkg_fmt;
 	protected $name;
 	protected $version;
 	protected $build;
 	protected $tar_cmd = 'c:\apps\git\bin\tar.exe';
+	protected $bsdtar_cmd = 'c:\apps\bsdtar\bin\bsdtar.exe';
 	protected $gzip_cmd = 'c:\apps\git\bin\gzip.exe';
 	protected $bzip2_cmd = 'c:\apps\git\bin\bzip2.exe';
 	protected $xz_cmd = 'c:\apps\xzutils\xz.exe';
@@ -35,27 +36,30 @@ class PeclExt
 		
 		if ('.tgz' == substr($pkg_path, -4)) {
 			$this->pkg_basename = basename($pkg_path, '.tgz');
-			$this->pkg_comp = 'tgz';
+			$this->pkg_fmt = 'tgz';
 		} else if ('.tar.gz' == substr($pkg_path, -7)) {
 			$this->pkg_basename = basename($pkg_path, '.tar.gz');
-			$this->pkg_comp = 'tgz';
+			$this->pkg_fmt = 'tgz';
 		} else if ('.tbz' == substr($pkg_path, -4)) {
 			$this->pkg_basename = basename($pkg_path, '.tbz');
-			$this->pkg_comp = 'tbz';
+			$this->pkg_fmt = 'tbz';
 		} else if ('.tar.bz2' == substr($pkg_path, -8)) {
 			$this->pkg_basename = basename($pkg_path, '.tar.bz2');
-			$this->pkg_comp = 'tbz';
+			$this->pkg_fmt = 'tbz';
 		} else if ('.txz' == substr($pkg_path, -4)) {
 			$this->pkg_basename = basename($pkg_path, '.txz');
-			$this->pkg_comp = 'txz';
+			$this->pkg_fmt = 'txz';
 		} else if ('.tar.xz' == substr($pkg_path, -7)) {
 			$this->pkg_basename = basename($pkg_path, '.tar.xz');
-			$this->pkg_comp = 'txz';
+			$this->pkg_fmt = 'txz';
+		} else if ('.tar' == substr($pkg_path, -4)) {
+			$this->pkg_basename = basename($pkg_path, '.tar');
+			$this->pkg_fmt = 'tar';
 		} else if ('.zip' == substr($pkg_path, -4)) {
 			$this->pkg_basename = basename($pkg_path, '.zip');
-			$this->pkg_comp = 'zip';
+			$this->pkg_fmt = 'zip';
 		} else {
-			throw new \Exception("Unsupported compression format, please pass tgz, tar.gz or zip");
+			throw new \Exception("Unsupported package format. We support zip, pure tarball, tarball compressed with gzip, bzip2 or xz");
 		}
 
 		$this->pkg_path = $pkg_path;
@@ -180,19 +184,35 @@ class PeclExt
 				$unopts = "-df";
 				break;
 
+			case 'tar':
+				// pass
+				break;
+
 			default:
 				throw new \Exception("Unsupported compression format '$format'");
 		}
-		$uncompress_cmd = $uncmd . ' ' . $unopts . ' ' . escapeshellarg(basename($this->pkg_path));
-		system($uncompress_cmd, $ret);
-		if ($ret) {
-			throw new \Exception("Failed to gunzip the tarball");
+
+		if ('tar' != $format) {
+			$uncompress_cmd = $uncmd . ' ' . $unopts . ' ' . escapeshellarg(basename($this->pkg_path));
+			system($uncompress_cmd, $ret);
+			if ($ret) {
+				$this->cleanup();
+				throw new \Exception("Failed to gunzip the tarball");
+			}
 		}
 
-		$tar_cmd = $this->tar_cmd . ' -xf ' . escapeshellarg($tar_name);
+		/* try gnu tar first */
+		$tar_cmd = $this->tar_cmd . ' --no-same-owner --no-same-permissions -xf ' . escapeshellarg($tar_name);
 		system($tar_cmd, $ret);
 		if ($ret) {
-			throw new \Exception("Failed to untar the tarball");
+			/* not done yet, retry with bsdtar */
+			$tar_cmd = $this->bsdtar_cmd . ' -xf ' . escapeshellarg($tar_name);
+			system($tar_cmd, $ret);
+			if ($ret) {
+				/* definitely broken, give up */
+				$this->cleanup();
+				throw new \Exception("Failed to untar the tarball");
+			}
 		}
 		unlink($tar_name);
 
@@ -216,9 +236,12 @@ class PeclExt
 
 	public function unpack()
 	{
-		switch ($this->pkg_comp) {
+		switch ($this->pkg_fmt) {
 			case 'tgz':
-				$tmp_path = $this->uncompressTarball($this->pkg_comp);
+			case 'tbz':
+			case 'txz':
+			case 'tar':
+				$tmp_path = $this->uncompressTarball($this->pkg_fmt);
 			break;
 
 			case 'zip':
@@ -629,6 +652,7 @@ if (!function_exists('rmtools\combinations')) {
 	{
 		if ($this->tmp_extract_path) {
 			$path = dirname($this->tmp_extract_path);
+			/* Do not delete TMP_DIR */
 			if (strtolower(realpath(TMP_DIR)) == strtolower(realpath($path))) {
 				$path = $this->tmp_extract_path;
 			}
