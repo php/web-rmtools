@@ -530,6 +530,57 @@ if (!function_exists('rmtools\combinations')) {
 		return $this->buildConfigureLine($config);
 	}
 
+	public function prepareLicenseSimple($source, $target, $suffix = NULL)
+	{
+		$ret = array();
+		$base = array(
+			"COPYING",
+			"COPYRIGHT",
+			"LICENSE",
+			"README",
+		);	
+
+		$names = $base;
+		foreach ($base as $nm) {
+			$names[] = "$nm*";
+			$names[] = strtolower($nm) . "*";
+			$names[] = ucfirst(strtolower($nm)) . "*";
+		}
+
+		foreach ($names as $name) {
+			$pat = $source . DIRECTORY_SEPARATOR . $name;
+
+			$glob = glob($pat);
+
+			if (is_array($glob)) {
+				foreach ($glob as $fl) {
+					$tgt_fl = $target . DIRECTORY_SEPARATOR
+						. basename($fl) . "." . strtoupper($suffix);
+					if (!copy($fl, $tgt_fl)) {
+						throw new \Exception("The license file '$fl' "
+						. "was found but couldn't be copied into '$tgt_fl'");
+					}
+
+					$ret[] = $tgt_fl;
+				}
+			}
+		}
+
+		return $ret;
+	}
+
+	public function prepareExtLicense($source, $target, $suffix = NULL)
+	{
+		$ret = $this->prepareLicenseSimple($source, $target, $suffix);
+
+		if (!$ret) {
+			/* XXX check package.xml here*/
+		}
+
+
+		return $ret;
+	}
+
 	public function prepareAllDepDlls($dll_file, $target)
 	{
 		$ret = array();
@@ -560,6 +611,14 @@ if (!function_exists('rmtools\combinations')) {
 					$ret[] = $dll_file;
 					/* some dep dll might have another dep :) */
 					$ret = array_merge($this->prepareAllDepDlls($look_for, $target), $ret);
+					$ret = array_merge(
+						$this->prepareLicenseSimple(
+							$deps_path . DIRECTORY_SEPARATOR . $lib,
+							$target,
+							$lib
+						),
+						$ret
+					);
 				}
 				
 				$look_for = $deps_path
@@ -634,6 +693,12 @@ if (!function_exists('rmtools\combinations')) {
 			$msg = "No DLL for " . implode(',', $ext_names) . " was found, build failed";
 			throw new \Exception($msg);
 		}
+
+		/* care about extension license */
+		 $files_to_zip = array_merge(
+		 	$files_to_zip,
+			$this->prepareExtLicense($this->tmp_extract_path, $target, "php." . $this->name)
+		);
 
 		/* pack */
 		$zip_file = TMP_DIR . DIRECTORY_SEPARATOR . $this->getPackageName() . '.zip';
