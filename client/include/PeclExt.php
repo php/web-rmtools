@@ -555,7 +555,7 @@ if (!function_exists('rmtools\combinations')) {
 			if (is_array($glob)) {
 				foreach ($glob as $fl) {
 					$tgt_fl = $target . DIRECTORY_SEPARATOR
-						. basename($fl) . "." . strtoupper($suffix);
+						. strtoupper(basename($fl)) . "." . strtoupper($suffix);
 					if (!copy($fl, $tgt_fl)) {
 						throw new \Exception("The license file '$fl' "
 						. "was found but couldn't be copied into '$tgt_fl'");
@@ -574,9 +574,21 @@ if (!function_exists('rmtools\combinations')) {
 		$ret = $this->prepareLicenseSimple($source, $target, $suffix);
 
 		if (!$ret) {
-			/* XXX check package.xml here*/
-		}
+			/* No license file, check package.xml*/
+			if ($this->package_xml && isset($this->package_xml->license)) {
+				if (isset($this->package_xml->license[0]["uri"])) {
+					$txt = (string)$this->package_xml->license[0]["uri"];
+				} else {
+					$txt = (string)$this->package_xml->license[0];
+				}
 
+				if (isset($txt)) {
+					$fl = $target . DIRECTORY_SEPARATOR . "LICENSE." . strtoupper($suffix);
+					file_put_contents($fl, $txt);
+					$ret[] = $fl;
+				}
+			}
+		}
 
 		return $ret;
 	}
@@ -611,6 +623,7 @@ if (!function_exists('rmtools\combinations')) {
 					$ret[] = $dll_file;
 					/* some dep dll might have another dep :) */
 					$ret = array_merge($this->prepareAllDepDlls($look_for, $target), $ret);
+					/* care about the dep libs licenses */
 					$ret = array_merge(
 						$this->prepareLicenseSimple(
 							$deps_path . DIRECTORY_SEPARATOR . $lib,
