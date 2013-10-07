@@ -140,6 +140,7 @@ foreach ($builds as $build_name) {
 	try {
 		$ext = new rm\PeclExt($pkg_path, $build);
 		$mailer = new rm\PeclMail($pkg_path, $aggregate_mail);
+		$ext->checkSkipBuild();
 	} catch (Exception $e) {
 		echo 'Error: ' . $e->getMessage() . PHP_EOL;
 

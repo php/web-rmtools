@@ -243,6 +243,11 @@ class PeclExt
 
 	public function unpack()
 	{
+		if ($this->tmp_extract_path) {
+			/* already unpacked */
+			return $this->tmp_extract_path;
+		}
+
 		switch ($this->pkg_fmt) {
 			case 'tgz':
 			case 'tbz':
@@ -684,6 +689,25 @@ if (!function_exists('rmtools\combinations')) {
 		$this->cleanupNonCoreExtDeps();
 	}
 
+	public function checkSkipBuild()
+	{
+		$this->unpack();
+
+		if ($this->package_xml) {
+			$oses = $this->getPackageXmlProperty("dependencies", "required", "os");
+			if ($oses) {
+				foreach($oses as $os) {
+					if ("windows" == (string)$os->name) {
+						if (isset($os->conflicts)) {
+							throw new \EXception("Per package.xml not compatible with Windows");
+						}
+					}
+				}
+			}
+
+		}
+	}
+
 	public function check()
 	{
 		if (!$this->tmp_extract_path) {
@@ -717,6 +741,8 @@ if (!function_exists('rmtools\combinations')) {
 				$this->cleanup();
 				throw new \Exception("At most PHP '$max_php_ver' required, got '$php_ver'");
 			}
+
+
 		}
 
 	}
