@@ -615,6 +615,17 @@ if (!function_exists('rmtools\combinations')) {
 					. DIRECTORY_SEPARATOR . 'bin'
 					. DIRECTORY_SEPARATOR . $dll_name;
 
+				/* care about the dep libs licenses, the license file should be laying directly
+				   in the corresponding lib dir*/
+				$ret = array_merge(
+					$this->prepareLicenseSimple(
+						$deps_path . DIRECTORY_SEPARATOR . $lib,
+						$target,
+						$lib
+					),
+					$ret
+				);
+
 				if(file_exists($look_for)) {
 					if (!copy($look_for, $dll_file)) {
 						throw new \Exception("The dependency dll '$dll_name' "
@@ -623,15 +634,6 @@ if (!function_exists('rmtools\combinations')) {
 					$ret[] = $dll_file;
 					/* some dep dll might have another dep :) */
 					$ret = array_merge($this->prepareAllDepDlls($look_for, $target), $ret);
-					/* care about the dep libs licenses */
-					$ret = array_merge(
-						$this->prepareLicenseSimple(
-							$deps_path . DIRECTORY_SEPARATOR . $lib,
-							$target,
-							$lib
-						),
-						$ret
-					);
 				}
 				
 				$look_for = $deps_path
