@@ -171,7 +171,9 @@ foreach ($builds as $build_name) {
 		}
 
 		$build->clean();
-		$ext->cleanup();
+		if (isset($ext)) {
+			$ext->cleanup();
+		}
 		$was_errors = true;
 
 		unset($ext);

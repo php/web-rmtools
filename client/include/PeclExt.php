@@ -530,6 +530,7 @@ if (!function_exists('rmtools\combinations')) {
 		return $this->buildConfigureLine($config);
 	}
 
+	/* No errors here, the license presence should be done by PECL site */
 	public function prepareLicenseSimple($source, $target, $suffix = NULL)
 	{
 		$ret = array();
@@ -717,17 +718,71 @@ if (!function_exists('rmtools\combinations')) {
 		}
 
 		/* care about extension license */
-		 $files_to_zip = array_merge(
+		/* lack of license s not an error for us, this has to be checked on pecl pkg upload */
+		/* The ext license will be copied based on the info from package.xml, but let these lines stay */
+		/*$files_to_zip = array_merge(
 		 	$files_to_zip,
 			$this->prepareExtLicense($this->tmp_extract_path, $target, "php." . $this->name)
-		);
+		);*/
+
+		/* care about the files marked as "doc" in the package.xml */
+		$dirs = $this->getPackageXmlProperty("contents", "dir");
+		if ($dirs) {
+			$root = NULL;
+			foreach ($dirs as $dir) {
+				if (isset($dir["name"]) && "/" == (string)$dir["name"]) {
+					$root = $dir;
+					break;
+				}
+			}
+
+			if (!$root || !isset($root->file)) {
+				goto nodoc;
+			}
+
+			foreach ($root->file as $file) {
+				if (!isset($file["role"]) || "doc" != (string)$file["role"]) {
+					continue;
+				}
+
+				if (!isset($file["name"])) {
+					continue;
+				}
+
+				$src_fl = $this->tmp_extract_path
+					. DIRECTORY_SEPARATOR
+					. (string)$file["name"];
+
+				if (!file_exists($src_fl)) {
+					continue;
+				}
+
+				$tgt_fl = $target
+					. DIRECTORY_SEPARATOR
+					. basename((string)$file["name"]);
+
+				/* this could already done while checking license */
+				if (in_array($tgt_fl, $files_to_zip)) {
+					continue;
+				}
+	
+				if (!copy($src_fl, $tgt_fl)) {
+					/* XXX actually it's not fatal, lets observe */
+					throw new \Exception("Failed to copy doc file '$src_fl' "
+						. "from the distribution into '$tgt_fl'");
+				}
+
+				$files_to_zip[] = $tgt_fl;
+			}
+		}
+nodoc:
 
 		/* pack */
 		$zip_file = TMP_DIR . DIRECTORY_SEPARATOR . $this->getPackageName() . '.zip';
 		$zip_cmd = $this->zip_cmd . ' -9 -D -j ' . $zip_file . ' ' . implode(' ', $files_to_zip);
 		system($zip_cmd, $status);
 		if ($status) {
-			throw new \Exception("Couldn't zip files for $zip_file");
+			throw new \Exception("Couldn't zip files for '$zip_file'");
 		}
 
 		return $zip_file;
