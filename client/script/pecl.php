@@ -256,7 +256,14 @@ foreach ($builds as $build_name) {
 			$build->configure($ext_conf_line);
 		}
 
-		if (!preg_match(',^\|\s+' . preg_quote($ext->getName()) . '\s+\|\s+shared\s+\|,Sm', $build->log_configure)) {
+		$multiext_enabled = 0;
+		foreach ($ext->getMultiExtensionNames() as $one_ext_name) {
+			$multiext_enabled += preg_match(
+				',^\|\s+' . preg_quote($one_ext_name) . '\s+\|\s+shared\s+\|,Sm',
+				$build->log_configure
+			);
+		}
+		if ($multiext_enabled < 1) {
 			throw new Exception($ext->getName() . ' is not enabled, skip make phase');
 		}
 

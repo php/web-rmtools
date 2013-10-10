@@ -655,13 +655,8 @@ if (!function_exists('rmtools\combinations')) {
 		return $ret;
 	}
 
-	public function preparePackage()
+	public function getMultiExtensionNames()
 	{
-		$sub = $this->build->thread_safe ? 'Release_TS' : 'Release';
-		$base = $this->build->getObjDir() . DIRECTORY_SEPARATOR . $sub;
-		$target = TMP_DIR . DIRECTORY_SEPARATOR . $this->getPackageName();
-		$files_to_zip = array();
-
 		$ext_names = array($this->name);
 
 		/* config.w32 can contain multiple EXTENTION definitions, which would lead to 
@@ -675,6 +670,18 @@ if (!function_exists('rmtools\combinations')) {
 				}
 			}
 		}
+
+		return $ext_names;
+	}
+
+	public function preparePackage()
+	{
+		$sub = $this->build->thread_safe ? 'Release_TS' : 'Release';
+		$base = $this->build->getObjDir() . DIRECTORY_SEPARATOR . $sub;
+		$target = TMP_DIR . DIRECTORY_SEPARATOR . $this->getPackageName();
+		$files_to_zip = array();
+
+		$ext_names = $this->getMultiExtensionNames();
 
 		$ext_dll_found = false;
 		foreach ($ext_names as $ext_name) {
