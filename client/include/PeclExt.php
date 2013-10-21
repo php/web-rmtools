@@ -578,7 +578,8 @@ if (!function_exists('rmtools\combinations')) {
 			if (is_array($glob)) {
 				foreach ($glob as $fl) {
 					$tgt_fl = $target . DIRECTORY_SEPARATOR
-						. strtoupper(basename($fl)) . "." . strtoupper($suffix);
+						. strtoupper(basename($fl));
+					$tgt_fl = $suffix ? $tgt_fl . "." . strtoupper($suffix) : $tgt_fl;
 					if (!copy($fl, $tgt_fl)) {
 						throw new \Exception("The license file '$fl' "
 						. "was found but couldn't be copied into '$tgt_fl'");
@@ -743,10 +744,10 @@ if (!function_exists('rmtools\combinations')) {
 
 		/* care about extension license */
 		/* The ext license will be copied based on the info from package.xml, but let these lines stay */
-		/*$files_to_zip = array_merge(
+		$files_to_zip = array_merge(
 		 	$files_to_zip,
-			$this->prepareExtLicense($this->tmp_extract_path, $target, "php." . $this->name)
-		);*/
+			$this->prepareExtLicense($this->tmp_extract_path, $target)
+		);
 
 		/* care about the files marked as "doc" in the package.xml */
 		$dirs = $this->getPackageXmlProperty("contents", "dir");
@@ -783,6 +784,10 @@ if (!function_exists('rmtools\combinations')) {
 				$tgt_fl = $target
 					. DIRECTORY_SEPARATOR
 					. basename((string)$file["name"]);
+
+				if (file_exists($tgt_fl)) {
+					continue;
+				}
 
 				/* this could already done while checking license */
 				if (in_array($tgt_fl, $files_to_zip)) {
