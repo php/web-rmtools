@@ -27,6 +27,7 @@ class PeclExt
 	protected $configure_data = NULL;
 	protected $non_core_ext_deps = array();
 	protected $pkg_config = NULL;
+	protected $lic_fnames = array();
 
 	public function __construct($pkg_path, $build)
 	{
@@ -71,6 +72,19 @@ class PeclExt
 		$this->pkg_path = $pkg_path;
 		$this->build = $build;
 
+		/* setup license filenames */
+		$base = array(
+			"COPYING",
+			"COPYRIGHT",
+			"LICENSE",
+		);
+
+		$this->lic_fnames = $base;
+		foreach ($base as $nm) {
+			$lic_fnames[] = "$nm*";
+			$lic_fnames[] = strtolower($nm) . "*";
+			$lic_fnames[] = ucfirst(strtolower($nm)) . "*";
+		}
 	}
 
 	public function init($force_name = NULL, $force_version = NULL)
@@ -530,25 +544,33 @@ if (!function_exists('rmtools\combinations')) {
 		return $this->buildConfigureLine($config);
 	}
 
-	/* No errors here, the license presence should be done by PECL site */
+	public function checkLicense()
+	{
+		$license_found = false;
+
+		foreach ($this->lic_fnames as $name) {
+			$pat = $this->tmp_extract_path . DIRECTORY_SEPARATOR . $name;
+
+			$glob = glob($pat);
+
+			if (is_array($glob) && !empty($glob)) {
+				$license_found = true;
+				break;
+			}
+		}
+
+		if (!$license_found) {
+			throw new \Exception("No LICENSE or COPYING was found in the package '" . $this->name . "'");
+		}
+
+	}
+
+
 	public function prepareLicenseSimple($source, $target, $suffix = NULL)
 	{
 		$ret = array();
-		$base = array(
-			"COPYING",
-			"COPYRIGHT",
-			"LICENSE",
-			"README",
-		);	
 
-		$names = $base;
-		foreach ($base as $nm) {
-			$names[] = "$nm*";
-			$names[] = strtolower($nm) . "*";
-			$names[] = ucfirst(strtolower($nm)) . "*";
-		}
-
-		foreach ($names as $name) {
+		foreach ($this->lic_fnames as $name) {
 			$pat = $source . DIRECTORY_SEPARATOR . $name;
 
 			$glob = glob($pat);
@@ -575,8 +597,9 @@ if (!function_exists('rmtools\combinations')) {
 		$ret = $this->prepareLicenseSimple($source, $target, $suffix);
 
 		if (!$ret) {
+			/* XXX don't do that! */
 			/* No license file, check package.xml*/
-			if ($this->package_xml && isset($this->package_xml->license)) {
+			/*if ($this->package_xml && isset($this->package_xml->license)) {
 				if (isset($this->package_xml->license[0]["uri"])) {
 					$txt = (string)$this->package_xml->license[0]["uri"];
 				} else {
@@ -588,7 +611,8 @@ if (!function_exists('rmtools\combinations')) {
 					file_put_contents($fl, $txt);
 					$ret[] = $fl;
 				}
-			}
+			}*/
+			throw new \Exception("No LICENSE or COPYING was found in the package '" . $this->name . "'");
 		}
 
 		return $ret;
@@ -718,7 +742,6 @@ if (!function_exists('rmtools\combinations')) {
 		}
 
 		/* care about extension license */
-		/* lack of license s not an error for us, this has to be checked on pecl pkg upload */
 		/* The ext license will be copied based on the info from package.xml, but let these lines stay */
 		/*$files_to_zip = array_merge(
 		 	$files_to_zip,
@@ -860,6 +883,8 @@ nodoc:
 			$this->cleanup();
 			throw new \Exception("config.w32 doesn't exist in the tarball");
 		}
+
+		$this->checkLicense();
 
 		if ($this->package_xml) {
 			$min_php_ver = (string)$this->getPackageXmlProperty("dependencies", "required", "php", "min");
