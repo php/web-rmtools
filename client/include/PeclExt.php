@@ -81,9 +81,9 @@ class PeclExt
 
 		$this->lic_fnames = $base;
 		foreach ($base as $nm) {
-			$lic_fnames[] = "$nm*";
-			$lic_fnames[] = strtolower($nm) . "*";
-			$lic_fnames[] = ucfirst(strtolower($nm)) . "*";
+			$this->lic_fnames[] = "$nm*";
+			$this->lic_fnames[] = strtolower($nm) . "*";
+			$this->lic_fnames[] = ucfirst(strtolower($nm)) . "*";
 		}
 	}
 
