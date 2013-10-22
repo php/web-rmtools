@@ -547,6 +547,7 @@ if (!function_exists('rmtools\combinations')) {
 	public function checkLicense()
 	{
 		$license_found = false;
+		$license_file_empty = true;
 
 		foreach ($this->lic_fnames as $name) {
 			$pat = $this->tmp_extract_path . DIRECTORY_SEPARATOR . $name;
@@ -555,14 +556,27 @@ if (!function_exists('rmtools\combinations')) {
 
 			if (is_array($glob) && !empty($glob)) {
 				$license_found = true;
+				
+				foreach ($glob as $fl) {
+					$fsize = filesize($fl);
+					/* XXX check some minimal length? */
+					if (false !== $fsize && $fsize > 0) {
+						$license_file_empty = false;
+						break;
+					}
+				}
+
 				break;
 			}
 		}
 
 		if (!$license_found) {
 			throw new \Exception("No LICENSE or COPYING was found in the package '" . $this->name . "'");
+		} else {
+			if ($license_file_empty) {
+				throw new \Exception("License file of zero size");
+			}
 		}
-
 	}
 
 
@@ -807,10 +821,12 @@ nodoc:
 
 		/* pack */
 		$zip_file = TMP_DIR . DIRECTORY_SEPARATOR . $this->getPackageName() . '.zip';
-		$zip_cmd = $this->zip_cmd . ' -9 -D -j ' . $zip_file . ' ' . implode(' ', $files_to_zip);
-		system($zip_cmd, $status);
-		if ($status) {
-			throw new \Exception("Couldn't zip files for '$zip_file'");
+		foreach ($files_to_zip as $file_to_zip) {
+			$zip_cmd = $this->zip_cmd . ' -9 -D -m ' . $zip_file . ' ' . $files_to_zip;
+			system($zip_cmd, $status);
+			if ($status) {
+				throw new \Exception("Couldn't zip files for '$zip_file'");
+			}
 		}
 
 		return $zip_file;
