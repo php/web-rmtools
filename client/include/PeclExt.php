@@ -820,9 +820,10 @@ if (!function_exists('rmtools\combinations')) {
 nodoc:
 
 		/* pack */
+		/* XXX implement the packaging of original fs structure from package.xml */
 		$zip_file = TMP_DIR . DIRECTORY_SEPARATOR . $this->getPackageName() . '.zip';
 		foreach ($files_to_zip as $file_to_zip) {
-			$zip_cmd = $this->zip_cmd . ' -9 -D -m ' . $zip_file . ' ' . $files_to_zip;
+			$zip_cmd = $this->zip_cmd . ' -9 -D -j ' . $zip_file . ' ' . $file_to_zip;
 			system($zip_cmd, $status);
 			if ($status) {
 				throw new \Exception("Couldn't zip files for '$zip_file'");
