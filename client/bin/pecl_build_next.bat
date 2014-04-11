@@ -37,6 +37,22 @@ for /r %%i in (*) do (
 	goto ONLY_ONE
 )
 
+cd c:\pecl-in-pkg-56
+
+for /r %%i in (*) do (
+	call %BAT_DIR%pecl_build_56.bat --upload --aggregate-mail --package=%%i
+	del %%i
+	goto ONLY_ONE
+)
+
+cd c:\pecl-in-pkg-nomail-56
+
+for /r %%i in (*) do (
+	call %BAT_DIR%pecl_build_56.bat --upload --package=%%i
+	del %%i
+	goto ONLY_ONE
+)
+
 :ONLY_ONE
 cd %BAT_DIR%
 echo .
