@@ -956,7 +956,7 @@ nodoc:
 
 	public function getToEmail()
 	{
-		$to = NULL;
+		$to = array();
 		$config = $this->getPackageConfig();
 
 		/* override package.xml */
@@ -973,12 +973,11 @@ nodoc:
 		$leads = $this->getPackageXmlProperty("lead");
 		foreach ($leads as $lead) {
 			if ((string)$lead->active == 'yes') {
-				$to = (string)$lead->email;
-				break;
+				$to[] = (string)$lead->email;
 			}
 		}
 
-		return $to;
+		return implode(",", $to);
 	}
 
 	public function mailMaintainers($success, $is_snap, array $logs, PeclMail $mailer, $force_email = NULL)
