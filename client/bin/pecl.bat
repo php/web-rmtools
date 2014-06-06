@@ -4,7 +4,7 @@ SET BAT_DIR=%~dp0
 
 set RMTOOLS_BASE_DIR=c:\php-sdk\rmtools-client
 
-set PECL_PHP_CMD=c:\php-sdk\php\php.exe -d extension_dir=c:\php-sdk\php\ext -d extension=php_openssl.dll -d extension=php_curl.dll -d extension=php_sqlite3.dll -d date.timezone=UTC
+set PECL_PHP_CMD=c:\php-sdk\php\php.exe -d memory_limit=2G -d extension_dir=c:\php-sdk\php\ext -d extension=php_openssl.dll -d extension=php_curl.dll -d extension=php_sqlite3.dll -d date.timezone=UTC
 
 if "%1"=="" goto :help
 if "%1"=="--help" goto :help
