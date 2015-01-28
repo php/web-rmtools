@@ -406,8 +406,10 @@ class PeclExt
 				 $this->setupNonCoreExtDeps();
 			}
 			if (!empty($this->non_core_ext_deps)) {
-				$ret .= ' ';
-				$ret .= $this->getNonCoreExtDepsConfLines();
+				/*$ret .= ' ';
+				$ret .= $this->getNonCoreExtDepsConfLines();*/
+
+				$ret = $this->getNonCoreExtDepsConfLines() . ' ' . $ret;
 			}
 		} else {
 			$data['exts'] = array();
