@@ -118,6 +118,12 @@ class PeclExt
 				}
 			}
 
+			if (!$this->name) {
+				if (preg_match("/EXTENSION\s*\(\s*('|\")([a-z0-9_]+)('|\")\s*,/Sm", file_get_contents($config_w32_path), $m)) {
+					$this->name = $m[2];
+				}
+			}
+
 			/* give up */
 			if (!$this->name) {
 				throw new \Exception("Couldn't reliably determine the package name, please fix or add package.xml");
