@@ -89,7 +89,9 @@ foreach($latest->item as $item) {
 			$get_url_tpl
 		);
 
-		$curl_cmd = $curl . ' -s -L -J -O ' . $get_url;
+               /* XXX -k is needed as the host is good known, but the download can fail on
+                       certain versions because of certs */
+		$curl_cmd = $curl . ' -s -L -J -O -k ' . $get_url;
 		$back = getcwd();
 
 		chdir($download_dir);
