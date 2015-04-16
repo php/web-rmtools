@@ -13,7 +13,7 @@ $required_exts = array(
 );
 foreach ($required_exts as $ext) {
 	if (!extension_loaded($ext)) {
-		die("'$ext' extension is not loaded but required");
+		die("'$ext' extension is not loaded but required, full rquired extensions list: " . implode(", ", $required_exts));
 	}
 }
 
