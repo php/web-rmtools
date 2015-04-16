@@ -57,7 +57,7 @@ if ($dump_all) {
 /* --refresh, need to wrap it all with ifs maybe*/
 echo "Refreshing the data" . PHP_EOL;
 
-$rss = 'http://pecl.php.net/feeds/latest.rss';
+$rss = 'https://pecl.php.net/feeds/latest.rss';
 
 echo "Fetching $rss" . PHP_EOL;
 $latest = simplexml_load_file($rss);
@@ -66,7 +66,7 @@ if (!isset($latest->item)) {
 }
 
 $curl = 'C:\apps\bin\curl.exe';
-$get_url_tpl = 'http://pecl.php.net/get/{name}/{version}';
+$get_url_tpl = 'https://pecl.php.net/get/{name}/{version}';
 $download_dir = 'c:\pecl-in-pkg';
 
 foreach($latest->item as $item) {
@@ -134,7 +134,7 @@ foreach($latest->item as $item) {
 	}
 	/*
 	 * when need more, look here (or /r) using name and version
-	 * $url = 'http://pecl.php.net/rest/p/';
+	 * $url = 'https://pecl.php.net/rest/p/';
 	 */
 }
 
