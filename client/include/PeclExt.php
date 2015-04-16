@@ -24,10 +24,14 @@ class PeclExt
 	protected $tmp_extract_path = NULL;
 	protected $ext_dir_in_src_path = NULL;
 	protected $package_xml = NULL;
+	protected $package_xml_path = NULL;
 	protected $configure_data = NULL;
 	protected $non_core_ext_deps = array();
 	protected $pkg_config = NULL;
 	protected $lic_fnames = array();
+	protected $pickle_phar = 'c:\apps\bin\pickle.phar';
+	protected $composer_json = NULL;
+	protected $composer_json_path = NULL;
 
 	public function __construct($pkg_path, $build)
 	{
@@ -297,19 +301,42 @@ class PeclExt
 			$this->tmp_extract_path = realpath($tmp_path);
 		}
 
-		$package_xml_path = NULL;
 		if (file_exists($tmp_path . DIRECTORY_SEPARATOR . 'package2.xml')) {
-			$package_xml_path = $tmp_path . DIRECTORY_SEPARATOR . 'package2.xml';
+			$this->package_xml_path = $tmp_path . DIRECTORY_SEPARATOR . 'package2.xml';
 		} else if (file_exists($tmp_path . DIRECTORY_SEPARATOR . 'package.xml')) {
-			$package_xml_path = $tmp_path . DIRECTORY_SEPARATOR . 'package.xml';
+			$this->package_xml_path = $tmp_path . DIRECTORY_SEPARATOR . 'package.xml';
 		} else if (file_exists($this->tmp_extract_path . DIRECTORY_SEPARATOR . 'package2.xml')) {
-			$package_xml_path = $this->tmp_extract_path . DIRECTORY_SEPARATOR . 'package2.xml';
+			$this->package_xml_path = $this->tmp_extract_path . DIRECTORY_SEPARATOR . 'package2.xml';
 		} else if (file_exists($this->tmp_extract_path . DIRECTORY_SEPARATOR . 'package.xml')) {
-			$package_xml_path = $this->tmp_extract_path . DIRECTORY_SEPARATOR . 'package.xml';
+			$this->package_xml_path = $this->tmp_extract_path . DIRECTORY_SEPARATOR . 'package.xml';
 		}
 
-		if ($package_xml_path) {
-			$this->package_xml = new \SimpleXMLElement($package_xml_path, 0, true);
+		if ($this->package_xml_path) {
+			$this->package_xml = new \SimpleXMLElement($this->package_xml_path, 0, true);
+		}
+
+		$pickle_convert_out = NULL;
+		/* XXX might be extended later to use glob() for searching the composer.json
+			If not found, it's anyway converted from the package.xml to inject 
+			into the build package later. */
+		if (file_exists($tmp_path . DIRECTORY_SEPARATOR . 'composer.json')) {
+			$this->composer_json_path = $tmp_path . DIRECTORY_SEPARATOR . 'composer.json';
+		} else if ($this->package_xml_path) {
+			$package_xml_dir = dirname($this->package_xml_path);
+			$cmd = PHP_BINARY . " $this->pickle_phar convert " . $package_xml_dir;
+			$pickle_convert_out = shell_exec($cmd);
+
+			if (file_exists($package_xml_dir . DIRECTORY_SEPARATOR . "composer.json")) {
+				$this->composer_json_path = $package_xml_dir . DIRECTORY_SEPARATOR . "composer.json";
+			} else {
+				/* XXX mail these errors to the package maintainers later in the main script pecl.php */
+				xmail(
+					NULL,
+					'ab@php.net',
+					"pickle convert fail for " . $this->pkg_basename,
+					$pickle_convert_out
+				);
+			}
 		}
 
 		$this->pkg_path = NULL;
@@ -770,6 +797,10 @@ if (!function_exists('rmtools\combinations')) {
 		 	$files_to_zip,
 			$this->prepareExtLicense($this->tmp_extract_path, $target)
 		);
+
+		if ($this->composer_json_path) {
+			$files_to_zip[] =  $this->composer_json_path;
+		}
 
 		/* care about the files marked as "doc" in the package.xml */
 		$dirs = $this->getPackageXmlProperty("contents", "dir");
