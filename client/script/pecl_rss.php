@@ -1,6 +1,6 @@
 <?php
 
-
+include __DIR__ . '/../data/config.php';
 include __DIR__ . '/../include/PeclDb.php';
 
 use rmtools as rm;

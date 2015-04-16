@@ -1,6 +1,22 @@
 <?php
 namespace rmtools;
 
+$required_exts = array(
+	'openssl',
+	'curl',
+	'sqlite3',
+	'simplexml',
+	'dom',
+	'json',
+	'mbstring',
+	'zlib',
+);
+foreach ($required_exts as $ext) {
+	if (!extension_loaded($ext)) {
+		die("'$ext' extension is not loaded but required");
+	}
+}
+
 $rmtools_base = getenv('RMTOOLS_BASE_DIR');
 
 if (!$rmtools_base) {
@@ -14,3 +30,4 @@ $custom_env = array(
 'LIB' => "C:\\Program Files (x86)\\Microsoft Visual Studio 9.0\\VC\\Lib;C:\\Program Files\\Microsoft SDKs\\Windows\\v6.1\\Lib;C:\\Program Files (x86)\\Microsoft Visual Studio 9.0\\VC\\ATLMFC\\LIB;",
 'BISON_SIMPLE' => 'c:\\php-sdk\\bin\\bison.simple'
 	);
+

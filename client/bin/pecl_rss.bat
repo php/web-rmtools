@@ -2,7 +2,7 @@
 
 SET BAT_DIR=%~dp0
 
-set PECL_RSS_CMD=c:\php-sdk\php\php.exe -d extension_dir=c:\php-sdk\php\ext -d extension=php_openssl.dll -d extension=php_curl.dll -d extension=php_sqlite3.dll -d date.timezone=UTC
+set PECL_RSS_CMD=c:\php-sdk\php\php.exe
 
 if "%1"=="" goto :help
 if "%1"=="--help" goto :help
