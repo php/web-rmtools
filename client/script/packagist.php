@@ -2,15 +2,15 @@
 
 include __DIR__ . '/../data/config.php';
 include __DIR__ . '/../include/PickleBranch.php';
-include __DIR__ . '/../include/Pickle.php';
 include __DIR__ . '/../include/Tools.php';
-//include __DIR__ . '/../include/PackagistExt.php';
+include __DIR__ . '/../include/PickleExt.php';
 
 use rmtools as rm;
 
 
 /* parametrize */
-$branch_name = "packagist70";
+$branch_name = "packagist56";
+$pkg_path = "c:\\tmp\\varnish-1.1.1.tgz";
 
 $config_path = __DIR__ . '/../data/config/packagist/' . $branch_name . '.ini';
 
@@ -18,9 +18,6 @@ $branch = new rm\PickleBranch($config_path);
 
 $branch_name = $branch->config->getName();
 $builds = $branch->getBuildList('windows');
-
-$pickle = new rm\Pickle();
-
 
 
 //var_dump($pickle);
@@ -34,9 +31,16 @@ foreach ($builds as $build_name) {
 	//$build_config = $branch->config->getBuildFromName($build_name);
 
 	$build = $branch->createBuildInstance($build_name);
+	$ext = new rm\PickleExt($pkg_path, $build);
+
+	$build->phpize();
+	$build->configure();
+	$build->make();
+	$build->clean();
 
 	var_dump($build_name);
 	var_dump($build);
+	var_dump($ext);
 	//var_dump($build_config);
 }
 
