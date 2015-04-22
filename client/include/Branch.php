@@ -158,6 +158,8 @@ class Branch {
 
 		$compiler	= strtolower($build['compiler']);
 		switch ($compiler) {
+			case 'vc14':
+			case 'vc12':
 			case 'vc11':
 			case 'vc9':
 			case 'vc6':
@@ -165,6 +167,7 @@ class Branch {
 				break;
 			case 'icc':
 			case 'gcc':
+			case 'clang':
 				throw new \Exception("$compiler not supported yet. Not implemented");
 				break;
 		}
