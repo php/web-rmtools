@@ -2,8 +2,6 @@
 
 namespace rmtools;
 
-include __DIR__ . '/BranchConfig.php';
-
 class Pickle
 {
 	
