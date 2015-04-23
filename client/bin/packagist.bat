@@ -13,7 +13,7 @@ if "%1"=="/?" goto :help
 goto :skip_help
 
 :help
-%PECL_PHP_CMD% %BAT_DIR%\..\script\pecl.php
+%PECL_PHP_CMD% %BAT_DIR%\..\script\packagist.php
 GOTO EXIT_LOCKED
 
 :skip_help
