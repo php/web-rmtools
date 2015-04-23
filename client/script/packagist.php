@@ -33,14 +33,16 @@ foreach ($builds as $build_name) {
 	$build = $branch->createBuildInstance($build_name);
 	$ext = new rm\PickleExt($pkg_path, $build);
 
-	$build->phpize();
-	$build->configure();
-	$build->make();
-	$build->clean();
+	$build->build();
+	$build->packLogs();
+	$build->archive();
 
-	var_dump($build_name);
-	var_dump($build);
-	var_dump($ext);
+	/* upload logs and builds */
+	/* notify packagist */
+
+	//var_dump($build_name);
+	//var_dump($build);
+	//var_dump($ext);
 	//var_dump($build_config);
 }
 

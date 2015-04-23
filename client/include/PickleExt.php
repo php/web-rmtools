@@ -38,5 +38,16 @@ class PickleExt
 	{
 
 	}
+
+	protected function createTmpDir()
+	{
+		$tmp_path = tempnam(TMP_DIR, 'pickle');
+		unlink($tmp_path);
+		if (!file_exists($tmp_path) && !mkdir($tmp_path)) {
+			throw new \Exception("Couldn't create temporary dir");
+		}
+
+		return $tmp_path;
+	}
 }
 
