@@ -33,7 +33,8 @@ foreach ($builds as $build_name) {
 	$build = $branch->createBuildInstance($build_name);
 	$ext = new rm\PickleExt($pkg_path, $build);
 
-	$build->build();
+	$build->build($ext);
+	die;
 	$build->packLogs();
 	$build->archive();
 

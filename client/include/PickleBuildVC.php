@@ -9,12 +9,15 @@ class PickleBuildVC
 {
 	public $branch;
 	public $build_name;
-	protected $pickle_phar = 'c:\\apps\\bin\\pickle.phar';
+	/* now use the dev pickle version, as it needs some adjustments for the build bots */
+	/* protected $pickle_phar = 'c:\\apps\\bin\\pickle.phar'; */
+	protected $pickle_phar = 'c:\\php-sdk\\pickle\\bin\pickle';
 	protected $env;
 	protected $sdk_base = "C:\\php-devel\\nts";
 
 	protected $int_dir;
 	protected $log_dir;
+	protected $sdk_dir;
 
 	protected $pickle_cmd;
 
@@ -34,12 +37,70 @@ class PickleBuildVC
 			throw new \Exception("Couldn't create log dir");
 		}
 
-		$this->pickle_cmd = PHP_BINARY . " " . $this->pickle_phar;
+		/* Use --ansi for now for better parsing if needed. Should tweak pickle to support --xml/--json */
+		$this->pickle_cmd = PHP_BINARY . " " . $this->pickle_phar . " --ansi ";
+
+
+		$this->compiler = $branch->config->builds[$build_name]['compiler'];
+		$this->architecture = $branch->config->builds[$build_name]['arch'];
+		$this->thread_safe = (boolean)$branch->config->builds[$build_name]['thread_safe'];
+
+
+		$vc_env_prefix = strtoupper($this->compiler);
+		if ($this->architecture == 'x64') {
+			$vc_env_prefix .= '_X64_';
+		} else {
+			$vc_env_prefix .= '_';
+		}
+
+		$path = getenv($vc_env_prefix . 'PATH');
+		if (empty($path)) {
+			include __DIR__ . '/../data/config.php';
+			/* use default config */
+			$env = $custom_env;
+		} else {
+			$env = array();
+			$env['PATH'] = getenv($vc_env_prefix . 'PATH') . ';' . getenv('PATH') ;
+			$env['INCLUDE'] = getenv($vc_env_prefix . 'INCLUDE');
+			$env['LIB'] = getenv($vc_env_prefix . 'LIB');
+		}
+
+		if (!$env['INCLUDE'] || !$env['LIB']) {
+			$env['INCLUDE'] = getenv('INCLUDE');
+			$env['LIB'] = getenv('LIB');
+		}
+
+
+		$env['TMP'] = $env['TEMP'] = getenv('TEMP');
+		$env['SystemDrive'] = getenv('SystemDrive');
+		$env['SystemRoot'] = getenv('SystemRoot');
+		if (!isset($env['BISON_SIMPLE'])) {
+			$env['BISON_SIMPLE'] = getenv('BISON_SIMPLE');
+		}
+
+		$env['CPU'] = "i386";
+		$env['APPVER'] = "6.0";
+		if ($branch->config->getDebug() == 0) {
+			$env['NODEBUG'] = "1";
+		}
+		if (strcasecmp($this->architecture, 'x64') == 0) {
+			$env['CPU'] = "AMD64";
+		}
+
+		$this->sdk_path = $branch->config->getBuildFromName($build_name)[sdk_path];
+		$env["PATH"] .= ";{$this->sdk_path}";
+		
+		$this->env = $env;
 	}
 
 	public function __destruct()
 	{
-		$this->clean();
+//		$this->clean();
+	}
+
+	public function setSdkDir($sdk_dir)
+	{
+		$this->sdk_dir = $sdk_dir;
 	}
 
 	function clean()
@@ -60,14 +121,18 @@ class PickleBuildVC
 
 	}
 
-	public function build()
+	public function build(PickleExt $ext)
 	{
 		$cmd = $this->pickle_cmd;
 
-		$opts = "install ";
+		$opts = "install --source --quiet ";
+		$opts .= $ext->getPkgUri() . " ";
 		$opts .= "--save-logs=" . $this->log_dir;
 
 		$cmd = $this->pickle_cmd . " " . $opts;
+echo $cmd;
+		$ret = exec_single_log($cmd, NULL, $this->env);
+		var_dump($ret);
 	}
 
 	public function archive()

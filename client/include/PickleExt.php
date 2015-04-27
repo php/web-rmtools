@@ -49,5 +49,11 @@ class PickleExt
 
 		return $tmp_path;
 	}
+
+	public function getPkgUri()
+	{
+		return $this->pkg_uri;
+	}
 }
+
 
