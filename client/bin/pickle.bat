@@ -13,7 +13,7 @@ if "%1"=="/?" goto :help
 goto :skip_help
 
 :help
-%PECL_PHP_CMD% %BAT_DIR%\..\script\packagist.php
+%PECL_PHP_CMD% %BAT_DIR%\..\script\pickle.php
 GOTO EXIT_LOCKED
 
 :skip_help
@@ -71,7 +71,7 @@ SET VC11_X64_SHELL=%comspec% /k ""C:\Program Files (x86)\Microsoft Visual Studio
 REM Run pecl.php
 SET BISON_SIMPLE=c:\php-sdk\bin\bison.simple
 @ECHO ON
-%PECL_PHP_CMD% %BAT_DIR%..\script\packagist.php %*
+%PECL_PHP_CMD% %BAT_DIR%..\script\pickle.php %*
 @ECHO OFF
 SET PATH=%OLD_PATH%
 
