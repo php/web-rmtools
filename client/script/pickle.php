@@ -24,6 +24,10 @@ $builds = $branch->getBuildList('windows');
 //var_dump($branch_name);
 //var_dump($builds);
 
+$was_errors = false;
+
+echo "Using <$pkg_path>" . PHP_EOL . PHP_EOL;
+
 foreach ($builds as $build_name) {
 
 	echo "Starting build" . PHP_EOL;
@@ -33,7 +37,26 @@ foreach ($builds as $build_name) {
 	$build = $branch->createBuildInstance($build_name);
 	$ext = new rm\PickleExt($pkg_path, $build);
 
-	$build->build($ext);
+	echo "Running pickle build" . PHP_EOL;
+
+	$ret = $build->build($ext);
+	if ($ret["return_value"]) {
+	
+		/* XXX build->clean() is gonna remove all the temp files, pack the logs before */
+		$build->clean();
+		//$ext->cleanup();
+		$was_errors = true;
+
+		unset($ext);
+		unset($build);
+
+		echo $ret["log"];
+
+		continue;
+	}
+
+	echo "Pickle build successful, packaging logs" . PHP_EOL;
+
 	//$build->packLogs();
 	//$build->archive();
 
@@ -44,6 +67,9 @@ foreach ($builds as $build_name) {
 	//var_dump($build);
 	//var_dump($ext);
 	//var_dump($build_config);
+
+
+	echo PHP_EOL;
 }
 
 exit(0);

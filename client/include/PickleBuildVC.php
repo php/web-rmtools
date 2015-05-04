@@ -95,7 +95,7 @@ class PickleBuildVC
 
 	public function __destruct()
 	{
-//		$this->clean();
+		$this->clean();
 	}
 
 	public function setSdkDir($sdk_dir)
@@ -141,6 +141,8 @@ class PickleBuildVC
 		$ret = exec_single_log($cmd, NULL, $this->env);
 
 		chdir($old_cwd);
+
+		return $ret;
 	}
 
 	public function archive()
