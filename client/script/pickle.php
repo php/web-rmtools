@@ -9,10 +9,10 @@ use rmtools as rm;
 
 
 /* parametrize */
-$branch_name = "packagist56";
-$pkg_path = "c:\\tmp\\varnish-1.1.1.tgz";
+$branch_name = "pickle70";
+$pkg_path = "c:\\tmp\\varnish-1.2.1.tgz";
 
-$config_path = __DIR__ . '/../data/config/packagist/' . $branch_name . '.ini';
+$config_path = __DIR__ . '/../data/config/pickle/' . $branch_name . '.ini';
 
 $branch = new rm\PickleBranch($config_path);
 
@@ -38,7 +38,7 @@ foreach ($builds as $build_name) {
 	//$build->archive();
 
 	/* upload logs and builds */
-	/* notify packagist */
+	/* notify pickle */
 
 	//var_dump($build_name);
 	//var_dump($build);
