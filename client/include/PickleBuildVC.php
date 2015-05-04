@@ -121,6 +121,7 @@ class PickleBuildVC
 
 	}
 
+	/* XXX read the configure options from the extconfig, create the options file to feed pickle */
 	public function build(PickleExt $ext)
 	{
 		$cmd = $this->pickle_cmd;

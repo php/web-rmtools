@@ -54,6 +54,11 @@ class PickleExt
 	{
 		return $this->pkg_uri;
 	}
+
+	public function cleanup()
+	{
+		// pass
+	}
 }
 
 

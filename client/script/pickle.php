@@ -55,10 +55,11 @@ foreach ($builds as $build_name) {
 		continue;
 	}
 
+	/* XXX check zipball path before saying this */
 	echo "Pickle build successful, packaging logs" . PHP_EOL;
 
+	// add the deps license to the pickle archive ... or should pickle do that?
 	//$build->packLogs();
-	//$build->archive();
 
 	/* upload logs and builds */
 	/* notify pickle */
