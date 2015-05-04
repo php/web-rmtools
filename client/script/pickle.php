@@ -34,9 +34,8 @@ foreach ($builds as $build_name) {
 	$ext = new rm\PickleExt($pkg_path, $build);
 
 	$build->build($ext);
-	die;
-	$build->packLogs();
-	$build->archive();
+	//$build->packLogs();
+	//$build->archive();
 
 	/* upload logs and builds */
 	/* notify packagist */

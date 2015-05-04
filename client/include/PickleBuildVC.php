@@ -87,7 +87,7 @@ class PickleBuildVC
 			$env['CPU'] = "AMD64";
 		}
 
-		$this->sdk_path = $branch->config->getBuildFromName($build_name)[sdk_path];
+		$this->sdk_path = $branch->config->getBuildFromName($build_name)["sdk_path"];
 		$env["PATH"] .= ";{$this->sdk_path}";
 		
 		$this->env = $env;
@@ -124,15 +124,23 @@ class PickleBuildVC
 	public function build(PickleExt $ext)
 	{
 		$cmd = $this->pickle_cmd;
+		$old_cwd = getcwd();
 
-		$opts = "install --source --quiet ";
-		$opts .= $ext->getPkgUri() . " ";
-		$opts .= "--save-logs=" . $this->log_dir;
+		chdir(TMP_DIR);
+
+		/* XXX check if --quiet needed */
+		$opts = " --binary "
+			. " --defaults " /* XXX if no force options was supplied, use --defaults. The logic is to implement. */
+			. "--tmp-dir={$this->int_dir} "
+			. "--save-logs=" . $this->log_dir . " "
+			. "release "
+			. $ext->getPkgUri();
 
 		$cmd = $this->pickle_cmd . " " . $opts;
-echo $cmd;
+
 		$ret = exec_single_log($cmd, NULL, $this->env);
-		var_dump($ret);
+
+		chdir($old_cwd);
 	}
 
 	public function archive()
