@@ -13,6 +13,7 @@ class PickleExt
 	protected $deplister_cmd = 'c:\apps\bin\deplister.exe';
 	protected $build;
 	protected $pkg_config;
+	protected $conf_opts;
 
 	protected $pickle_cmd;
 
@@ -80,7 +81,7 @@ class PickleExt
 
 	public function cleanup()
 	{
-		// pass
+		$this->cleanConfigureOpts();
 	}
 
 	protected function complexPkgNameMatch($cnf_name) {
@@ -165,6 +166,133 @@ if (!function_exists('rmtools\combinations')) {
 		$config = $this->getPackageConfig();
 
 		return $config && isset($config['ignore']);
+	}
+
+	/* Depending on other extensions is neither handled nor supported by phpize.
+		This will need significant change in the PHP build, but still doable.
+		Or, it'll need some quite tricky business inside rmtools, still doable
+		as well. */
+	public function getConfigureOpts()
+	{
+		$config = $this->getPackageConfig();
+
+		/* Ext isn't known, force pickle --defaults */
+		if (!$config) {
+			return NULL;
+		}
+
+		$conf = $this->buildConfigureLine($config);
+
+		$fn = $this->build->getIntDir() . DIRECTORY_SEPARATOR . $this->getName() . ".conf";
+		if (strlen($conf) != file_put_contents($fn, $conf)) {
+			throw new \Exception("Error writing build config into '$fn'");
+		}
+
+		$this->conf_opts = $fn;
+		return $this->conf_opts;
+	}
+
+	public function cleanConfigureOpts()
+	{
+		if (file_exists($this->conf_opts)) {
+			unlink($this->conf_opts);
+		}
+	}
+
+	protected function buildConfigureLine(array $data)
+	{
+		$ret = '';
+		$ignore_main_opt = false;
+
+		if (!isset($data['type'])
+			|| !in_array($data['type'], array('with', 'enable'))) {
+			throw new \Exception("Unknown extention configure type, expected enable/with");
+		}
+
+		$main_opt = '--' . $data['type'] . '-' . str_replace('_', '-', $this->name);
+
+		if (isset($data['opts']) && $data['opts']) {
+			$data['opts'] = !is_array($data['opts']) ? array($data['opts']) : $data['opts'];
+			foreach($data['opts'] as $opt) {
+				if ($opt) {
+					/* XXX simple check for opt syntax */
+					$ret .= ' "' . $opt . '" ';
+				}
+				/* the main enable/with option was overridden in the ini */
+				if (strstr($opt, "$main_opt=") !== false) {
+					$ignore_main_opt = true;
+				}
+			}
+		} else {
+			$data['opts'] = array();
+		}
+
+		$ignore_main_opt = $ignore_main_opt || isset($data['no_conf']);
+
+		if (!$ignore_main_opt) {
+			$ret .=  ' "' . $main_opt . '=shared" ';
+		}
+
+		if (isset($data['libs']) && $data['libs']) {
+			$data['libs'] = !is_array($data['libs']) ? array($data['libs']) : $data['libs'];
+			$deps_path = $this->build->pecl_deps_base;
+			$extra_lib = $extra_inc = array();
+
+			foreach($data['libs'] as $lib) {
+				if (!$lib) {
+					continue;
+				}
+
+				$lib_conf = $this->getLibraryConfig($lib);
+
+				$lib_path = $deps_path . DIRECTORY_SEPARATOR . $lib;
+
+				$some_lib_path = $lib_path . DIRECTORY_SEPARATOR . 'lib';
+				if (!file_exists($some_lib_path)) {
+					throw new \Exception("Path '$some_lib_path' doesn't exist");
+				}
+				$extra_lib[] = $some_lib_path;	
+
+				$some_lib_inc_path =  $lib_path . DIRECTORY_SEPARATOR . 'include';
+				if (!file_exists($some_lib_inc_path)) {
+					throw new \Exception("Path '$some_lib_inc_path' doesn't exist");
+				}
+				$extra_inc[] = $some_lib_inc_path;	
+
+				/* If expand_include not set, consider true. */
+				if (!isset($lib_conf['expand_include']) || $lib_conf['expand_include']) {
+					$dirs = glob("$some_lib_inc_path/*", GLOB_ONLYDIR);
+					foreach ($dirs as $dir) {
+						$extra_inc[] = $dir;
+					}
+				}
+			}
+
+			if (!empty($extra_lib)) {
+				$ret .= ' "--with-extra-libs=' . implode(';', $extra_lib) . '" '
+					. ' "--with-extra-includes=' . implode(';', $extra_inc) . '" ';
+			}
+		} else {
+			$data['libs'] = array();
+		}
+
+		$this->configure_data = $data;
+
+		return $ret;
+	}
+
+	public function getLibraryConfig($name)
+	{
+		$ret = array();
+
+		$known_path = __DIR__ . '/../data/config/pickle/libs.ini';
+		$lib_conf = parse_ini_file($known_path, true, INI_SCANNER_RAW);
+
+		if (isset($lib_conf[$name]) && is_array($lib_conf[$name])) {
+			$ret = $lib_conf[$name];
+		}
+
+		return $ret;
 	}
 }
 

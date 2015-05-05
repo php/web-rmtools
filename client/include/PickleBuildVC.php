@@ -44,6 +44,10 @@ class PickleBuildVC
 		$this->compiler = $branch->config->builds[$build_name]['compiler'];
 		$this->architecture = $branch->config->builds[$build_name]['arch'];
 		$this->thread_safe = (boolean)$branch->config->builds[$build_name]['thread_safe'];
+		$this->pecl_deps_base = $branch->config->builds[$build_name]['pecl_deps_base'];
+		if (!file_exists($this->pecl_deps_base)) {
+			throw new \Exception("Dependency libs not found under '{$this->pecl_deps_base}'");
+		}
 
 
 		$vc_env_prefix = strtoupper($this->compiler);
@@ -128,9 +132,16 @@ class PickleBuildVC
 
 		chdir(TMP_DIR);
 
+		$conf_opts = $ext->getConfigureOpts();
+		if ($conf_opts && file_exists($conf_opts)) {
+			$ext_config_opt = "--with-configure-options=$conf_opts";
+		} else {
+			$ext_config_opt = "--defaults";
+		}
+
 		/* XXX check if --quiet needed */
 		$opts = " --binary "
-			. " --defaults " /* XXX if no force options was supplied, use --defaults. The logic is to implement. */
+			. " $ext_config_opt "
 			. "--tmp-dir={$this->int_dir} "
 			. "--pack-logs "
 			. "release "
@@ -140,6 +151,8 @@ class PickleBuildVC
 
 		$ret = exec_single_log($cmd, NULL, $this->env);
 
+		$ext->cleanConfigureOpts();
+
 		chdir($old_cwd);
 
 		return $ret;
@@ -148,6 +161,11 @@ class PickleBuildVC
 	public function archive()
 	{
 
+	}
+
+	public function getIntDir()
+	{
+		return $this->int_dir;
 	}
 }
 

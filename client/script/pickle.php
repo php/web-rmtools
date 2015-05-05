@@ -77,17 +77,28 @@ foreach ($builds as $build_name) {
 
 	echo "Running pickle build" . PHP_EOL;
 
+	try {
 	$ret = $build->build($ext);
+	} catch (Exception $e) {
+		echo 'Error: ' . $e->getMessage() . PHP_EOL;
+
+		$ret = array("return_value" => 1, "log" => "");
+		/* send error mail*/
+
+		continue;
+	}
+
 	if ($ret["return_value"]) {
 	
 		/* XXX build->clean() is gonna remove all the temp files, pack the logs before */
 		$build->clean();
-		//$ext->cleanup();
+		$ext->cleanup();
 		$was_errors = true;
 
 		unset($ext);
 		unset($build);
 
+		echo "Build failed" . PHP_EOL;
 		echo $ret["log"];
 
 		continue;
