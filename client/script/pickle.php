@@ -8,9 +8,16 @@ include __DIR__ . '/../include/PickleExt.php';
 use rmtools as rm;
 
 
-/* parametrize */
-$branch_name = "pickle70";
-$pkg_path = "c:\\tmp\\varnish-1.2.1.tgz";
+$longopts = array("config:", "package:", "upload", "is-snap", "first", "last");
+
+$options = getopt(NULL, $longopts);
+
+$branch_name = isset($options['config']) ? $options['config'] : NULL;
+$pkg_path = isset($options['package']) ? $options['package'] : NULL;
+$upload = isset($options['upload']);
+$is_snap = isset($options['is-snap']);
+$is_last_run = isset($options['last']);
+$is_first_run = isset($options['first']);
 
 $config_path = __DIR__ . '/../data/config/pickle/' . $branch_name . '.ini';
 
