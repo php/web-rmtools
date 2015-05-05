@@ -182,6 +182,7 @@ if (!function_exists('rmtools\combinations')) {
 		}
 
 		$conf = $this->buildConfigureLine($config);
+		$conf .= " --enable-debug-pack";
 
 		$fn = $this->build->getIntDir() . DIRECTORY_SEPARATOR . $this->getName() . ".conf";
 		if (strlen($conf) != file_put_contents($fn, $conf)) {
