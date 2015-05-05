@@ -67,7 +67,6 @@ foreach ($builds as $build_name) {
 
 	try {
 		$ext->init();
-		var_dump($ext->getPackageConfig());
 	} catch (Exception $e) {
 		echo 'Error: ' . $e->getMessage() . PHP_EOL;
 

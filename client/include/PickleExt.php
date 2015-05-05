@@ -18,10 +18,6 @@ class PickleExt
 
 	public function __construct($pkg_uri, $build)
 	{
-		if (!file_exists($pkg_uri)) {
-			throw new \Exception("'$pkg_uri' does not exist");
-		} 
-
 		$this->pkg_uri = $pkg_uri;
 		$this->build = $build;
 	}
