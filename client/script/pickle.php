@@ -19,6 +19,19 @@ $is_snap = isset($options['is-snap']);
 $is_last_run = isset($options['last']);
 $is_first_run = isset($options['first']);
 
+if (NULL == $branch_name || NULL == $pkg_path) {
+	echo "Usage: pickle.php [OPTION] ..." . PHP_EOL;
+	echo "  --config         Configuration file name without suffix, required." . PHP_EOL;
+	echo "  --package        Path to the PECL package, required." . PHP_EOL;
+	echo "  --upload         Upload the builds to the windows.php.net, optional." . PHP_EOL;
+	echo "  --is-snap        We upload to releases by default, but this one goes to snaps, optional." . PHP_EOL;
+	echo "  --first          This call is the first in the series for the same package file, optional." . PHP_EOL;
+	echo "  --last           This call is the last in the series for the same package file, optional." . PHP_EOL;
+	echo PHP_EOL;
+}
+
+
+
 $config_path = __DIR__ . '/../data/config/pickle/' . $branch_name . '.ini';
 
 $branch = new rm\PickleBranch($config_path);
@@ -41,8 +54,16 @@ foreach ($builds as $build_name) {
 
 	//$build_config = $branch->config->getBuildFromName($build_name);
 
-	$build = $branch->createBuildInstance($build_name);
-	$ext = new rm\PickleExt($pkg_path, $build);
+	try {
+		$build = $branch->createBuildInstance($build_name);
+		$ext = new rm\PickleExt($pkg_path, $build);
+	} catch (Exception $e) {
+		echo 'Error: ' . $e->getMessage() . PHP_EOL;
+
+		/* send error mail*/
+
+		continue;
+	}
 
 	$ext->init();
 
