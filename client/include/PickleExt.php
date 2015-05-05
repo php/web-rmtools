@@ -12,6 +12,7 @@ class PickleExt
 	protected $unzip_cmd = 'c:\php-sdk\bin\unzip.exe';
 	protected $deplister_cmd = 'c:\apps\bin\deplister.exe';
 	protected $build;
+	protected $pkg_config;
 
 	protected $pickle_cmd;
 
@@ -45,12 +46,17 @@ class PickleExt
 		$this->version = $m[1];
 	}
 
-	public function preparePackage()
+	public function getName()
 	{
-
+		return $this->name;
 	}
 
-	public function packLogs()
+	public function getVersion()
+	{
+		return $this->version;
+	}
+
+	public function preparePackage()
 	{
 
 	}
@@ -79,6 +85,90 @@ class PickleExt
 	public function cleanup()
 	{
 		// pass
+	}
+
+	protected function complexPkgNameMatch($cnf_name) {
+		$full_set = array(
+			$this->build->branch->config->getBranch(),
+			($this->build->thread_safe ? 'ts' : 'nts'),
+			$this->build->compiler,
+			$this->build->architecture,
+		);
+
+if (!function_exists('rmtools\combinations')) {
+		function combinations($arr, $level, &$result, $that, $curr=array()) {
+			for($i = 0; $i < count($arr); $i++) {
+				$new = array_merge($curr, array($arr[$i]));
+				if($level == 1) {
+					/* preserve order */
+					sort($new);
+					/* no repititions */
+					$new = array_unique($new);
+					$name = $that->getName() . '-' . implode('-', $new);
+					if (!in_array($name, $result)) {
+						$result[] = $name;
+					}
+				} else {
+					combinations($arr, $level - 1, $result, $that, $new);
+				}
+			}
+		}
+}
+
+		$names = array();
+		for ($i = 0; $i<count($full_set); $i++) {
+			combinations($full_set, $i+1, $names, $this);
+		}
+
+		foreach ($names as $name) {
+			if ($name === $cnf_name) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	public function getPackageConfig()
+	{
+		$config = NULL;
+
+		if ($this->pkg_config) {
+			return $this->pkg_config;
+		}
+
+		$known_path = __DIR__ . '/../data/config/pickle/exts.ini';
+		$exts = parse_ini_file($known_path, true, INI_SCANNER_RAW);
+
+		/* Check for like myext-5.3-ts-vc9-x86 */
+		foreach ($exts as $name => $conf) {
+			if ($this->complexPkgNameMatch($name)) {
+				$config = $conf;
+				break;
+			}
+		}
+
+		/* XXX this here might be redundant */
+		if (!$config) {
+			foreach ($exts as $name => $conf) {
+				if ($name === $this->name) {
+					$config = $conf;
+					break;
+				}
+			}
+		}
+
+		$this->pkg_config = $config;
+
+		return $config;
+	}
+
+	/* ignore me */
+	public function sendToCoventry()
+	{
+		$config = $this->getPackageConfig();
+
+		return $config && isset($config['ignore']);
 	}
 }
 

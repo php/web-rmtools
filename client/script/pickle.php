@@ -65,7 +65,16 @@ foreach ($builds as $build_name) {
 		continue;
 	}
 
-	$ext->init();
+	try {
+		$ext->init();
+		var_dump($ext->getPackageConfig());
+	} catch (Exception $e) {
+		echo 'Error: ' . $e->getMessage() . PHP_EOL;
+
+		/* send error mail*/
+
+		continue;
+	}
 
 	echo "Running pickle build" . PHP_EOL;
 
