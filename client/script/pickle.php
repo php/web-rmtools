@@ -37,6 +37,8 @@ foreach ($builds as $build_name) {
 	$build = $branch->createBuildInstance($build_name);
 	$ext = new rm\PickleExt($pkg_path, $build);
 
+	$ext->init();
+
 	echo "Running pickle build" . PHP_EOL;
 
 	$ret = $build->build($ext);
@@ -55,11 +57,10 @@ foreach ($builds as $build_name) {
 		continue;
 	}
 
-	/* XXX check zipball path before saying this */
-	echo "Pickle build successful, packaging logs" . PHP_EOL;
+	/* XXX check zipballs path before saying this */
+	echo "Pickle build successful" . PHP_EOL;
 
 	// add the deps license to the pickle archive ... or should pickle do that?
-	//$build->packLogs();
 
 	/* upload logs and builds */
 	/* notify pickle */

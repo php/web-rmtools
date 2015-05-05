@@ -11,17 +11,34 @@ class PickleExt
 	protected $zip_cmd = 'c:\php-sdk\bin\zip.exe';
 	protected $unzip_cmd = 'c:\php-sdk\bin\unzip.exe';
 	protected $deplister_cmd = 'c:\apps\bin\deplister.exe';
-	protected $composer_json = NULL;
-	protected $composer_json_path = NULL;
+	protected $build;
 
-	public function __construct($pkg_uri)
+	protected $pickle_cmd;
+
+	public function __construct($pkg_uri, $build)
 	{
 		$this->pkg_uri = $pkg_uri;
+		$this->build = $build;
 	}
 
 
 	public function init()
 	{
+		$this->pickle_cmd = $this->build->getPickleCmd();
+
+
+		$cmd = "{$this->pickle_cmd} info {$this->pkg_uri}";
+		$ret = exec_single_log($cmd, NULL, NULL);
+
+		if (!preg_match(",Package name\s+\|\s+([^\s]+)\s+\|,", $ret["log"], $m)) {
+			throw new \Exception("Couldn't parse extension name");
+		}
+		$this->name = $m[1];
+
+		if (!preg_match(",Package version.+\|\s+([a-z0-9\.\-]+)\s+\|,i", $ret["log"], $m)) {
+			throw new \Exception("Couldn't parse extension name");
+		}
+		$this->version = $m[1];
 	}
 
 	public function preparePackage()

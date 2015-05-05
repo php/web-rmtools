@@ -13,7 +13,7 @@ class PickleBuildVC
 	/* protected $pickle_phar = 'c:\\apps\\bin\\pickle.phar'; */
 	protected $pickle_phar = 'c:\\php-sdk\\pickle\\bin\pickle';
 	protected $env;
-	protected $sdk_base = "C:\\php-devel\\nts";
+	protected $sdk_base;
 
 	protected $int_dir;
 	protected $log_dir;
@@ -37,8 +37,8 @@ class PickleBuildVC
 			throw new \Exception("Couldn't create log dir");
 		}
 
-		/* Use --ansi for now for better parsing if needed. Should tweak pickle to support --xml/--json */
-		$this->pickle_cmd = PHP_BINARY . " " . $this->pickle_phar . " --ansi ";
+		/* Use --no-ansi for now for better parsing if needed. Should tweak pickle to support --xml/--json */
+		$this->pickle_cmd = PHP_BINARY . " " . $this->pickle_phar . " --no-ansi ";
 
 
 		$this->compiler = $branch->config->builds[$build_name]['compiler'];
@@ -98,6 +98,11 @@ class PickleBuildVC
 		$this->clean();
 	}
 
+	public function getPickleCmd()
+	{
+		return $this->pickle_cmd;
+	}
+
 	public function setSdkDir($sdk_dir)
 	{
 		$this->sdk_dir = $sdk_dir;
@@ -108,12 +113,6 @@ class PickleBuildVC
 		if (is_dir($this->int_dir)) {
 			rmdir_rf($this->int_dir);
 		}
-	}
-
-
-	public function packLogs()
-	{
-
 	}
 
 	public function info()
@@ -133,7 +132,7 @@ class PickleBuildVC
 		$opts = " --binary "
 			. " --defaults " /* XXX if no force options was supplied, use --defaults. The logic is to implement. */
 			. "--tmp-dir={$this->int_dir} "
-			. "--save-logs=" . $this->log_dir . " "
+			. "--pack-logs "
 			. "release "
 			. $ext->getPkgUri();
 
