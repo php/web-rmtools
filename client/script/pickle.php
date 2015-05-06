@@ -57,6 +57,8 @@ echo "Using <$pkg_path>" . PHP_EOL . PHP_EOL;
 
 foreach ($builds as $build_name) {
 
+	$build_error = 0;
+
 	echo "Starting build $build_name" . PHP_EOL;
 
 	//$build_config = $branch->config->getBuildFromName($build_name);
@@ -85,12 +87,14 @@ foreach ($builds as $build_name) {
 	echo "Running pickle build" . PHP_EOL;
 
 	try {
-	$ret = $build->build($ext);
+		$ret = $build->build($ext);
 	} catch (Exception $e) {
 		echo 'Error: ' . $e->getMessage() . PHP_EOL;
 
 		$ret = array("return_value" => 1, "log" => "");
 		/* send error mail*/
+
+		$build_error++;
 
 		continue;
 	}
@@ -108,6 +112,8 @@ foreach ($builds as $build_name) {
 		echo "Build failed" . PHP_EOL;
 		echo $ret["log"];
 
+		$build_error++;
+
 		continue;
 	}
 
@@ -117,6 +123,41 @@ foreach ($builds as $build_name) {
 	// add the deps license to the pickle archive ... or should pickle do that?
 
 	/* upload logs and builds */
+
+	$fl_base = "php_" . $ext->getName() . "-" . $ext->getVersion() . "-" . $build->branch->config->getBranch() . "-" . ($build->thread_safe ? "ts" : "nts") . "-" . $build->compiler . "-" . $build->architecture;
+
+	$logs_zip = realpath(TMP_DIR . DIRECTORY_SEPARATOR . "$fl_base-logs.zip");
+	$pkg_file = realpath(TMP_DIR . DIRECTORY_SEPARATOR . "$fl_base.zip");
+
+	$upload_success = true;
+	if ($upload) {
+		try {
+			$root = $is_snap ? 'snaps' : 'releases';
+			$target = '/' . $root . '/' .  $ext->getName() . '/' . $ext->getVersion();
+
+			$pkgs_to_upload = $build_error ? array() : array($pkg_file);
+
+			if ($build_error) {
+				echo "Uploading logs" . PHP_EOL;
+			} else {
+				echo "Uploading '$pkg_file' and logs" . PHP_EOL;
+			}
+
+			if ($build_error && !file_exists($logs_zip)) {
+				throw new Exception("Logs wasn't packaged, nothing to upload");
+			}
+
+			if (rm\upload_pickle_pkg_ftp_curl($pkgs_to_upload, array($logs_zip), $target)) {
+				echo "Upload succeeded" . PHP_EOL;
+			} else {
+				echo "Upload failed" . PHP_EOL;
+			}
+		} catch (Exception $e) {
+			echo 'Error . ' . $e->getMessage() . PHP_EOL;
+			$upload_success = false;
+		}
+	}
+
 	/* notify pickle */
 
 	//var_dump($build_name);
