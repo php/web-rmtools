@@ -30,7 +30,7 @@ class PickleExt
 
 
 		$cmd = "{$this->pickle_cmd} info {$this->pkg_uri}";
-		$ret = exec_single_log($cmd, NULL, NULL);
+		$ret = exec_single_log($cmd, NULL, $this->build->getEnv());
 
 		if ($ret["return_value"]) {
 			throw new \Exception($ret["log"]);

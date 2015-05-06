@@ -92,9 +92,9 @@ class PickleBuildVC
 		}
 
 		$this->sdk_path = $branch->config->getBuildFromName($build_name)["sdk_path"];
-		$env["PATH"] .= ";{$this->sdk_path}";
+		$env["PATH"] = "{$this->sdk_path};" . $env["PATH"];
 		
-		$env["PATH"] .= ";c:\\apps\\git\\bin;c:\\apps\\bin";
+		$env["PATH"] = "c:\\apps\\git\\bin;c:\\apps\\bin;" . $env["PATH"];
 
 		$this->env = $env;
 	}
@@ -168,6 +168,11 @@ class PickleBuildVC
 	public function getIntDir()
 	{
 		return $this->int_dir;
+	}
+
+	public function getEnv()
+	{
+		return $this->env;
 	}
 }
 
