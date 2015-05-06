@@ -28,6 +28,13 @@ if (NULL == $branch_name || NULL == $pkg_path) {
 	echo "  --first          This call is the first in the series for the same package file, optional." . PHP_EOL;
 	echo "  --last           This call is the last in the series for the same package file, optional." . PHP_EOL;
 	echo PHP_EOL;
+	echo "Examples: " . PHP_EOL;
+	echo PHP_EOL;
+	echo "Just build, binaries and logs will stay in TMP_DIR" . PHP_EOL;
+	echo "pecl --config=pickle --package=someext" . PHP_EOL;
+	echo PHP_EOL;
+	echo "Build and upload to windows.php.net/pickle/releases/some/1.0.0/" . PHP_EOL;
+	echo "pecl --config=pickle70 --upload --package=some-1.0.0" . PHP_EOL;
 }
 
 
@@ -50,7 +57,7 @@ echo "Using <$pkg_path>" . PHP_EOL . PHP_EOL;
 
 foreach ($builds as $build_name) {
 
-	echo "Starting build" . PHP_EOL;
+	echo "Starting build $build_name" . PHP_EOL;
 
 	//$build_config = $branch->config->getBuildFromName($build_name);
 
