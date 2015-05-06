@@ -142,6 +142,12 @@ foreach ($builds as $build_name) {
 
 			if (rm\upload_pickle_pkg_ftp_curl($pkgs_to_upload, array($logs_zip), $target)) {
 				echo "Upload succeeded" . PHP_EOL;
+				if (file_exists($logs_zip)) {
+					unlink($logs_zip);
+				}
+				if (file_exists($pkg_file)) {
+					unlink($pkg_file);
+				}
 			} else {
 				echo "Upload failed" . PHP_EOL;
 			}
@@ -152,12 +158,6 @@ foreach ($builds as $build_name) {
 	}
 
 	/* notify pickle */
-
-	//var_dump($build_name);
-	//var_dump($build);
-	//var_dump($ext);
-	//var_dump($build_config);
-
 
 	echo PHP_EOL;
 }
