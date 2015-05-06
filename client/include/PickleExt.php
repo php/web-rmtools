@@ -38,7 +38,7 @@ class PickleExt
 		$this->name = $m[1];
 
 		if (!preg_match(",Package version.+\|\s+([a-z0-9\.\-]+)\s+\|,i", $ret["log"], $m)) {
-			throw new \Exception("Couldn't parse extension name");
+			throw new \Exception("Couldn't parse extension versiot");
 		}
 		$this->version = $m[1];
 	}
