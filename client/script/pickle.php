@@ -95,8 +95,6 @@ foreach ($builds as $build_name) {
 		/* send error mail*/
 
 		$build_error++;
-
-		continue;
 	}
 
 	if ($ret["return_value"]) {
@@ -106,15 +104,10 @@ foreach ($builds as $build_name) {
 		$ext->cleanup();
 		$was_errors = true;
 
-		unset($ext);
-		unset($build);
-
 		echo "Build failed" . PHP_EOL;
 		echo $ret["log"];
 
 		$build_error++;
-
-		continue;
 	}
 
 	/* XXX check zipballs path before saying this */
