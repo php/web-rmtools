@@ -32,13 +32,17 @@ class PickleExt
 		$cmd = "{$this->pickle_cmd} info {$this->pkg_uri}";
 		$ret = exec_single_log($cmd, NULL, NULL);
 
+		if ($ret["return_value"]) {
+			throw new \Exception($ret["log"]);
+		}
+
 		if (!preg_match(",Package name\s+\|\s+([^\s]+)\s+\|,", $ret["log"], $m)) {
 			throw new \Exception("Couldn't parse extension name");
 		}
 		$this->name = $m[1];
 
 		if (!preg_match(",Package version.+\|\s+([a-z0-9\.\-]+)\s+\|,i", $ret["log"], $m)) {
-			throw new \Exception("Couldn't parse extension versiot");
+			throw new \Exception("Couldn't parse extension version");
 		}
 		$this->version = $m[1];
 	}

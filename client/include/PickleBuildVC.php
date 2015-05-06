@@ -94,6 +94,8 @@ class PickleBuildVC
 		$this->sdk_path = $branch->config->getBuildFromName($build_name)["sdk_path"];
 		$env["PATH"] .= ";{$this->sdk_path}";
 		
+		$env["PATH"] .= ";c:\\apps\\git\\bin;c:\\apps\\bin";
+
 		$this->env = $env;
 	}
 
