@@ -99,7 +99,6 @@ foreach ($builds as $build_name) {
 
 	if ($ret["return_value"]) {
 	
-		/* XXX build->clean() is gonna remove all the temp files, pack the logs before */
 		$build->clean();
 		$ext->cleanup();
 		$was_errors = true;

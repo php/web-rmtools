@@ -117,6 +117,18 @@ class PickleBuildVC
 	function clean()
 	{
 		if (is_dir($this->int_dir)) {
+			/* XXX something seems to be missing in unlink(), .git has some ACLs so then
+				PHP cannot handle the removal of the several items in it. Using the
+				system commando helps with that. */
+			$items = scandir($this->int_dir);
+			foreach ($items as $item) {
+				$dir = "{$this->int_dir}/$item";
+
+				if (is_dir("$dir/.git")) {
+					@shell_exec("del /F /S /Q /A " . realpath($dir) . DIRECTORY_SEPARATOR . ".git");
+				}
+			}
+
 			rmdir_rf($this->int_dir);
 		}
 	}
