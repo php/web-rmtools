@@ -70,6 +70,8 @@ SET VC11_X64_SHELL=%comspec% /k ""C:\Program Files (x86)\Microsoft Visual Studio
 
 REM Run pecl.php
 SET BISON_SIMPLE=c:\php-sdk\bin\bison.simple
+rem appending the git path to the end, this should reduce negative effects of command names clashing, fe "find". Pickle embedded within the other PHP scripts seems not be able to pickup the correct git.exe with proc_open(). For the last solution one can try installing msysgit globally on the system with the current installer, that will put git.exe on the path globally.
+set PATH=%PATH%;c:\\apps\\git\\bin
 @ECHO ON
 %PECL_PHP_CMD% %BAT_DIR%..\script\pickle.php %*
 @ECHO OFF
