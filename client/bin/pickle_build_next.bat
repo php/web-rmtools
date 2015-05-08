@@ -3,6 +3,10 @@
 rem pick the next pickle pkg and pass to pickle_build_all.bat 
 rem first try releases, if there aren't any, look for snaps
 
+rem in contrary to pecl, the pickle build bot doesn't download
+rem the releases itself, but get the job files created by the
+rem peclweb job script
+
 SET BAT_DIR=%~dp0
 
 

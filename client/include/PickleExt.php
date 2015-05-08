@@ -5,6 +5,7 @@ namespace rmtools;
 class PickleExt
 {
 	protected $name;
+	protected $vendor;
 	protected $version;
 	protected $pkg_uri;
 	protected $lic_fnames = array();
@@ -39,7 +40,7 @@ class PickleExt
 		if (!preg_match(",Package name\s+\|\s+([^\s]+)\s+\|,", $ret["log"], $m)) {
 			throw new \Exception("Couldn't parse extension name");
 		}
-		$this->name = $m[1];
+		$this->setupNames($m[1]);
 
 		if (!preg_match(",Package version.+\|\s+([a-z0-9\.\-]+)\s+\|,i", $ret["log"], $m)) {
 			throw new \Exception("Couldn't parse extension version");
@@ -50,6 +51,11 @@ class PickleExt
 	public function getName()
 	{
 		return $this->name;
+	}
+
+	public function getVendor()
+	{
+		return $this->vendor;
 	}
 
 	public function getVersion()
@@ -299,6 +305,16 @@ if (!function_exists('rmtools\combinations')) {
 
 		return $ret;
 	}
-}
 
+	protected function setupNames($full_name)
+	{
+		if (preg_match(",(.+)/(.+),", $full_name, $m)) {
+			$this->name = $m[2];
+			$this->vendor = $m[1];
+		} else {
+			$this->name = $full_name;
+			$this->vendor = "novendor";
+		}
+	}
+}
 
