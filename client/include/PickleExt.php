@@ -244,10 +244,13 @@ if (!function_exists('rmtools\combinations')) {
 			$ret .=  ' "' . $main_opt . '=shared" ';
 		}
 
+		/* XXX this defines the core libraries as extra, maybe there's a better way. */
+		$extra_lib = array($this->build->core_deps_base . DIRECTORY_SEPARATOR . "lib");
+		$extra_inc = array($this->build->core_deps_base . DIRECTORY_SEPARATOR . "include");
+
 		if (isset($data['libs']) && $data['libs']) {
 			$data['libs'] = !is_array($data['libs']) ? array($data['libs']) : $data['libs'];
 			$deps_path = $this->build->pecl_deps_base;
-			$extra_lib = $extra_inc = array();
 
 			foreach($data['libs'] as $lib) {
 				if (!$lib) {
@@ -278,14 +281,12 @@ if (!function_exists('rmtools\combinations')) {
 					}
 				}
 			}
-
-			if (!empty($extra_lib)) {
-				$ret .= ' "--with-extra-libs=' . implode(';', $extra_lib) . '" '
-					. ' "--with-extra-includes=' . implode(';', $extra_inc) . '" ';
-			}
 		} else {
 			$data['libs'] = array();
 		}
+
+		$ret .= ' "--with-extra-libs=' . implode(';', $extra_lib) . '" '
+			. ' "--with-extra-includes=' . implode(';', $extra_inc) . '" ';
 
 		$this->configure_data = $data;
 
