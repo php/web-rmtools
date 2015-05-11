@@ -2,10 +2,8 @@
 
 namespace rmtools;
 
-/* This is one model for all, could be split somewhen to improve. Only can work */
-
-class PickleDb extends \SQLite3 {
-
+class PickleDb extends \SQLite3
+{
 	public function __construct($db_path, $autoinit = true)
 	{
 		$flags = SQLITE3_OPEN_READWRITE;
@@ -15,7 +13,7 @@ class PickleDb extends \SQLite3 {
 				$flags |= SQLITE3_OPEN_CREATE;
 		}
 		
-		$this->open($db_path);
+		$this->open($db_path, $flags);
 
 		if (!$existent && $autoinit) {
 			$this->initDb();
@@ -24,45 +22,38 @@ class PickleDb extends \SQLite3 {
 
 	public function initDb()
 	{
-		/*status: new, */
-		$sql = "CREATE TABLE package_release (package_release_id INTEGER PRIMARY KEY, package_hash STRING, package_name STRING, package_status TEXT);";
-		$this->exec($sql);
-
-		/* status:  */
-		$sql = "CREATE TABLE package_build (package_build_id INTEGER PRIMARY KEY, package_hash STRING, build_status TEXT, ts_last_build INTEGER);";
-		$this->exec($sql);
-
-		$sql = "CREATE TABLE package_build_job (package_build_job_id INTEGER PRIMARY KEY, package_hash STRING, build_status INTEGER, ts_last_build INTEGER);";
+		/* no primary keys here, reling on the hashes delivered by pickleweb. */
+		$sql = "CREATE TABLE package_release (package_hash STRING, package_name STRING, ts_placed INTEGER, ts_finished INTEGER);";
 		$this->exec($sql);
 	}
 
-	public function add($name, $version, $force = false)
+	public function add($name, $hash, $force = false)
 	{
 		if ($force) {
-			$this->remove($name, $version);
+			$this->remove($name, $hash);
 		}
 
-		if ($this->exists($name, $version)) {
+		if ($this->exists($name, $hash)) {
 			return false;
 		}
 
 		$name = $this->escapeString($name);
-		$version = $this->escapeString($version);
-		$sql = "INSERT INTO package_release (package_name, package_hash, ts_built) VALUES ('$name', '$version', 0);";
+		$hash = $this->escapeString($hash);
+		$sql = "INSERT INTO package_release (package_name, package_hash, ts_placed, ts_finished) VALUES ('$name', '$hash', " . time() . ", 0);";
 		$this->exec($sql);
 
 		return true;
 	}
 
-	public function remove($name, $version)
+	public function remove($name, $hash)
 	{
 		$name = $this->escapeString($name);
-		$version = $this->escapeString($version);
-		$sql = "DELETE FROM package_release WHERE package_name = '$name' AND package_hash = '$version';";
+		$hash = $this->escapeString($hash);
+		$sql = "DELETE FROM package_release WHERE package_name = '$name' AND package_hash = '$hash';";
 		$this->exec($sql);
 	}
 
-	public function exists($name, $version, $where = '')
+	public function exists($name, $hash, $where = '')
 	{
 		/* cant check such thing, so trust :) */
 		if ($where) {
@@ -70,8 +61,8 @@ class PickleDb extends \SQLite3 {
 		}
 
 		$name = $this->escapeString($name);
-		$version = $this->escapeString($version);
-		$sql = "SELECT ts_built FROM package_release WHERE package_name = '$name' AND package_hash = '$version' $where;";
+		$hash = $this->escapeString($hash);
+		$sql = "SELECT ts_finished FROM package_release WHERE package_name = '$name' AND package_hash = '$hash' $where;";
 
 		$res = $this->query($sql);
 
@@ -83,11 +74,11 @@ class PickleDb extends \SQLite3 {
 		return $ret;
 	}
 
-	public function done($name, $version)
+	public function done($name, $hash)
 	{
 		/* XXX That's an assumption as the latest timestamp should be about 30 mit old. 
 		   Need to extend pecl.php to set the real statuses when in't really done */
-		return $this->exists($name, $version, "ts_built - " . time() . " > 1800");
+		return $this->exists($name, $hash, "ts_finished - " . time() . " > 1800");
 	}
 
 	public function dump($where = '')
@@ -110,14 +101,14 @@ class PickleDb extends \SQLite3 {
 
 	public function dumpQueue()
 	{
-		$this->dump("ts_built <= 0");
+		$this->dump("ts_finished <= 0");
 	}
 
-	public function touch($name, $version) 
+	public function finished($name, $hash) 
 	{
 		$name = $this->escapeString($name);
-		$version = $this->escapeString($version);
-		$sql = "UPDATE package_release SET ts_built=" . time() . " WHERE lower(package_name) = lower('$name') AND lower(package_hash) = lower('$version');";
+		$hash = $this->escapeString($hash);
+		$sql = "UPDATE package_release SET ts_finished=" . time() . " WHERE lower(package_name) = lower('$name') AND lower(package_hash) = lower('$hash');";
 		$this->exec($sql);
 	}
 }

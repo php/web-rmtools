@@ -1,5 +1,7 @@
 <?php
 
+namespace rmtools;
+
 class PickleWeb
 {
 	protected $host;

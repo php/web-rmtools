@@ -7,7 +7,7 @@ include __DIR__ . '/../include/PickleWeb.php';
 use rmtools as rm;
 
 $sync_host = "http://16e0a43d.ngrok.io";
-$db_path = __DIR__ . '/../data/pickle.sqlite';
+$db_path = realpath(__DIR__ . '/../data/pickle.sqlite');
 
 $longopts = array("help", "sync", "init-db");
 
@@ -38,6 +38,9 @@ if ($init_cmd) {
 	}
 	echo "\n";
 	try {
+		if (file_exists($db_path)) {
+			unlink($db_path);
+		}
 		$db = new rm\PickleDb($db_path, true);
 		echo "Pickle DB initialized";
 		exit(0);
@@ -50,16 +53,17 @@ if ($init_cmd) {
 if ($sync_cmd) {
 
 	try {
-		$pw = new PickleWeb($sync_host);
-		$info = $pw->fetchProviders();
+		$pw = new rm\PickleWeb($sync_host);
+		$news = (array)$pw->fetchProviders();
 	} catch (Exception $e) {
 		echo $e->getMessage() . "\n";
 		exit(3);
 	}
 
-	var_dump($info);
-
 	$db = new rm\PickleDb($db_path);
+	foreach ($news as $name => $sha) {
+		$db->add($name, $sha);
+	}
 
 
 }
