@@ -48,6 +48,10 @@ class PickleBuildVC
 		if (!file_exists($this->pecl_deps_base)) {
 			throw new \Exception("Dependency libs not found under '{$this->pecl_deps_base}'");
 		}
+		$this->core_deps_base = $branch->config->builds[$build_name]['core_deps_base'];
+		if (!file_exists($this->core_deps_base)) {
+			throw new \Exception("Dependency libs not found under '{$this->core_deps_base}'");
+		}
 
 
 		$vc_env_prefix = strtoupper($this->compiler);
