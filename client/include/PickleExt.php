@@ -313,8 +313,7 @@ if (!function_exists('rmtools\combinations')) {
 			$this->name = $m[2];
 			$this->vendor = $m[1];
 		} else {
-			$this->name = $full_name;
-			$this->vendor = "novendor";
+			throw new \Exception("Couldn't parse vendor from '$full_name'");
 		}
 	}
 }
