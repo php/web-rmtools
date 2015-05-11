@@ -125,7 +125,7 @@ foreach ($builds as $build_name) {
 	if ($upload) {
 		try {
 			$root = $is_snap ? 'snaps' : 'releases';
-			$frag = is_null($ext->getVendor()) ? $ext->getName() : $ext->getVendor() . "/" . $ext->getName();
+			$frag = $ext->getVendor() . "/" . $ext->getName();
 			$target = '/' . $root . '/' .  $frag . '/' . $ext->getVersion();
 
 			$pkgs_to_upload = $build_error ? array() : array($pkg_file);
