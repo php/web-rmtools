@@ -2,8 +2,9 @@
 
 namespace rmtools;
 
+/* This is one model for all, could be split somewhen to improve. Only can work */
 
-class PDb extends \SQLite3 {
+class PickleDb extends \SQLite3 {
 
 	public function __construct($db_path, $autoinit = true)
 	{
@@ -23,10 +24,15 @@ class PDb extends \SQLite3 {
 
 	public function initDb()
 	{
-		$sql = "CREATE TABLE package_release (package_release_id INTEGER PRIMARY KEY, package_hash STRING, package_name STRING);";
+		/*status: new, */
+		$sql = "CREATE TABLE package_release (package_release_id INTEGER PRIMARY KEY, package_hash STRING, package_name STRING, package_status TEXT);";
 		$this->exec($sql);
 
-		$sql = "CREATE TABLE package_build (package_build_id INTEGER PRIMARY KEY, package_hash STRING, build_status INTEGER, ts_last_build INTEGER, ts_last_);";
+		/* status:  */
+		$sql = "CREATE TABLE package_build (package_build_id INTEGER PRIMARY KEY, package_hash STRING, build_status TEXT, ts_last_build INTEGER);";
+		$this->exec($sql);
+
+		$sql = "CREATE TABLE package_build_job (package_build_job_id INTEGER PRIMARY KEY, package_hash STRING, build_status INTEGER, ts_last_build INTEGER);";
 		$this->exec($sql);
 	}
 
