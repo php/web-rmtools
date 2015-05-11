@@ -23,6 +23,7 @@ class BranchConfig {
 		'Appver' 		=> 'appver',
 		'BuildSrcSubdir'	=> 'build_src_subdir',
 		'PeclDepsBase'	=> 'pecl_deps_base',
+		'CoreDepsBase'	=> 'core_deps_base',
 		'PeclNonCoreExtDepsBase' => 'pecl_non_core_ext_deps_base',
 	);
 
