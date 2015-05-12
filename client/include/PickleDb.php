@@ -71,6 +71,10 @@ class PickleDb extends \SQLite3
 	{
 		$fname = $this->buildUriLocalPath($uri);
 
+		if (!file_exists($fname)) {
+			return true;
+		}
+
 		return unlink($fname);
 	}
 

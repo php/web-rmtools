@@ -59,6 +59,7 @@ class PickleWeb
 			throw new \Exception("No provider includes found");
 		}
 
+		$this->db->delUri($uri); /* XXX pure dev stuff, remove in prod */
 		if (!$this->db->uriExists($uri)) {
 			$this->updatesAvailableFlag = true;
 		} else {
@@ -93,9 +94,15 @@ class PickleWeb
 	}
 
 
-	protected function diffProviders($remote, $local)
+	protected function diffProviders(array $remote, array $local)
 	{
 		$ret = array();
+
+		if (empty($remote)) {
+			return array();
+		} else if (empty($local)) {
+			return $remote;
+		}
 
 		foreach ($remote as $vendor => $sha) {
 			if (isset($local[$vendor]) && $local[$vendor] != $sha) {
@@ -105,6 +112,7 @@ class PickleWeb
 
 		return $ret;
 	}
+
 	public function fetchProviderUpdates()
 	{
 		$ret = array();
@@ -117,14 +125,36 @@ class PickleWeb
 
 			$pkgs = $this->db->getUriJson($uri);
 			if (!is_array($pkgs) || !isset($pkgs["providers"]) || !is_array($pkgs["providers"]) || empty($pkgs["providers"])) {
+				/* local doesn't exist, just take the remote version*/
 				$this->db->saveUriJson($uri, $pkgs_new);
 				$ret = array_merge($ret, $pkgs_new["providers"]);
 				continue;
 			}
 
-			$this->db->saveUriJson($uri, $pkgs_new);
+			if (!$this->db->saveUriJson($uri, $pkgs_new)) {
+				throw new \Exception("Failed to save '$uri'");
+			}
 
 			$ret = array_merge($ret, $this->diffProviders($pkgs_new["providers"], $pkgs["providers"]));
+		}
+
+		return $ret;
+	}
+
+	public function diffTags(array $remote, array $local)
+	{
+		$ret = array();
+
+		if (empty($remote)) {
+			return array();
+		} else if (empty($local)) {
+			return $remote;
+		}
+
+		foreach ($remote as $tag => $data) {
+			if (!isset($local[$tag])) {
+				$ret[$tag] = $data;
+			}
 		}
 
 		return $ret;
@@ -133,9 +163,23 @@ class PickleWeb
 	public function getNewTags()
 	{
 		$provs = $this->fetchProviderUpdates();
+		$ret = array();
 
+		/* $name the ext name is, vendor/foo it looks like */
+		foreach ($provs as $name => $sha) {
+			$uri = "/json/$name.json";
 
-		return $provs;
+			$remote = (array)$this->fetchUriJson($uri);
+			$local = (array)$this->db->getUriJson($uri);
+
+			if (!$this->db->saveUriJson($uri, $remote)) {
+				throw new \Exception("Failed to save '$uri'");
+			}
+
+			$ret = array_merge($ret, $this->diffTags($remote, $local));
+		}
+
+		return $ret;
 	}
 
 	public function pingBack($data)
