@@ -98,10 +98,10 @@ class PickleWeb
 	{
 		$ret = array();
 
-		if (empty($remote)) {
+		if (!isset($remote["providers"]) || !is_array($remote["providers"]) || empty($remote["providers"])) {
 			return array();
-		} else if (empty($local)) {
-			return $remote;
+		} else if (!isset($llocal["providers"]) || !is_array($local["providers"]) || empty($local["providers"])) {
+			return $remote["providers"];
 		}
 
 		foreach ($remote as $vendor => $sha) {
@@ -118,42 +118,59 @@ class PickleWeb
 		$ret = array();
 
 		foreach ($this->info["provider-includes"] as $uri => $hash) {
-			$pkgs_new = $this->fetchUriJson($uri);
-			if (!is_array($pkgs_new) || !isset($pkgs_new["providers"]) || !is_array($pkgs_new["providers"]) || empty($pkgs_new["providers"])) {
-				continue;
-			}
-
-			$pkgs = $this->db->getUriJson($uri);
-			if (!is_array($pkgs) || !isset($pkgs["providers"]) || !is_array($pkgs["providers"]) || empty($pkgs["providers"])) {
-				/* local doesn't exist, just take the remote version*/
-				$this->db->saveUriJson($uri, $pkgs_new);
-				$ret = array_merge($ret, $pkgs_new["providers"]);
-				continue;
-			}
+			$pkgs_new = (array)$this->fetchUriJson($uri);
+			$pkgs = (array)$this->db->getUriJson($uri);
 
 			if (!$this->db->saveUriJson($uri, $pkgs_new)) {
 				throw new \Exception("Failed to save '$uri'");
 			}
 
-			$ret = array_merge($ret, $this->diffProviders($pkgs_new["providers"], $pkgs["providers"]));
+			$ret = array_merge($ret, $this->diffProviders($pkgs_new, $pkgs));
 		}
 
 		return $ret;
+	}
+
+	protected function isUniqueTag($name, $version, array $tags)
+	{
+		foreach ($tags as $tag) {
+			if ($tag["name"] == $name && $tag["version"] == $version) {
+				return false;
+			}
+		}
+
+		return true;
 	}
 
 	public function diffTags(array $remote, array $local)
 	{
 		$ret = array();
 
-		if (empty($remote)) {
+		if (empty($remote) || !isset($remote["packages"])) {
 			return array();
-		} else if (empty($local)) {
-			return $remote;
+		} else if (empty($local) || !isset($local["packages"])) {
+			foreach ($remote["packages"] as $name => $tags) {
+				foreach ($tags as $version => $data) {
+					/* $version is from the tag name, be strict and use the oone from the actual tag data*/
+					if ($this->isUniqueTag($name, $data["version"], $ret)) {
+						$ret[] = $data;
+					}
+				}
+			}
+
+			return $ret;
 		}
 
-		foreach ($remote as $tag => $data) {
-			if (!isset($local[$tag])) {
-				$ret[$tag] = $data;
+		foreach ($remote["packages"] as $name => $tags) {
+			if (!isset($local["packages"][$name])) {
+				$ret[$name] = $data;
+				break;
+			}
+			
+			foreach ($tags as $version => $data) {
+				if (!isset($local["packages"][$name][$version]) && $this->isUniqueTag($name, $data["version"], $ret)) {
+					$ret[] = $data;
+				}
 			}
 		}
 

@@ -45,7 +45,7 @@ class PickleDb extends \SQLite3
 
 	public function saveUriJson($uri, $data)
 	{
-		$json = json_encode($data);
+		$json = json_encode($data, JSON_PRETTY_PRINT);
 
 		return $this->saveUri($uri, $json);
 	}
