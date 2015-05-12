@@ -2,6 +2,7 @@
 
 include __DIR__ . '/../data/config.php';
 include __DIR__ . '/../include/PickleWeb.php';
+include __DIR__ . '/../include/PickleDb.php';
 include __DIR__ . '/../include/PickleJob.php';
 
 use rmtools as rm;
@@ -39,20 +40,20 @@ if ($sync_cmd) {
 	
 
 	try {
-		$pw = new rm\PickleWeb($sync_host, $db_dir);
+		$pw = new rm\PickleWeb($sync_host, new rm\PickleDb($db_dir));
 
 		if (!$pw->updatesAvailable()) {
 			echo "No updates available";
 			exit(0);
 		}
 
-		$news = (array)$pw->fetchProviders();
+		$news = (array)$pw->getNewTags();
 	} catch (Exception $e) {
 		echo $e->getMessage() . "\n";
 		exit(3);
 	}
 
-
+	var_dump($news);
 
 }
 

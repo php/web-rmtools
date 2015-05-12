@@ -4,112 +4,84 @@ namespace rmtools;
 
 class PickleDb extends \SQLite3
 {
-	public function __construct($db_path, $autoinit = true)
+	protected $db_path;
+
+	public function __construct($db_path)
 	{
-		$flags = SQLITE3_OPEN_READWRITE;
-		$existent = file_exists($db_path);
-
-		if (!$existent) {
-				$flags |= SQLITE3_OPEN_CREATE;
-		}
-		
-		$this->open($db_path, $flags);
-
-		if (!$existent && $autoinit) {
-			$this->initDb();
-		}
+		$this->db_path = $this->createDir($db_path);
 	}
 
-	public function initDb()
+	protected function isSlash($c)
 	{
-		/* no primary keys here, reling on the hashes delivered by pickleweb. */
-		$sql = "CREATE TABLE package_release (package_hash STRING, package_name STRING, ts_placed INTEGER, ts_finished INTEGER);";
-		$this->exec($sql);
+		return '\\' == $c || '/' == $c;
 	}
 
-	public function add($name, $hash, $force = false)
-	{
-		if ($force) {
-			$this->remove($name, $hash);
-		}
 
-		if ($this->exists($name, $hash)) {
+	protected function buildUriLocalPath($uri)
+	{
+		if (!$this->isSlash($uri[0])) {
+			$uri = DIRECTORY_SEPARATOR . $uri;
+		}
+		$uri = str_replace('/', DIRECTORY_SEPARATOR, $uri);
+
+		return $this->db_path . $uri;
+	}
+
+	public function uriExists($uri)
+	{
+		return file_exists($this->buildUriLocalPath($uri));
+	}
+
+	public function getUri($uri)
+	{
+		$fname = $this->buildUriLocalPath($uri);
+
+		if (!file_exists($fname)) {
 			return false;
 		}
 
-		$name = $this->escapeString($name);
-		$hash = $this->escapeString($hash);
-		$sql = "INSERT INTO package_release (package_name, package_hash, ts_placed, ts_finished) VALUES ('$name', '$hash', " . time() . ", 0);";
-		$this->exec($sql);
-
-		return true;
+		return file_get_contents($fname);
 	}
 
-	public function remove($name, $hash)
+	public function saveUriJson($uri, $data)
 	{
-		$name = $this->escapeString($name);
-		$hash = $this->escapeString($hash);
-		$sql = "DELETE FROM package_release WHERE package_name = '$name' AND package_hash = '$hash';";
-		$this->exec($sql);
+		$json = json_encode($data);
+
+		return $this->saveUri($uri, $json);
 	}
 
-	public function exists($name, $hash, $where = '')
+	public function saveUri($uri, $data)
 	{
-		/* cant check such thing, so trust :) */
-		if ($where) {
-			$where = "AND $where";
+		$fname = $this->buildUriLocalPath($uri);
+
+		$dir = dirname($fname);
+		if (!is_dir($dir)) {
+			$this->createDir($dir);
 		}
 
-		$name = $this->escapeString($name);
-		$hash = $this->escapeString($hash);
-		$sql = "SELECT ts_finished FROM package_release WHERE package_name = '$name' AND package_hash = '$hash' $where;";
-
-		$res = $this->query($sql);
-
-		$ret = false !== $res->fetchArray(SQLITE3_NUM);
-		//return $res->numColumns() > 0;
-
-		$res->finalize();
-
-		return $ret;
+		return strlen($data) == file_put_contents($fname, $data);
 	}
 
-	public function done($name, $hash)
+	public function getUriJson($uri)
 	{
-		/* XXX That's an assumption as the latest timestamp should be about 30 mit old. 
-		   Need to extend pecl.php to set the real statuses when in't really done */
-		return $this->exists($name, $hash, "ts_finished - " . time() . " > 1800");
+		return json_decode($this->getUri($uri), true);
 	}
 
-	public function dump($where = '')
+	public function delUri($uri)
 	{
-		/* cant check such thing, so trust :) */
-		if ($where) {
-			$where = "WHERE $where";
-		}
+		$fname = $this->buildUriLocalPath($uri);
 
-		$res = $this->query("SELECT * FROM package_release $where ORDER BY package_name, package_hash ASC");
-		echo "DUMP package_release " . PHP_EOL . PHP_EOL;
-		while(false !== ($row = $res->fetchArray(SQLITE3_ASSOC))) {
-			foreach ($row as $col => $val) {
-				echo "$col=$val" . PHP_EOL;
+		return unlink($fname);
+	}
+
+	protected function createDir($path, $rec = true)
+	{
+		if (!is_dir($path)) {
+			if (!mkdir($path, 0777, $rec)) {
+				throw new \Exception("failed to create '$path'");
 			}
-			echo PHP_EOL;
 		}
-		$res->finalize();
-	}
 
-	public function dumpQueue()
-	{
-		$this->dump("ts_finished <= 0");
-	}
-
-	public function finished($name, $hash) 
-	{
-		$name = $this->escapeString($name);
-		$hash = $this->escapeString($hash);
-		$sql = "UPDATE package_release SET ts_finished=" . time() . " WHERE lower(package_name) = lower('$name') AND lower(package_hash) = lower('$hash');";
-		$this->exec($sql);
+		return realpath($path);
 	}
 }
-

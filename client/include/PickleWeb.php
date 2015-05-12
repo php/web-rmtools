@@ -4,60 +4,75 @@ namespace rmtools;
 
 class PickleWeb
 {
-	protected $db_path;
+	protected $db;
 	protected $host;
 
 	protected $info;
 
 	protected $updatesAvailableFlag = false;
 
-	public function __construct($host, $db_path)
+	public function __construct($host, PickleDB $db)
 	{
 		$this->host = $host;
-
-		if (!is_dir($db_path)) {
-			if (!mkdir($db_path)) {
-				throw new \Exception("failed to create '$db_path'");
-			}
-		}
-
-		$this->db_path = $db_path;
+		$this->db = $db;
 
 		$this->init();
 	}
 
-	public function init()
+	protected function fetchUri($uri, $allow_empty = false)
 	{
-		$uri = "{$this->host}/packages.json";
-		$__tmp = file_get_contents($uri);
-		if (!$__tmp) {
+
+		$url = "{$this->host}$uri";
+
+		$__tmp = file_get_contents($url);
+
+
+		if (false === $__tmp) {
+			throw new \Exception("Error encountered while receiving '$url'");
+		}
+
+		if (!$allow_empty && !$__tmp) {
 			throw new \Exception("Empty content received from '$url'");
 		}
 
-		$this->info = json_decode($__tmp, true);
-		if (!$this->info) {
-			throw new \Exception("Couldn't decode JSON from '$url'");
+		return $__tmp;
+	}
+
+	protected function fetchUriJson($uri, $allow_empty = false)
+	{
+		$__tmp = $this->fetchUri($uri, $allow_empty);
+
+		$ret = json_decode($__tmp, true);
+		if (!$ret) {
+			throw new \Exception("Couldn't decode JSON from '$uri' on '{$this->host}'");
 		}
+
+		return $ret;
+	}
+
+	public function init()
+	{
+		$uri = "/packages.json";
+		$this->info = $this->fetchUriJson($uri);
 
 		if (!isset($this->info["provider-includes"])) {
 			throw new \Exception("No provider includes found");
 		}
 
-		$packages_json = $this->db_path . DIRECTORY_SEPARATOR . "packages.json";
-		if (!file_exists($packages_json)) {
+		if (!$this->db->uriExists($uri)) {
 			$this->updatesAvailableFlag = true;
 		} else {
-			$packages_info = json_decode(file_get_contents($packages_json), true);
-			foreach ($this->info["provider-includes"] as $uri => $hash) {
-				if (!isset($packages_info["provider-includes"][$uri]) ||
-					$packages_info["provider-includes"][$uri] != $hash) {
+			$packages_info = $this->db->getUriJson($uri);
+			foreach ($this->info["provider-includes"] as $provider_uri => $hash) {
+				if (!isset($packages_info["provider-includes"][$provider_uri]) ||
+					$packages_info["provider-includes"][$provider_uri] != $hash) {
 					$this->updatesAvailableFlag = true;
 					break;
 				}
 			}
 		}
-		if ($this->updatesAvailableFlag && strlen($__tmp) != file_put_contents($packages_json, $__tmp)) {
-			throw new \Exception("Couldn't save '$packages_json'");
+		if ($this->updatesAvailableFlag && !$this->db->saveUriJson($uri, $this->info)) {
+			throw new \Exception("Couldn't save '$uri'");
 		}
 	}
 
@@ -66,35 +81,61 @@ class PickleWeb
 		return $this->updatesAvailableFlag;
 	}
 
-	public function fetchProviders()
+
+	protected function saveUriLocal($uri)
+	{
+
+	}
+
+	protected function getUriLocal($uri)
+	{
+
+	}
+
+
+	protected function diffProviders($remote, $local)
 	{
 		$ret = array();
 
-		/* XXX What meaning does the $hash have? */
-		foreach ($this->info["provider-includes"] as $uri => $hash) {
-			$url = "{$this->host}$uri";
-			$__tmp = file_get_contents($url);
-
-			if (!$__tmp) {
-				//echo "Empty content received from '$url'";
-				continue;
+		foreach ($remote as $vendor => $sha) {
+			if (isset($local[$vendor]) && $local[$vendor] != $sha) {
+				$ret[$vendor] = $sha;
 			}
-
-			$pkgs = json_decode($__tmp, true);
-			if (!is_array($pkgs) || !isset($pkgs["providers"]) || !is_array($pkgs["providers"]) || empty($pkgs["providers"])) {
-				//echo "No packages provided from '$url'";
-				continue;
-			}
-			$pkgs = $pkgs["providers"];
-
-			foreach ($pkgs as $pkg => $phash) {
-
-			}
-
-			$ret = array_merge($ret, $pkgs);
 		}
 
 		return $ret;
+	}
+	public function fetchProviderUpdates()
+	{
+		$ret = array();
+
+		foreach ($this->info["provider-includes"] as $uri => $hash) {
+			$pkgs_new = $this->fetchUriJson($uri);
+			if (!is_array($pkgs_new) || !isset($pkgs_new["providers"]) || !is_array($pkgs_new["providers"]) || empty($pkgs_new["providers"])) {
+				continue;
+			}
+
+			$pkgs = $this->db->getUriJson($uri);
+			if (!is_array($pkgs) || !isset($pkgs["providers"]) || !is_array($pkgs["providers"]) || empty($pkgs["providers"])) {
+				$this->db->saveUriJson($uri, $pkgs_new);
+				$ret = array_merge($ret, $pkgs_new["providers"]);
+				continue;
+			}
+
+			$this->db->saveUriJson($uri, $pkgs_new);
+
+			$ret = array_merge($ret, $this->diffProviders($pkgs_new["providers"], $pkgs["providers"]));
+		}
+
+		return $ret;
+	}
+
+	public function getNewTags()
+	{
+		$provs = $this->fetchProviderUpdates();
+
+
+		return $provs;
 	}
 
 	public function pingBack($data)
@@ -102,9 +143,5 @@ class PickleWeb
 		// TODO send the build data to pickle web
 	}
 
-	public function updateDb()
-	{
-
-	}
 }
 
