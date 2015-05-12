@@ -32,14 +32,14 @@ class PickleJob
 
 	public function add(array $tag)
 	{
-		if (!isset($tag["support"]["source"])) {
-			throw new \Exception("Tag source location isn't set, no jub created for '$tag[name]-$tag[version]'");
+		if (!isset($tag["source"]["url"])) {
+			throw new \Exception("Tag source location isn't set, no job created for '$tag[name]-$tag[version]'");
 		}
 
 		$data = array(
 			"name" => $tag["name"],
 			"version" => $tag["version"],
-			"src"  => $tag["support"]["source"],
+			"src"  => $tag["source"]["url"] . "#" . $tag["version"],
 			"status" => "new",
 		);
 

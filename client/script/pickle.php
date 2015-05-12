@@ -98,9 +98,12 @@ foreach ($builds as $build_name) {
 		continue;
 	}
 
-	echo "Running pickle build" . PHP_EOL;
+	echo "Starting pickle build" . PHP_EOL;
 
 	try {
+		$cmd = $build->getPickleCmdToRun($ext);
+		echo "Pickle command is " . PHP_EOL . " $cmd" . PHP_EOL;
+
 		$ret = $build->build($ext);
 	} catch (Exception $e) {
 		echo 'Error: ' . $e->getMessage() . PHP_EOL;

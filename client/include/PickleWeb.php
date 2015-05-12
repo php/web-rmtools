@@ -149,8 +149,8 @@ class PickleWeb
 			!empty($tag["name"]) &&
 			isset($tag["version"]) &&
 			!empty($tag["version"]) &&
-			isset($tag["support"]["source"]) &&
-			!empty($tag["support"]["source"]) /* XXX might check at least the URL format */;
+			isset($tag["source"]["url"]) &&
+			!empty($tag["source"]["url"]) /* XXX might check at least the URL format */;
 	}
 
 	public function diffTags(array $remote, array $local)
