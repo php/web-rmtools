@@ -4,25 +4,28 @@ include __DIR__ . '/../data/config.php';
 include __DIR__ . '/../include/PickleBranch.php';
 include __DIR__ . '/../include/Tools.php';
 include __DIR__ . '/../include/PickleExt.php';
+include __DIR__ . '/../include/PickleJob.php';
 
 use rmtools as rm;
 
 
-$longopts = array("config:", "package:", "upload", "is-snap", "first", "last");
+$longopts = array("config:", "package:", "job:", "upload", "is-snap", "first", "last");
 
 $options = getopt(NULL, $longopts);
 
 $branch_name = isset($options['config']) ? $options['config'] : NULL;
 $pkg_path = isset($options['package']) ? $options['package'] : NULL;
+$job_path = isset($options['job']) ? $options['job'] : NULL;
 $upload = isset($options['upload']);
 $is_snap = isset($options['is-snap']);
 $is_last_run = isset($options['last']);
 $is_first_run = isset($options['first']);
 
-if (NULL == $branch_name || NULL == $pkg_path) {
+if (NULL == $branch_name || (NULL == $pkg_path && NULL == $job_path)) {
 	echo "Usage: pickle.php [OPTION] ..." . PHP_EOL;
 	echo "  --config         Configuration file name without suffix, required." . PHP_EOL;
-	echo "  --package        Path to the PECL package, required." . PHP_EOL;
+	echo "  --package        Path to the package source, either this or --job required." . PHP_EOL;
+	echo "  --job            Path to the package source, either this or --package required." . PHP_EOL;
 	echo "  --upload         Upload the builds to the windows.php.net, optional." . PHP_EOL;
 	echo "  --is-snap        We upload to releases by default, but this one goes to snaps, optional." . PHP_EOL;
 	echo "  --first          This call is the first in the series for the same package file, optional." . PHP_EOL;
@@ -37,6 +40,17 @@ if (NULL == $branch_name || NULL == $pkg_path) {
 	echo "pecl --config=pickle70 --upload --package=some-1.0.0" . PHP_EOL;
 }
 
+if (NULL == $pkg_path) {
+	/* TODO implement for PickleJob*/
+	try {
+		$job_data = rm\PickleJob::loadData($job_path);
+
+		$pkg_path = $job_data["src"];
+	} catch (Exception $e) {
+		echo $e->getMessage();
+		exit(3);
+	}
+}
 
 
 $config_path = __DIR__ . '/../data/config/pickle/' . $branch_name . '.ini';
@@ -160,6 +174,16 @@ foreach ($builds as $build_name) {
 	/* notify pickle */
 
 	echo PHP_EOL;
+}
+
+if ($is_last_run) {
+	if (file_exists($job_path)) {
+		unlink($job_path);
+	}
+
+	if (file_exists($pkg_path)) {
+		unlink($pkg_path);
+	}
 }
 
 exit(0);

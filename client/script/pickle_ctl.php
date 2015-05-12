@@ -9,7 +9,7 @@ use rmtools as rm;
 
 $sync_host = "http://aa382bdf.ngrok.io";
 $db_dir = __DIR__ . '/../data/pickle_db';
-$job_dir = 'c:\pickle-in-pkg';
+$job_dir = 'c:\pickle-in-job';
 
 $longopts = array("help", "sync", "init-db");
 

@@ -16,6 +16,20 @@ class PickleJob
 		$this->job_dir = $job_dir;
 	}
 
+	public static function loadData($path)
+	{
+		if (!file_exists($path)) {
+			throw new \Exception("Couldn't load job file '$path'");
+		}
+
+		$job_data = json_decode(file_get_contents($path), true);	
+		if (!$job_data) {
+			throw new \Exception("Couldn't decode job data from '$path'");
+		}
+
+		return $job_data;
+	}
+
 	public function add(array $tag)
 	{
 		if (!isset($tag["support"]["source"])) {
