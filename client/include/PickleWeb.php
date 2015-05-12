@@ -4,13 +4,24 @@ namespace rmtools;
 
 class PickleWeb
 {
+	protected $db_path;
 	protected $host;
 
 	protected $info;
 
-	public function __construct($host)
+	protected $updatesAvailableFlag = false;
+
+	public function __construct($host, $db_path)
 	{
 		$this->host = $host;
+
+		if (!is_dir($db_path)) {
+			if (!mkdir($db_path)) {
+				throw new \Exception("failed to create '$db_path'");
+			}
+		}
+
+		$this->db_path = $db_path;
 
 		$this->init();
 	}
@@ -31,6 +42,28 @@ class PickleWeb
 		if (!isset($this->info["provider-includes"])) {
 			throw new \Exception("No provider includes found");
 		}
+
+		$packages_json = $this->db_path . DIRECTORY_SEPARATOR . "packages.json";
+		if (!file_exists($packages_json)) {
+			$this->updatesAvailableFlag = true;
+		} else {
+			$packages_info = json_decode(file_get_contents($packages_json), true);
+			foreach ($this->info["provider-includes"] as $uri => $hash) {
+				if (!isset($packages_info["provider-includes"][$uri]) ||
+					$packages_info["provider-includes"][$uri] != $hash) {
+					$this->updatesAvailableFlag = true;
+					break;
+				}
+			}
+		}
+		if ($this->updatesAvailableFlag && strlen($__tmp) != file_put_contents($packages_json, $__tmp)) {
+			throw new \Exception("Couldn't save '$packages_json'");
+		}
+	}
+
+	public function updatesAvailable()
+	{
+		return $this->updatesAvailableFlag;
 	}
 
 	public function fetchProviders()
@@ -62,6 +95,11 @@ class PickleWeb
 		}
 
 		return $ret;
+	}
+
+	public function pingBack($data)
+	{
+		// TODO send the build data to pickle web
 	}
 
 	public function updateDb()
