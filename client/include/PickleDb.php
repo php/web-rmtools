@@ -59,7 +59,7 @@ class PickleDb extends \SQLite3
 			$this->createDir($dir);
 		}
 
-		return strlen($data) == file_put_contents($fname, $data);
+		return strlen($data) == file_put_contents($fname, $data, LOCK_EX);
 	}
 
 	public function getUriJson($uri)

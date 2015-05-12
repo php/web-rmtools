@@ -16,15 +16,29 @@ class PickleJob
 		$this->job_dir = $job_dir;
 	}
 
-	public function add($sha, $name, $uri)
+	public function add(array $tag)
 	{
-		$fn = "{$this->job_dir}/$sha.job";
+		if (!isset($tag["support"]["source"])) {
+			throw new \Exception("Tag source location isn't set, no jub created for '$tag[name]-$tag[version]'");
+		}
+
 		$data = array(
-			"name" => $name,
-			"hash" => $sha,
-			"uri"  => $uri,
+			"name" => $tag["name"],
+			"version" => $tag["version"],
+			"src"  => $tag["support"]["source"],
 			"status" => "new",
 		);
+
+		$tmp = tempnam($this->job_dir, $tag["name"]);
+		if (false === $tmp) {
+			throw new \Exception("Failed to create temporary job file");
+		}
+
+		$fn  = "$tmp.job";
+
+		if (!rename($tmp, $fn)) {
+			throw new \Exception("Failed to create job file");
+		}
 
 		$this->save($fn, $data);
 	}
@@ -33,7 +47,7 @@ class PickleJob
 	{
 		$json = json_encode($data, JSON_PRETTY_PRINT);
 
-		if (strlen($json) != file_put_contents($fn, $json)) {
+		if (strlen($json) != file_put_contents($fn, $json, LOCK_EX)) {
 			throw new \Exception("Error while writing data to '$fn'");
 		}
 	}

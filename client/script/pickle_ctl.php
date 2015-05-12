@@ -34,12 +34,13 @@ if ($_SERVER['argc'] <= 1 || $help_cmd) {
 
 if ($sync_cmd) {
 
-	$jobs = new rm\PickleJob($job_dir);
-
-	/* XXX handle the finished jobs first. */
 	
 
 	try {
+		$aa = new rm\PickleJob($job_dir);
+		/* XXX handle the finished jobs first. */
+		// $aa->cleanup();
+
 		$pw = new rm\PickleWeb($sync_host, new rm\PickleDb($db_dir));
 
 		if (!$pw->updatesAvailable()) {
@@ -48,12 +49,14 @@ if ($sync_cmd) {
 		}
 
 		$news = (array)$pw->getNewTags();
+
+		foreach ($news as $job) {
+			$aa->add($job);
+		}
 	} catch (Exception $e) {
 		echo $e->getMessage() . "\n";
 		exit(3);
 	}
-
-	var_dump($news);
 
 }
 
