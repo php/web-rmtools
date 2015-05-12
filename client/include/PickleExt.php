@@ -34,7 +34,7 @@ class PickleExt
 		$ret = exec_single_log($cmd, NULL, $this->build->getEnv());
 
 		if ($ret["return_value"]) {
-			throw new \Exception($ret["log"]);
+			throw new \Exception("'$cmd' resulted  error: '" . $ret["log"] . "'");
 		}
 
 		if (!preg_match(",Package name\s+\|\s+([^\s]+)\s+\|,", $ret["log"], $m)) {

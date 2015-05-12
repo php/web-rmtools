@@ -142,14 +142,8 @@ class PickleBuildVC
 
 	}
 
-	/* XXX read the configure options from the extconfig, create the options file to feed pickle */
-	public function build(PickleExt $ext)
+	public function getPickleCmdToRun(PickleExt $ext)
 	{
-		$cmd = $this->pickle_cmd;
-		$old_cwd = getcwd();
-
-		chdir(TMP_DIR);
-
 		$conf_opts = $ext->getConfigureOpts();
 		if ($conf_opts && file_exists($conf_opts)) {
 			$ext_config_opt = "--with-configure-options=$conf_opts";
@@ -166,6 +160,20 @@ class PickleBuildVC
 			. $ext->getPkgUri();
 
 		$cmd = $this->pickle_cmd . " " . $opts;
+
+		return $cmd;
+
+	}
+
+
+	/* XXX read the configure options from the extconfig, create the options file to feed pickle */
+	public function build(PickleExt $ext)
+	{
+		$old_cwd = getcwd();
+
+		chdir(TMP_DIR);
+
+		$cmd = $this->getPickleCmdToRun($ext);
 
 		$ret = exec_single_log($cmd, NULL, $this->env);
 
