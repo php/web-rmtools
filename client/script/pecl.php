@@ -160,7 +160,7 @@ foreach ($builds as $build_name) {
 					$ext->getPackageName() . " not started\nReason: " . $e->getMessage()
 				);
 			} else {
-				xmail(
+				rm\xmail(
 					MAIL_FROM,
 					/* no chance to have the maintainers mailto at this stage */
 					$maintainer_mailto,
