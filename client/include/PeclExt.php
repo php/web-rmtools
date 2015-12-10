@@ -1109,7 +1109,7 @@ nodoc:
 				continue;
 			}
 
-			$pkgs = glob("$path/*");
+			$pkgs = glob("$path/*$name*");
 
 			if (!$pkgs) {
 				continue;
