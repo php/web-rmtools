@@ -115,7 +115,7 @@ function upload_file($src, $target)
 {
 	include __DIR__ . '/../data/config/credentials_ftps.php';
 
-	$ftp = ftp_connect($ftp_server); 
+	$ftp = ftp_ssl_connect($ftp_server); 
 	$login_result = ftp_login($ftp, $user_snaps, $password);
 	if (!$login_result) {
 		return false;
@@ -153,7 +153,7 @@ function update_snapshot_page()
 {
 	include __DIR__ . '/../data/config/credentials_ftps.php';
 
-	$ftp = ftp_connect($ftp_server); 
+	$ftp = ftp_ssl_connect($ftp_server); 
 	$login_result = ftp_login($ftp, $user_snaps, $password);
 	if (!$login_result) {
 		return false;
@@ -167,7 +167,7 @@ function upload_build_result_ftp_curl($src_dir, $target)
 {
 	include __DIR__ . '/../data/config/credentials_ftps.php';
 
-	$ftp = ftp_connect($ftp_server);
+	$ftp = ftp_ssl_connect($ftp_server);
 	if (!$ftp) {
 		echo "Cannot connect to $ftp_server\n";
 		return false;
@@ -375,7 +375,7 @@ function upload_pecl_pkg_ftp_curl($files, $logs, $target)
 {
 	include __DIR__ . '/../data/config/credentials_ftps.php';
 
-	$ftp = ftp_connect($ftp_server);
+	$ftp = ftp_ssl_connect($ftp_server);
 	if (!$ftp) {
 		echo "Cannot connect to $ftp_server\n";
 		return false;
@@ -475,7 +475,7 @@ function upload_pickle_pkg_ftp_curl($files, $logs, $target)
 {
 	include __DIR__ . '/../data/config/credentials_ftps.php';
 
-	$ftp = ftp_connect($ftp_server);
+	$ftp = ftp_ssl_connect($ftp_server);
 	if (!$ftp) {
 		echo "Cannot connect to $ftp_server\n";
 		return false;
