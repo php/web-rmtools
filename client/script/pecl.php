@@ -107,6 +107,8 @@ $was_errors = false;
 
 echo "Using <$pkg_path>" . PHP_EOL . PHP_EOL;
 
+$upload_status = array();
+
 /* Each windows configuration from the ini for the given PHP version will be built */
 foreach ($builds as $build_name) {
 
@@ -339,13 +341,14 @@ foreach ($builds as $build_name) {
 			if (rm\upload_pecl_pkg_ftp_curl($pkgs_to_upload, array($logs_zip), $target)) {
 				echo "Upload succeeded" . PHP_EOL;
 			} else {
-				echo "Upload failed" . PHP_EOL;
+				throw new Exception("Upload failed");
 			}
 		} catch (Exception $e) {
 			echo 'Error . ' . $e->getMessage() . PHP_EOL;
 			$upload_success = false;
 		}
 	}
+	$upload_status[$build_name] = $upload_success;
 
 	if ($mail_maintainers) {
 		try {
@@ -440,13 +443,17 @@ if ($is_last_run) {
 			$open .= "For each build combination and status please refer to the list below."; 
 
 			$close = "";
-			if ($upload && isset($upload_success)) {
+			if ($upload) {
+				$all_uploads_succeeded = true;
+				foreach ($upload_status as $st) {
+					$all_uploads_succeeded = $all_uploads_succeeded && $st;
+				}
 				$close = "Upload status: ";
-				if ($upload_success) {
+				if ($all_uploads_succeeded) {
 					$close .= "succceeded\n";
 					$close .= "URL: $url\n\n";
 				} else {
-					$close .= "failed\n\n";
+					$close .= "some uploads failed\n\n";
 				}
 			}
 			$close .= "This mail is being sent to you because you are the lead developer in package.xml\n\n";

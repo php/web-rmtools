@@ -69,6 +69,8 @@ $was_errors = false;
 
 echo "Using <$pkg_path>" . PHP_EOL . PHP_EOL;
 
+$upload_status = array();
+
 foreach ($builds as $build_name) {
 
 	$build_error = 0;
@@ -166,13 +168,15 @@ foreach ($builds as $build_name) {
 					unlink($pkg_file);
 				}
 			} else {
-				echo "Upload failed" . PHP_EOL;
+				throw new Exception("Upload failed");
 			}
 		} catch (Exception $e) {
 			echo 'Error . ' . $e->getMessage() . PHP_EOL;
 			$upload_success = false;
 		}
 	}
+	/* keep recording upload status for every package, the code at the end is going to evaluate it  like in pecl. */
+	$upload_status[$build_name] = $upload_success;
 
 	/* notify pickle */
 
