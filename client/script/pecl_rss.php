@@ -68,6 +68,7 @@ if (!isset($latest->item)) {
 $curl = 'C:\apps\bin\curl.exe';
 $get_url_tpl = 'https://pecl.php.net/get/{name}/{version}';
 $download_dir = 'c:\pecl-in-pkg';
+$download_dir_pre = 'c:\pecl-in-snap-pre';
 
 foreach($latest->item as $item) {
 	if (!$item->title) {
@@ -119,6 +120,9 @@ foreach($latest->item as $item) {
 
 		if (!$suspects) {
 			system($curl_cmd, $status);
+			/* This needs to be turned off after 7.1 GA */
+			copy("$name-$version.tgz", "$download_dir_pre" . DIRECTORY_SEPARATOR . "$name-$version.tgz");
+
 			if ($status) {
 				echo "<$name-$version> download failed" . PHP_EOL;
 				chdir($back);
