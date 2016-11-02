@@ -37,18 +37,18 @@ for /r %%i in (*) do (
 	goto ONLY_ONE
 )
 
-cd c:\pecl-in-pkg-56
+cd c:\pecl-in-snap-pre
 
 for /r %%i in (*) do (
-	call %BAT_DIR%pecl_build_56.bat --upload --aggregate-mail --package=%%i
+	call %BAT_DIR%pecl_snap_pre.bat --upload --is-snap --aggregate-mail --package=%%i
 	del %%i
 	goto ONLY_ONE
 )
 
-cd c:\pecl-in-pkg-nomail-56
+cd c:\pecl-in-snap-nomail-pre
 
 for /r %%i in (*) do (
-	call %BAT_DIR%pecl_build_56.bat --upload --package=%%i
+	call %BAT_DIR%pecl_snap_pre.bat --upload --is-snap --package=%%i
 	del %%i
 	goto ONLY_ONE
 )
