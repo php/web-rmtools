@@ -44,9 +44,11 @@ class BuildVC {
 
 		$path = getenv($vc_env_prefix . 'PATH');
 		if (empty($path)) {
-			include __DIR__ . '/../data/config.php';
+			/* TODO check all the other things */
+			throw new \Exception("Compiler environment couldn't be determined");
+			//include __DIR__ . '/../data/config.php';
 			/* use default config */
-			$env = $custom_env;
+			//$env = $custom_env;
 		} else {
 			$env = array();
 			$env['PATH'] = getenv($vc_env_prefix . 'PATH') . ';' . getenv('PATH') ;

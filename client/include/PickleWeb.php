@@ -162,9 +162,9 @@ class PickleWeb
 		} else if (empty($local) || !isset($local["packages"])) {
 			foreach ($remote["packages"] as $name => $tags) {
 				foreach ($tags as $version => $data) {
-					if (preg_match(",master,", $version) || !$this->isValidTag($data)) {
+					/*if (!$this->isValidTag($data)) {
 						continue;
-					}
+					}*/
 					/* $version is from the tag name, be strict and use the oone from the actual tag data*/
 					if ($this->isUniqueTag($name, $data["version"], $ret)) {
 						$ret[] = $data;
@@ -182,9 +182,9 @@ class PickleWeb
 			}
 			
 			foreach ($tags as $version => $data) {
-				if (preg_match(",master,", $version) || !$this->isValidTag($data)) {
+				/*if (!$this->isValidTag($data)) {
 					continue;
-				}
+				}*/
 				if (!isset($local["packages"][$name][$version]) && $this->isUniqueTag($name, $data["version"], $ret)) {
 					$ret[] = $data;
 				}
