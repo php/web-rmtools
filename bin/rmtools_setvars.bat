@@ -1,6 +1,6 @@
 @echo off
 
-set PHP_RMTOOLS_BIN_DIR=%~dp0
+set PHP_RMTOOLS_BIN_PATH=%~dp0
 set PHP_RMTOOLS_BIN_PATH=%PHP_RMTOOLS_BIN_PATH:~0,-1%
 
 for %%a in ("%PHP_RMTOOLS_BIN_PATH%") do set PHP_RMTOOLS_PATH=%%~dpa
