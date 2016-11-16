@@ -19,7 +19,7 @@ GOTO EXIT_LOCKED
 
 :skip_help
 
-if not exist "%PHP_SDK_ROOT_PATH%\data\config\credentials_ftps.php" (
+if not exist "%PHP_RMTOOLS_ROOT_PATH%\data\config\credentials_ftps.php" (
 	echo FTP config %PHP_SDK_ROOT_PATH%\data\config\credentials_ftps.php not found
 	exit /b 3
 )
