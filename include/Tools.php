@@ -127,7 +127,7 @@ function upload_file($src, $target)
 
 function upload_file_curl($src, $target) // SAZ - Like upload_file(), but using curl
 {
-	include 'C:/php-sdk/rmtools-client/data/config/credentials_ftps.php';
+	include __DIR__ . '/../data/config/credentials_ftps.php';
 	$ftp_user = $user_snaps;
 	$ftp_password = $password;
 
