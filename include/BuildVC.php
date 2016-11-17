@@ -29,6 +29,7 @@ class BuildVC {
 
 	function __construct(Branch $branch, $build_name)
 	{
+		/* XXX this has to be merged with PeclBuildVC and any other, be it per trait or inheritance. */
 		$build_dir = $branch->config->getBuildDir();
 		if (!file_exists($build_dir)) {
 			throw new \Exception("Directory '$build_dir' doesn't exist");
@@ -40,41 +41,27 @@ class BuildVC {
 		$this->compiler = $this->branch->config->getCompiler();
 		$this->architecture = $this->branch->config->getArchitecture();
 
-		$vc_env_prefix = strtoupper($this->compiler);
-		if ($this->architecture == 'x64') {
-			$vc_env_prefix .= '_X64_';
-		} else {
-			$vc_env_prefix .= '_';
+		$sdk_arch = getenv("PHP_SDK_ARCH");
+		if (strtolower($this->architecture) != strtolower($sdk_arch)) {
+			throw new \Exception("Arch mismatch. PHP SDK is configured for '$sdk_arch', while the current RMTOOLS config targets '{$this->architecture}'");
 		}
 
-		$path = getenv($vc_env_prefix . 'PATH');
-		if (empty($path)) {
-			/* TODO check all the other things */
-			throw new \Exception("Compiler environment couldn't be determined");
-			//include __DIR__ . '/../data/config.php';
-			/* use default config */
-			//$env = $custom_env;
-		} else {
-			$env = array();
-			$env['PATH'] = getenv($vc_env_prefix . 'PATH') . ';' . getenv('PATH') ;
-			$env['INCLUDE'] = getenv($vc_env_prefix . 'INCLUDE');
-			$env['LIB'] = getenv($vc_env_prefix . 'LIB');
+		$sdk_vc = getenv("PHP_SDK_VC");
+		if (strtolower($this->compiler) != strtolower($sdk_vc)) {
+			throw new \Exception("Compiler mismatch. PHP SDK is configured for '$sdk_vc', while the current RMTOOLS config targets '{$this->compiler}'");
 		}
 
-		/* We don't support anymore VC6, so calling these scripts from the
-		   SDK are just fine */
-		if (!$env['INCLUDE'] || !$env['LIB']) {
-			$env['INCLUDE'] = getenv('INCLUDE');
-			$env['LIB'] = getenv('LIB');
-		}
+		$env = array();
+		$env['PATH'] = getenv('PATH') ;
+		$env['INCLUDE'] = getenv('INCLUDE');
+		$env['LIB'] = getenv('LIB');
 
 		$env['TMP'] = $env['TEMP'] = getenv('TEMP');
 		$env['SystemDrive'] = getenv('SystemDrive');
 		$env['SystemRoot'] = getenv('SystemRoot');
-		if (!isset($env['BISON_SIMPLE'])) {
-			$env['BISON_SIMPLE'] = getenv('BISON_SIMPLE');
-		}
 
+		/* XXX Not sure, in how far the below is needed. */
+		/*
 		$env['CPU'] = "i386";
 		$env['APPVER'] = "5.01";  // setenv /xp
 		if (strcasecmp($this->architecture, 'x64') == 0) {
@@ -83,6 +70,7 @@ class BuildVC {
 		if (strcmp($branch->config->getAppver(), '2008') == 0) {
 			$env['APPVER'] = "6.0";
 		}
+		 */
 		if ($branch->config->getDebug() == 0) {
 			$env['NODEBUG'] = "1";
 		}
