@@ -30,7 +30,7 @@ class PeclBuildVC {
 
 	function __construct(PeclBranch $branch, $build_name)
 	{
-		$build_dir = $this->config->getBuildDir();
+		$build_dir = $branch->config->getBuildDir();
 		if (!file_exists($build_dir)) {
 			throw new \Exception("Directory '$build_dir' doesn't exist");
 		}
