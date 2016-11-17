@@ -11,6 +11,22 @@ class Git {
 	public function __construct($repo_url)
 	{
 		$this->repo_url = $repo_url;
+
+		if (!file_exists($this->git_cmd)) {
+			$git_cmd = trim(shell_exec("where git.exe"));
+			if (!$git_cmd) {
+				throw new \Exception("Git binary not available");
+			}
+			$this->git_cmd = $git_cmd;
+		}
+
+		if (!file_exists($this->tar_cmd)) {
+			$tar_cmd = trim(shell_exec("where tar.exe"));
+			if (!$tar_cmd) {
+				throw new \Exception("Tar binary not available");
+			}
+			$this->tar_cmd = $tar_cmd;
+		}
 	}
 
 	function setModule($module) {
@@ -37,7 +53,7 @@ class Git {
 	public function getLastCommitId()
 	{
 		$try = 3;
-		$cmd = $this->git_cmd . ' ls-remote ' . $this->repo_url . '/' . $this->module . ' ' . $this->branch;
+		$cmd = '"' . $this->git_cmd . '" ls-remote ' . $this->repo_url . '/' . $this->module . ' ' . $this->branch;
 		while ( $try > 0 )  {
 			$res = exec_sep_log($cmd);
 			if ($res && !empty($res['log_stdout']))  {
