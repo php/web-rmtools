@@ -30,9 +30,14 @@ class PeclBuildVC {
 
 	function __construct(PeclBranch $branch, $build_name)
 	{
+		$build_dir = $this->config->getBuildDir();
+		if (!file_exists($build_dir)) {
+			throw new \Exception("Directory '$build_dir' doesn't exist");
+		}
+
 		$this->branch = $branch;
 		$this->build_name = $build_name;
-		$this->obj_dir = $branch->config->getBuildDir() . '/' . $branch->config->getBranch() . '-' . $this->build_name;
+		$this->obj_dir = $build_dir . '/' . $branch->config->getBranch() . '-' . $this->build_name;
 		$this->compiler = $branch->config->builds[$build_name]['compiler'];
 		$this->architecture = $branch->config->builds[$build_name]['arch'];
 		$this->thread_safe = (boolean)$branch->config->builds[$build_name]['thread_safe'];

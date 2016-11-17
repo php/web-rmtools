@@ -29,9 +29,14 @@ class BuildVC {
 
 	function __construct(Branch $branch, $build_name)
 	{
+		$build_dir = $this->branch->config->getBuildDir();
+		if (!file_exists($build_dir)) {
+			throw new \Exception("Directory '$build_dir' doesn't exist");
+		}
+
 		$this->branch = $branch;
 		$this->build_name = $build_name;
-		$this->obj_dir = $this->branch->config->getBuildDir() . '/' . $this->build_name;
+		$this->obj_dir = $build_dir . '/' . $this->build_name;
 		$this->compiler = $this->branch->config->getCompiler();
 		$this->architecture = $this->branch->config->getArchitecture();
 
