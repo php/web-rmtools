@@ -75,7 +75,11 @@ class Branch {
 			$rev_name = substr($this->data->revision_last, 0, 7);
 		}
 		$dir_name = $this->config->getName() . '-src-' . ($build_type ? $build_type.'-' : $build_type) . 'r' . $rev_name;
-		$target = $this->config->getBuildDir() . '/' . $dir_name;
+		$build_dir = $this->config->getBuildDir();
+		if (!file_exists($build_dir)) {
+			throw new \Exception("Directory '$build_dir' doesn't exist");
+		}
+		$target = $build_dir . '/' . $dir_name;
 		$exportfile = $this->repo->export($target);
 
 		if (preg_match('/\.zip$/', $exportfile) > 0) {  // export function returned a .zip file.
@@ -84,18 +88,18 @@ class Branch {
 		if ($zip && !$is_zip) {
 			$zip_path = $dir_name . '.zip';
 			$cmd = "zip -q -r $zip_path $dir_name";
-			$res = exec_single_log($cmd, $this->config->getBuildDir());
+			$res = exec_single_log($cmd, $build_dir);
 			if (!$res) {
 				throw new \Exception("Export failed, svn exec failed to be ran");
 			}
 		}
 		elseif ($is_zip === true)  {
-			$cmd = 'unzip -q -o ' . $exportfile . ' -d ' . $this->config->getBuildDir();
+			$cmd = 'unzip -q -o ' . $exportfile . ' -d ' . $build_dir;
 			$res = exec_single_log($cmd);
 			if (!$res) {
 				throw new \Exception("Unzipping $exportfile failed.");
 			}
-			$gitname = $this->config->getBuildDir() . '/php-src-' . strtoupper($this->config->getName()) . '-' . $rev_name;
+			$gitname = $build_dir . '/php-src-' . strtoupper($this->config->getName()) . '-' . $rev_name;
 			rename($gitname, $target);
 		}
 
