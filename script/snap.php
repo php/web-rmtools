@@ -32,17 +32,17 @@ if ($force || $branch->hasNewRevision()) {
 		$new_rev = true;
 		echo "processing revision $last_rev\n";
 		if ($branch->config->getPGO() == 1) {  // Check revision to maintain concurrent builds
-			$fh = fopen('c:\php-sdk\locks\snaps_'.$build_type.'.lock', "a");
+			$fh = fopen(getenv("PHP_RMTOOLS_LOCK_PATH") . "/snaps_".$build_type.".lock", "a");
 			fwrite($fh, "$last_rev");
 			fclose($fh);
 			if (strcmp($build_type, 'nts') == 0) {
-				if (!file_exists('c:\php-sdk\locks\snaps_ts.lock'))  {
+				if (!file_exists(getenv("PHP_RMTOOLS_LOCK_PATH") . "/snaps_ts.lock"))  {
 					echo "Waiting for thread-safe build, exiting.\n";
 					exit(0);
 				}
 				else {
-					$fh = fopen('c:\php-sdk\locks\snaps_ts.lock', "r");
-					$data = fread($fh, filesize('c:\php-sdk\locks\snaps_ts.lock'));
+					$fh = fopen(getenv("PHP_RMTOOLS_LOCK_PATH") . "/snaps_ts.lock", "r");
+					$data = fread($fh, filesize(getenv("PHP_RMTOOLS_LOCK_PATH") . "/snaps_ts.lock"));
 					fclose($fh);
 					if (!preg_match("/$last_rev/", $data)) {
 						echo "Revision mismatch on concurrent builds, waiting for ts build to complete\n";
@@ -92,6 +92,9 @@ if ($force || $branch->hasNewRevision()) {
 
 			$build_src_path = realpath($build_dir_parent) . DIRECTORY_SEPARATOR . $build_name;
 			$log = rm\exec_single_log('mklink /J ' . $build_src_path . ' ' . $src_original_path);
+			if (!file_exists($build_src_path)) {
+				throw new \Exception("Couldn't link '$src_original_path' to '$build_src_path'");
+			}
 
 			$build = $branch->createBuildInstance($build_name);
 			echo "running build in <$build_src_path>\n";
