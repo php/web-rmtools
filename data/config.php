@@ -17,17 +17,12 @@ foreach ($required_exts as $ext) {
 	}
 }
 
-$rmtools_base = getenv('RMTOOLS_BASE_DIR');
-
-if (!$rmtools_base) {
-	$rmtools_base = '/home/web/rmtools.php.net';
+$tmp = getenv('PHP_RMTOOLS_TMP_PATH');
+if (!$tmp) {
+	throw new \Exception("Temporary path '$tmp' doesn't exist");
 }
+define('TMP_DIR', $tmp);
 
-define('TMP_DIR', $rmtools_base . '/tmp');
-$custom_env = array(
-'PATH' => "C:\\Program Files (x86)\\Microsoft Visual Studio 9.0\\VC\\Bin;C:\\Program Files (x86)\\Microsoft Visual Studio 9.0\\VC\\vcpackages;C:\\Program Files (x86)\\Microsoft Visual Studio 9.0\\Common7\\IDE;C:\\Program Files\\Microsoft SDKs\\Windows\\v6.1\\Bin\\x64;C:\\Program Files\\Microsoft SDKs\\Windows\\v6.1\\Bin;C:\\Windows\\Microsoft.NET\\Framework\\v3.5;C:\\Windows\\Microsoft.NET\\Framework\\v2.0.50727;C:\\Program Files (x86)\\NVIDIA Corporation\\PhysX\\Common;C:\\Program Files\\Common Files\\Microsoft Shared\\Windows Live;C:\\Program Files (x86)\\Common Files\\Microsoft Shared\\Windows Live;C:\\Windows\\system32;C:\\Windows;C:\\Windows\\System32\\Wbem;C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\;;C:\apps\slicksvn\bin;c:\\php-sdk\\bin\\;",
-'INCLUDE' => "C:\\Program Files (x86)\\Microsoft Visual Studio 9.0\\VC\\Include;C:\\Program Files\\Microsoft SDKs\\Windows\\v6.1\\Include;C:\\Program Files\\Microsoft SDKs\\Windows\\v6.1\\Include\\gl;C:\\Program Files (x86)\\Microsoft Visual Studio 9.0\\VC\\ATLMFC\\INCLUDE;",
-'LIB' => "C:\\Program Files (x86)\\Microsoft Visual Studio 9.0\\VC\\Lib;C:\\Program Files\\Microsoft SDKs\\Windows\\v6.1\\Lib;C:\\Program Files (x86)\\Microsoft Visual Studio 9.0\\VC\\ATLMFC\\LIB;",
-'BISON_SIMPLE' => 'c:\\php-sdk\\bin\\bison.simple'
-	);
+/* XXX might remove this later */
+$custom_env = array();
 
