@@ -14,7 +14,11 @@ $new_rev = false;
 $branch_name = $argv[1];
 $build_type = strtolower($argv[2]);
 $force = isset($argv[3]) ? true : false;
-$config_path = __DIR__ . '/../data/config/branch/' . $branch_name . '.ini';
+$sdk_arch = getenv("PHP_SDK_ARCH");
+if (!$sdk_arch) {
+	throw new \Exception("Arch is empty, the SDK might not have been setup. ");
+}
+$config_path = __DIR__ . '/../data/config/branch/' . $sdk_arch . '/' . $branch_name . '.ini';
 
 $branch = new rm\Branch($config_path);
 $branch->update();
@@ -23,7 +27,7 @@ $branch_name = $branch->config->getName();
 $branch_name_short = $branch->config->getBranch();
 $last_rev = $branch->getLastRevisionId();
 
-echo "Running <$config_path>\n";
+echo "Running <" . realpath($config_path) . ">\n";
 echo "\t$branch_name\n";
 echo "\tprevious revision was: " . $branch->getPreviousRevision() . "\n";
 echo "\tlast revision is: " . $branch->getLastRevisionId() . "\n";
