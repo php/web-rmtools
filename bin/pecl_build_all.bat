@@ -5,18 +5,9 @@ if "%PHP_SDK_ROOT_PATH%"=="" (
 	echo PHP SDK is not setup
 	exit /b 3
 )
-
-set yyyy=%date:~-4%
-set mm=%date:~4,2%
-set dd=%date:~0,2%
-
-set hh=%time:~0,2%
-if %hh% lss 10 (set hh=0%time:~1,1%)
-set nn=%time:~3,2%
-set ss=%time:~6,2%
-set cur_date=%yyyy%%mm%%dd%-%hh%%nn%%ss%
-
 call %~dp0rmtools_setvars.bat 
+
+for /f "tokens=2-8 delims=.:/ " %%a in ("%date% %time%") do set cur_date=%%c-%%a-%%b_%%d-%%e-%%f.%%g
 
 set LOG_FILE=%PHP_RMTOOLS_LOG_PATH%\task-pecl-%cur_date%.log
 set LOCK_FILE=%PHP_RMTOOLS_LOCK_PATH%\pecl.lock

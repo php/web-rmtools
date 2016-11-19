@@ -1,43 +1,36 @@
 @ECHO OFF
-set yyyy=%date:~6,4%
-set mm=%date:~3,2%
-set dd=%date:~0,2%
 
-set hh=%time:~0,2%
-if %hh% lss 10 (set hh=0%time:~1,1%)
-set nn=%time:~3,2%
-set ss=%time:~6,2%
-set cur_date=%yyyy%%mm%%dd%-%hh%%nn%%ss%
+rem must be on the env already
+if "%PHP_SDK_ROOT_PATH%"=="" (
+	echo PHP SDK is not setup
+	exit /b 3
+)
+call %~dp0rmtools_setvars.bat
 
-set LOG_FILE=c:\php-sdk\logs\task-%cur_date%.log
-set RMTOOLS_BASE_DIR=c:\php-sdk\rmtools-client
+for /f "tokens=2-8 delims=.:/ " %%a in ("%date% %time%") do set cur_date=%%c-%%a-%%b_%%d-%%e-%%f.%%g
 
-IF EXIST c:\php-sdk\locks\snaps.lock (
+set PART=%*
+set LOG_FILE=%PHP_RMTOOLS_LOG_PATH%\task-%PART: =-%-%cur_date%.log
+set LOCK_FILE=%PHP_RMTOOLS_LOCK_PATH%\snaps.lock
+
+IF EXIST %LOCK_FILE% (
 	ECHO Snapshot script is already running.
 	GOTO EXIT_LOCKED
 )
 
-ECHO running > c:\php-sdk\locks\snaps.lock 
+ECHO running > %LOCK_FILE% 
 
-CALL c:\php-sdk\bin\phpsdk_setvars.bat
+if not exist "%PHP_RMTOOLS_ROOT_PATH%\data\config\credentials_ftps.php" (
+	echo FTP config %PHP_SDK_ROOT_PATH%\data\config\credentials_ftps.php not found >> %LOG_FILE% 2<&1
+	exit /b 3
+)
 
-rmdir /q /s %RMTOOLS_BASE_DIR% >> %LOG_FILE% 2<&1
+call %PHP_RMTOOLS_BIN_PATH%\snap.bat %* >> %LOG_FILE% 2<&1
 
-svn export --quiet --force https://svn.php.net/repository/web/php-rmtools/trunk/client %RMTOOLS_BASE_DIR% >> %LOG_FILE% 2<&1
-rem xcopy /s /e /y /i  c:\php-sdk\src\rmtools-client %RMTOOLS_BASE_DIR% >> %LOG_FILE% 2<&1
-
-copy c:\php-sdk\rmtools.base\data\config\credentials_ftps.php %RMTOOLS_BASE_DIR%\data\config\ >> %LOG_FILE% 2<&1
-copy c:\php-sdk\rmtools.base\data\db\* %RMTOOLS_BASE_DIR%\data\db\ >> %LOG_FILE% 2<&1
-mkdir %RMTOOLS_BASE_DIR%\tmp
-
-CALL c:\php-sdk\rmtools-client\bin\snap.bat php53 %* >> %LOG_FILE% 2<&1
-REM CALL c:\php-sdk\rmtools-client\bin\snap.bat php54 %* >> %LOG_FILE% 2<&1
-REM CALL c:\php-sdk\rmtools-client\bin\snap.bat phptrunk %* >> %LOG_FILE% 2<&1
-
-copy %RMTOOLS_BASE_DIR%\data\db\* c:\php-sdk\rmtools.base\data\db\ >> %LOG_FILE% 2<&1
-del c:\php-sdk\locks\snaps.lock >> %LOG_FILE% 2<&1
+del %LOCK_FILE% >> %LOG_FILE% 2<&1
 
 echo Done.>> %LOG_FILE%
 
 :EXIT_LOCKED
 echo .
+
