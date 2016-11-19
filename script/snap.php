@@ -101,9 +101,15 @@ if ($force || $branch->hasNewRevision()) {
 			}
 
 			$build = $branch->createBuildInstance($build_name);
-			echo "running build in <$build_src_path>\n";
 			try {
 				$build->setSourceDir($build_src_path);
+
+				echo "Updating dependencies\n";
+				/* XXX Pass stability from script arg. */
+				$ret = $build->updateDeps("staging");
+				echo $ret["log"] . "\n";
+
+				echo "running build in <$build_src_path>\n";
 				$build->buildconf();
 				if ($branch->config->getPGO() == 1)  {
 					echo "Creating PGI build\n";
