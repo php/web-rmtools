@@ -13,6 +13,7 @@ class Branch {
 	public $db_path;
 	private $has_new_revision;
 	public $data = NULL;
+	private $required_build_runs = 2;
 
 	public function __construct($config_path)
 	{
@@ -26,11 +27,15 @@ class Branch {
 		$this->db_path = __DIR__ . '/../data/db/' . $this->config->getName() . '.json';
 		if (file_exists($this->db_path)) {
 			$this->data = json_decode(file_get_contents($this->db_path));
+			if ($this->data->build_run == $this->required_build_runs) {
+				$this->build_run = 0;
+			}
 		} else {
 			$data = new \StdClass;
 			$data->revision_last = NULL;
 			$data->revision_previous = NULL;
 			$data->revision_last_exported = NULL;
+			$data->build_run = 0;
 			$this->data = $data;
 		}
 		$this->addBuildList();
@@ -52,9 +57,12 @@ class Branch {
 
 	public function update()
 	{
+		$this->data->build_run++;
+		
 		$last_id = $this->repo->getLastCommitId();
-		if (strcasecmp($last_id, (string)$this->data->revision_last) != 0 ||
-				strcasecmp($last_id, $this->data->revision_previous) != 0) {
+		/* Either there's no db file at all yet, or this is the last required build run. */
+		if ($this->requiredBuldRunsReached() && (strcasecmp($last_id, (string)$this->data->revision_last) != 0 || strcasecmp($last_id, $this->data->revision_previous) != 0)
+			|| NULL == $this->revision_last && NULL == $this->revision_previous) {
 			$this->data->revision_previous = $this->data->revision_last;
 			$this->data->revision_last = $last_id;
 			$json = json_encode($this->data);
@@ -63,9 +71,14 @@ class Branch {
 		}
 	}
 
+	public function requiredBuldRunsReached()
+	{
+		return $this->data->build_run == $this->required_build_runs;
+	}
+
 	public function hasNewRevision()
 	{
-		return $this->has_new_revision || ( $this->data->revision_previous == NULL);
+		return $this->has_new_revision || $this->data->revision_previous == NULL;
 	}
 
 	public function export($revision = false, $build_type = false, $zip = false, $is_zip = false)
@@ -114,9 +127,13 @@ class Branch {
 
 	public function setLastRevisionExported($last_rev)
 	{
-		$this->data->revision_last_exported = $last_rev;
-		$json = json_encode($this->data);
-		file_put_contents($this->db_path, $json);
+		/* Basically, we need two runs for x64 and x86, every run covers ts and nts.
+			Only set the revision exported, if we're on last required build run. */
+		if ($this->requiredBuldRunsReached()) {
+			$this->data->revision_last_exported = $last_rev;
+			$json = json_encode($this->data);
+			file_put_contents($this->db_path, $json);
+		}
 	}
 
 	public function getLastRevisionExported()

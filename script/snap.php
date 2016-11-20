@@ -5,15 +5,15 @@ include __DIR__ . '/../include/Tools.php';
 
 use rmtools as rm;
 
-if ($argc < 3 || $argc > 4) {
-	echo "Usage: snapshot <config name> <build type> [force 1/0]\n";
+if ($argc < 2 || $argc >3) {
+	echo "Usage: snapshot <config name> [force 1/0]\n";
 	exit();
 }
 
 $new_rev = false;
 $branch_name = $argv[1];
-$build_type = strtolower($argv[2]);
-$force = isset($argv[3]) ? true : false;
+$build_type = "all"; /* Build both ts and NTS for one given arch. This also complies with the top level script, otherwise it'd need a special SDK setup. */
+$force = isset($argv[2]) ? true : false;
 $sdk_arch = getenv("PHP_SDK_ARCH");
 if (!$sdk_arch) {
 	throw new \Exception("Arch is empty, the SDK might not have been setup. ");
@@ -32,6 +32,16 @@ echo "\t$branch_name\n";
 echo "\tprevious revision was: " . $branch->getPreviousRevision() . "\n";
 echo "\tlast revision is: " . $branch->getLastRevisionId() . "\n";
 if ($force || $branch->hasNewRevision()) {
+/* Prepared rewritten part, which might be helpful for PGO integration later. */
+/*$builds_top = $branch->getBuildList('windows');
+for ($i = 0; $i < count($builds_top) && ($force || $branch->hasNewRevision()); $i++) {
+	if (preg_match(",(ts|nts),", $builds_top[$i], $m)) {
+		$build_type = $m[0];
+	} else {
+		echo "Unknown build type '{$builds_top[$i]}', skip\n";
+		continue;
+	}*/
+
 	if ($force || substr_compare($last_rev, $branch->getLastRevisionExported(), 0, 7) != 0) {
 		$new_rev = true;
 		echo "processing revision $last_rev\n";
@@ -60,7 +70,6 @@ if ($force || $branch->hasNewRevision()) {
 			$last_rev = substr($last_rev, 0, 7);
 		}
 		$src_original_path =  $branch->createSourceSnap($build_type);
-		$branch->setLastRevisionExported($last_rev);
 
 		$build_dir_parent = $branch->config->getBuildLocation();
 
@@ -199,8 +208,11 @@ if ($force || $branch->hasNewRevision()) {
 //			$build->clean();
 			rmdir($build_src_path);
 		}
+
+		$branch->setLastRevisionExported($last_rev);
 	}
 }
+
 
 if (!$new_rev) {
 	echo "no new revision.\n";
