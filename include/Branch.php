@@ -28,7 +28,7 @@ class Branch {
 		if (file_exists($this->db_path)) {
 			$this->data = json_decode(file_get_contents($this->db_path));
 			if ($this->data->build_run == $this->required_build_runs) {
-				$this->build_run = 0;
+				$this->data->build_run = 0;
 			}
 		} else {
 			$data = new \StdClass;
