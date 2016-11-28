@@ -1,3 +1,4 @@
 credentials_ftps.php
 data/db/*.json
 logs/*.log
+locks/*.lock
