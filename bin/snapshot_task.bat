@@ -22,6 +22,7 @@ ECHO running > %LOCK_FILE%
 
 if not exist "%PHP_RMTOOLS_ROOT_PATH%\data\config\credentials_ftps.php" (
 	echo FTP config %PHP_SDK_ROOT_PATH%\data\config\credentials_ftps.php not found >> %LOG_FILE% 2<&1
+	del %LOCK_FILE% >> %LOG_FILE% 2<&1
 	exit /b 3
 )
 
