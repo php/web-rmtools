@@ -24,7 +24,7 @@ NOTE: All the paths in the usage exampled are on drive C: for simplicity. Locati
 ## Preparing
 
 
-- install [Git](https://git-scm.com/)
+- install [Git](https://git-scm.com/), alternatively - fetch the latest tags for RMTOOLS and PHP SDK
 - `md c:\php-snap-build`
 - `cd c:\php-snap-build`
 - `git clone https://github.com/OSTC/php-sdk-binary-tools.git --branch new_binary_tools php-sdk`
