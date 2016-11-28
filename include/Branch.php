@@ -62,7 +62,7 @@ class Branch {
 		$last_id = $this->repo->getLastCommitId();
 		/* Either there's no db file at all yet, or this is the last required build run. */
 		if ($this->requiredBuldRunsReached() && (strcasecmp($last_id, (string)$this->data->revision_last) != 0 || strcasecmp($last_id, $this->data->revision_previous) != 0)
-			|| NULL == $this->revision_last && NULL == $this->revision_previous) {
+			|| NULL == $this->data->revision_last && NULL == $this->data->revision_previous) {
 			$this->data->revision_previous = $this->data->revision_last;
 			$this->data->revision_last = $last_id;
 			$json = json_encode($this->data);
