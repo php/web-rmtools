@@ -424,6 +424,11 @@ class PeclExt
 						$extra_inc[] = $dir;
 					}
 				}
+
+				$some_lib_bin_path =  str_replace("/", "\\", $lib_path . DIRECTORY_SEPARATOR . 'bin');
+				if (file_exists($some_lib_bin_path)) {
+					$this->build->addPath($some_lib_bin_path);
+				}
 			}
 
 			if (!empty($extra_lib)) {
