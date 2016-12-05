@@ -81,6 +81,11 @@ class PeclBuildVC {
 		$this->env = $env;
 	}
 
+	function addPath($path)
+	{
+		$this->env["PATH"] = $path . ";" . $this->env["PATH"];
+	}
+
 	function setSourceDir($src_dir)
 	{
 		$this->build_dir = $src_dir;
