@@ -131,7 +131,7 @@ function upload_file_curl($src, $target) // SAZ - Like upload_file(), but using 
 	$ftp_user = $user_snaps;
 	$ftp_password = $password;
 
-	$remoteurl = "ftps://${ftp_user}:${ftp_password}@${ftp_server}/${target}";
+	$remoteurl = "ftps://" . urlencode($ftp_user) . ":" . urlencode($ftp_password) . "@${ftp_server}/${target}";
 	$fp = fopen($src, "rb");
 
 	$ch = curl_init();
@@ -202,7 +202,7 @@ function upload_build_result_ftp_curl($src_dir, $target)
 		$fp = fopen($local_file, "rb");
 		$local_file = basename($local_file);
 
-		$remoteurl = "ftps://${ftp_user}:${ftp_password}@${ftp_server}${ftp_path}/${local_file}";
+		$remoteurl = "ftps://" . urlencode($ftp_user) . ":" . urlencode($ftp_password) . "@${ftp_server}${ftp_path}/${local_file}";
 
 		\curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
 		\curl_setopt($ch, CURLOPT_URL, $remoteurl);
@@ -221,7 +221,7 @@ function upload_build_result_ftp_curl($src_dir, $target)
 		$fp = fopen($local_file, "rb");
 		$local_file = basename($local_file);
 
-		$remoteurl = "ftps://${ftp_user}:${ftp_password}@${ftp_server}${ftp_path}/logs/${local_file}";
+		$remoteurl = "ftps://" . urlencode(ftp_user) . ":" . urlencode($ftp_password) . "@${ftp_server}${ftp_path}/logs/${local_file}";
 
 		\curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
 		\curl_setopt($ch, CURLOPT_URL, $remoteurl);
@@ -411,7 +411,7 @@ function upload_pecl_pkg_ftp_curl($files, $logs, $target)
 		$fp = fopen($local_file, "rb");
 		$local_file = basename($local_file);
 
-		$remoteurl = "ftps://${ftp_user}:${ftp_password}@${ftp_server}${ftp_path}/${local_file}";
+		$remoteurl = "ftps://" . urlencode($ftp_user) . ":" . urlencode($ftp_password) . "@${ftp_server}${ftp_path}/${local_file}";
 
 		\curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
 		\curl_setopt($ch, CURLOPT_URL, $remoteurl);
@@ -430,7 +430,7 @@ function upload_pecl_pkg_ftp_curl($files, $logs, $target)
 		$fp = fopen($local_file, "rb");
 		$local_file = basename($local_file);
 
-		$remoteurl = "ftps://${ftp_user}:${ftp_password}@${ftp_server}${ftp_path}/logs/${local_file}";
+		$remoteurl = "ftps://" . urlencode($ftp_user) . ":" . urlencode($ftp_password) . "@${ftp_server}${ftp_path}/logs/${local_file}";
 
 		\curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
 		\curl_setopt($ch, CURLOPT_URL, $remoteurl);
@@ -511,7 +511,7 @@ function upload_pickle_pkg_ftp_curl($files, $logs, $target)
 		$fp = fopen($local_file, "rb");
 		$local_file = basename($local_file);
 
-		$remoteurl = "ftps://${ftp_user}:${ftp_password}@${ftp_server}${ftp_path}/${local_file}";
+		$remoteurl = "ftps://" . urlencode($ftp_user) . ":" . urlencode($ftp_password) . "@${ftp_server}${ftp_path}/${local_file}";
 
 		\curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
 		\curl_setopt($ch, CURLOPT_URL, $remoteurl);
@@ -530,7 +530,7 @@ function upload_pickle_pkg_ftp_curl($files, $logs, $target)
 		$fp = fopen($local_file, "rb");
 		$local_file = basename($local_file);
 
-		$remoteurl = "ftps://${ftp_user}:${ftp_password}@${ftp_server}${ftp_path}/logs/${local_file}";
+		$remoteurl = "ftps://" . urlencode($ftp_user) . ":" . urlencode($ftp_password) . "@${ftp_server}${ftp_path}/logs/${local_file}";
 
 		\curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
 		\curl_setopt($ch, CURLOPT_URL, $remoteurl);
