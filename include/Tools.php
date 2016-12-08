@@ -221,7 +221,7 @@ function upload_build_result_ftp_curl($src_dir, $target)
 		$fp = fopen($local_file, "rb");
 		$local_file = basename($local_file);
 
-		$remoteurl = "ftps://" . urlencode(ftp_user) . ":" . urlencode($ftp_password) . "@${ftp_server}${ftp_path}/logs/${local_file}";
+		$remoteurl = "ftps://" . urlencode($ftp_user) . ":" . urlencode($ftp_password) . "@${ftp_server}${ftp_path}/logs/${local_file}";
 
 		\curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
 		\curl_setopt($ch, CURLOPT_URL, $remoteurl);
