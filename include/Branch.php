@@ -11,7 +11,6 @@ class Branch {
 	public $config;
 	private $repo;
 	public $db_path;
-	private $has_new_revision;
 	public $data = NULL;
 	private $required_build_runs = 2;
 
@@ -25,20 +24,34 @@ class Branch {
 		$this->repo->setModule($this->config->getModule());
 		$this->repo->setBranch($this->config->getRepoBranch());
 		$this->db_path = __DIR__ . '/../data/db/' . $this->config->getName() . '.json';
+
+		$this->data = $this->readdata();
+		/*if ($this->requiredBuldRunsReached()) {
+			$this->data->build_run = 0;
+		}*/
+
+		$this->addBuildList();
+	}
+
+	protected function readData()
+	{
 		if (file_exists($this->db_path)) {
-			$this->data = json_decode(file_get_contents($this->db_path));
-			if ($this->data->build_run == $this->required_build_runs) {
-				$this->data->build_run = 0;
-			}
+			$data = json_decode(file_get_contents($this->db_path));
 		} else {
 			$data = new \StdClass;
 			$data->revision_last = NULL;
 			$data->revision_previous = NULL;
 			$data->revision_last_exported = NULL;
 			$data->build_run = 0;
-			$this->data = $data;
 		}
-		$this->addBuildList();
+		
+		return $data;
+	}
+
+	protected function writeData()
+	{
+		$json = json_encode($this->data, JSON_PRETTY_PRINT);
+		return file_put_contents($this->db_path, $json);
 	}
 
 	private function addBuildList()
@@ -57,28 +70,47 @@ class Branch {
 
 	public function update()
 	{
-		$this->data->build_run++;
-		
 		$last_id = $this->repo->getLastCommitId();
-		/* Either there's no db file at all yet, or this is the last required build run. */
-		if ($this->requiredBuldRunsReached() && (strcasecmp($last_id, (string)$this->data->revision_last) != 0 || strcasecmp($last_id, $this->data->revision_previous) != 0)
-			|| NULL == $this->data->revision_last && NULL == $this->data->revision_previous) {
+		
+		if (!$last_id) {
+			// XXX throw here
+			echo "last revision id is empty\n";
+			return false;
+		}
+
+		if ($this->data->build_run > 0 && $this->hasUnfinishedBuild()) {
+			$this->data->build_run++;
+		} else if ($this->hasNewRevision()) {
 			$this->data->revision_previous = $this->data->revision_last;
 			$this->data->revision_last = $last_id;
-			$json = json_encode($this->data);
-			file_put_contents($this->db_path, $json);
-			$this->has_new_revision = true;
+			$this->data->build_run = 1;
+		} else {
+			return false;
 		}
+		
+		$this->writeData();
+		
+		return true;
 	}
 
+	public function hasUnfinishedBuild()
+	{
+		$exported = $this->getLastRevisionExported();
+		$last = $this->getLastRevisionId();
+
+		return !$this->requiredBuldRunsReached() || substr_compare($last, $exported, 0, strlen($exported)) != 0;
+	}
+	
 	public function requiredBuldRunsReached()
 	{
-		return $this->data->build_run == $this->required_build_runs;
+		return $this->data->build_run >= $this->required_build_runs;
 	}
 
 	public function hasNewRevision()
 	{
-		return $this->has_new_revision || $this->data->revision_previous == NULL;
+		$last = $this->repo->getLastCommitId();
+
+		return $last && !$this->isLastRevisionExported($last);
 	}
 
 	public function export($revision = false, $build_type = false, $zip = false, $is_zip = false)
@@ -131,8 +163,7 @@ class Branch {
 			Only set the revision exported, if we're on last required build run. */
 		if ($this->requiredBuldRunsReached()) {
 			$this->data->revision_last_exported = $last_rev;
-			$json = json_encode($this->data);
-			file_put_contents($this->db_path, $json);
+			$this->writeData();
 		}
 	}
 
@@ -140,12 +171,16 @@ class Branch {
 	{
 		return $this->data->revision_last_exported;
 	}
+	
+	public function isLastRevisionExported($rev)
+	{
+		$last_exported = $this->getLastRevisionExported();
+
+		return $last_exported && substr_compare($rev, $last_exported, 0, strlen($last_exported)) === 0;
+	}
 
 	public function getLastRevisionId()
 	{
-		if (!$this->data->revision_last) {
-			$this->update();
-		}
 		return $this->data->revision_last;
 	}
 
