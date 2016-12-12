@@ -12,7 +12,6 @@ class Branch {
 	private $repo;
 	public $db_path;
 	public $data = NULL;
-	private $required_build_runs = 2;
 
 	public function __construct($config_path)
 	{
@@ -26,11 +25,6 @@ class Branch {
 		$this->db_path = __DIR__ . '/../data/db/' . $this->config->getName() . '.json';
 
 		$this->data = $this->readdata();
-		/*if ($this->requiredBuldRunsReached()) {
-			$this->data->build_run = 0;
-		}*/
-
-		$this->addBuildList();
 	}
 
 	protected function readData()
@@ -42,7 +36,6 @@ class Branch {
 			$data->revision_last = NULL;
 			$data->revision_previous = NULL;
 			$data->revision_last_exported = NULL;
-			$data->build_run = 0;
 		}
 		
 		return $data;
@@ -51,7 +44,7 @@ class Branch {
 	protected function writeData()
 	{
 		$json = json_encode($this->data, JSON_PRETTY_PRINT);
-		return file_put_contents($this->db_path, $json);
+		return file_put_contents($this->db_path, $json, LOCK_EX);
 	}
 
 	private function addBuildList()
@@ -59,12 +52,14 @@ class Branch {
 		$builds = $this->config->getBuildList();
 
 		if (!empty($builds)) {
-			$this->data->builds = array();
 			foreach ($builds as $n => $v) {
+				if (in_array($n, $this->data->builds) && $this->hasUnfinishedBuild()) {
+					throw new \Exception("Builds for '$n' are already done or in progress");
+				}
 				$this->data->builds[] = $n;
 			}
 		} else {
-				$this->data->builds = NULL;
+				throw new \Exception("No build configuration");
 		}
 	}
 
@@ -73,19 +68,20 @@ class Branch {
 		$last_id = $this->repo->getLastCommitId();
 		
 		if (!$last_id) {
-			// XXX throw here
-			echo "last revision id is empty\n";
-			return false;
+			throw new \Exception("last revision id is empty");
 		}
-
-		if ($this->data->build_run > 0 && $this->hasUnfinishedBuild()) {
-			$this->data->build_run++;
-		} else if ($this->hasNewRevision()) {
+	
+		if ($this->requiredBuildRunsReached() && $this->hasNewRevision()) {
 			$this->data->revision_previous = $this->data->revision_last;
 			$this->data->revision_last = $last_id;
-			$this->data->build_run = 1;
-		} else {
-			return false;
+		}
+
+		if ($this->requiredBuildRunsReached()) {
+			$this->data->builds = array();
+		}
+		
+		if ($this->hasUnfinishedBuild()) {
+			$this->addBuildList();
 		}
 		
 		$this->writeData();
@@ -95,17 +91,19 @@ class Branch {
 
 	public function hasUnfinishedBuild()
 	{
-		$exported = $this->getLastRevisionExported();
-		$last = $this->getLastRevisionId();
-
-		return !$this->requiredBuldRunsReached() || substr_compare($last, $exported, 0, strlen($exported)) != 0;
+		return !$this->requiredBuildRunsReached() || $this->hasNewRevision();
 	}
 	
-	public function requiredBuldRunsReached()
+	public function requiredBuildRunsReached()
 	{
-		return $this->data->build_run >= $this->required_build_runs;
+		/* XXX 4 stands for all the combinations, scan the files to get this number from there instead of hardcoding. */
+		if (!$this->data->builds || empty($this->data->builds)) {
+			return true;
+		}
+		
+		return count($this->data->builds) == 4;
 	}
-
+	
 	public function hasNewRevision()
 	{
 		$last = $this->repo->getLastCommitId();
@@ -161,7 +159,7 @@ class Branch {
 	{
 		/* Basically, we need two runs for x64 and x86, every run covers ts and nts.
 			Only set the revision exported, if we're on last required build run. */
-		if ($this->requiredBuldRunsReached()) {
+		if ($this->requiredBuildRunsReached()) {
 			$this->data->revision_last_exported = $last_rev;
 			$this->writeData();
 		}
@@ -194,6 +192,8 @@ class Branch {
 
 	function getBuildList($platform)
 	{
+		/* XXX this might need to be changed, if the builds have to be done single at run. Then it'll
+			need to check the thread safety argument as well. */
 		$builds = array();
 		foreach ($this->data->builds as $build_name) {
 			$build = $this->config->getBuildFromName($build_name);
@@ -214,6 +214,7 @@ class Branch {
 
 		$compiler	= strtolower($build['compiler']);
 		switch ($compiler) {
+			/* XXX scan the configs for compatible compiler list*/
 			case 'vc14':
 			case 'vc12':
 			case 'vc11':

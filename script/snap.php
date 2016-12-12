@@ -20,7 +20,13 @@ if (!$sdk_arch) {
 }
 $config_path = __DIR__ . '/../data/config/branch/' . $sdk_arch . '/' . $branch_name . '.ini';
 
-$branch = new rm\Branch($config_path);
+$err_msg = NULL;
+try {
+	$branch = new rm\Branch($config_path);
+} catch (\Exception $e) {
+	$err_msg = $e->getMessage();
+	goto out_here;
+}
 
 $branch_name = $branch->config->getName();
 $branch_name_short = $branch->config->getBranch();
@@ -41,7 +47,12 @@ for ($i = 0; $i < count($builds_top) && ($force || $branch->hasNewRevision()); $
 		continue;
 	}*/
 	
-	if (!$branch->update()) {
+	try {
+		if (!$branch->update()) {
+			goto out_here;
+		}
+	} catch (\Exception $e) {
+		$err_msg = $e->getMessage();
 		goto out_here;
 	}
 
@@ -218,24 +229,32 @@ for ($i = 0; $i < count($builds_top) && ($force || $branch->hasNewRevision()); $
 		rmdir($build_src_path);
 	}
 
-	$src_dir = $branch_name . '/r' . $last_rev;
-	rm\upload_build_result_ftp_curl($toupload_dir, $src_dir);
+	/* Only upload once, and then cleanup. */
+	if ($branch->requiredBuildRunsReached()) {
+		$src_dir = $branch_name . '/r' . $last_rev;
+		rm\upload_build_result_ftp_curl($toupload_dir, $src_dir);
+		rm\rmdir_rf($toupload_dir);
+	}
 	
 	$branch->setLastRevisionExported($last_rev);
 
 }
 
 out_here:
-if (!$have_build_run) {
+if ($err_msg) {
+	echo "$err_msg\n";
+} else if (!$have_build_run) {
 	echo "no new revision.\n";
 }
 
-/*Upload the branch DB */
-$try = 0;
-do {
-	$status = rm\upload_file_curl($branch->db_path, $branch_name . '/' . basename($branch->db_path));
-	$try++;
-} while ( $status === false && $try < 10 );
+if ($have_build_run) {
+	/*Upload the branch DB */
+	$try = 0;
+	do {
+		$status = rm\upload_file_curl($branch->db_path, $branch_name . '/' . basename($branch->db_path));
+		$try++;
+	} while ( $status === false && $try < 10 );
+}
 
 //if ($has_build_errors) {
 //	rm\send_error_notification($branch_name, $build_errors, $branch->getPreviousRevision(), $last_rev, 'http://windows.php.net/downloads/snaps/' . $branch_name . '/r' . $last_rev);
