@@ -97,7 +97,7 @@ class Branch {
 	public function requiredBuildRunsReached()
 	{
 		/* XXX 4 stands for all the combinations, scan the files to get this number from there instead of hardcoding. */
-		if (!$this->data->builds || empty($this->data->builds)) {
+		if (!isset($this->data->builds) || empty($this->data->builds)) {
 			return true;
 		}
 		
