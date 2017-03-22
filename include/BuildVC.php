@@ -99,7 +99,8 @@ class BuildVC {
 	function updateDeps(string $stability = "stable")
 	{
 		$branch = $this->branch->config->getBranch();
-		$cmd = "phpsdk_deps -u -s $stability -b $branch -d " . dirname($this->build_dir) . "/deps";
+		$compiler = $this->branch->config->getCompiler();
+		$cmd = "phpsdk_deps -u -s $stability -b $branch -t $compiler -d " . dirname($this->build_dir) . "/deps";
 		$ret = exec_single_log($cmd, $this->build_dir, $this->env);
 		if (!$ret) {
 			throw new \Exception('dependencies update failed');
