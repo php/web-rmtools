@@ -214,25 +214,12 @@ class Branch {
 
 		$compiler	= strtolower($build['compiler']);
 		switch ($compiler) {
-			/* XXX scan the configs for compatible compiler list*/
-			case 'vc15':
-			case 'vc14':
-			case 'vc12':
-			case 'vc11':
-			case 'vc9':
-			case 'vc6':
-				$build = new BuildVC($this, $build_name);
-				break;
 			case 'icc':
 			case 'gcc':
 			case 'clang':
+				throw new \Exception("$compiler not supported yet. Not implemented.");
 			default:
-				if ($compiler) {
-					throw new \Exception("$compiler not supported yet. Not implemented.");
-				} else {
-					throw new \Exception("Unknown or unsupported compiler passed.");
-				}
-				break;
+				$build = new BuildVC($this, $build_name);
 		}
 
 		return $build;
