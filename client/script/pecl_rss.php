@@ -121,7 +121,7 @@ foreach($latest->item as $item) {
 		if (!$suspects) {
 			system($curl_cmd, $status);
 			/* This needs to be turned off after 7.1 GA */
-			copy("$name-$version.tgz", "$download_dir_pre" . DIRECTORY_SEPARATOR . "$name-$version.tgz");
+			//copy("$name-$version.tgz", "$download_dir_pre" . DIRECTORY_SEPARATOR . "$name-$version.tgz");
 
 			if ($status) {
 				echo "<$name-$version> download failed" . PHP_EOL;

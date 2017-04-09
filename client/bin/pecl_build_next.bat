@@ -5,6 +5,14 @@ rem first try releases, if there aren't any, look for snaps
 
 SET BAT_DIR=%~dp0
 
+cd c:\pecl-7.1-rebuild
+
+for /r %%i in (*) do (
+	call %BAT_DIR%pecl_build_all_7.1_rebuild.bat --upload --package=%%i
+	del %%i
+	goto ONLY_ONE
+)
+
 cd c:\pecl-in-pkg
 
 for /r %%i in (*) do (

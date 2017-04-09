@@ -42,14 +42,14 @@ ECHO running > c:\php-sdk\locks\pecl.lock
 rem Notice the --first and the --last calls marked, that's important
 rem to maintain the state between call for the same package. For instance
 rem if --aggregate-mail is used.
-call %BAT_DIR%pecl.bat --config=pecl70_x64 --first %* >> %LOG_FILE% 2<&1
+call %BAT_DIR%pecl.bat --config=pecl71_x64 --first %* >> %LOG_FILE% 2<&1
+call %BAT_DIR%pecl.bat --config=pecl71_x86 %* >> %LOG_FILE% 2<&1
+call %BAT_DIR%pecl.bat --config=pecl70_x64 %* >> %LOG_FILE% 2<&1
 call %BAT_DIR%pecl.bat --config=pecl70_x86 %* >> %LOG_FILE% 2<&1
 call %BAT_DIR%pecl.bat --config=pecl56_x64 %* >> %LOG_FILE% 2<&1
 call %BAT_DIR%pecl.bat --config=pecl56_x86 %* >> %LOG_FILE% 2<&1
 call %BAT_DIR%pecl.bat --config=pecl55_x64 %* >> %LOG_FILE% 2<&1
-call %BAT_DIR%pecl.bat --config=pecl55_x86 %* >> %LOG_FILE% 2<&1
-call %BAT_DIR%pecl.bat --config=pecl54 %* >> %LOG_FILE% 2<&1
-call %BAT_DIR%pecl.bat --config=pecl53 --last %* >> %LOG_FILE% 2<&1
+call %BAT_DIR%pecl.bat --config=pecl55_x86 --last %* >> %LOG_FILE% 2<&1
 
 echo Done.>> %LOG_FILE%
 
