@@ -86,19 +86,19 @@ for ($i = 0; $i < count($builds_top) && ($force || $branch->hasNewRevision()); $
 		}
 	}
 
-	if (strlen($last_rev) == 40) {
-		$last_rev = substr($last_rev, 0, 7);
-	}
-	$src_original_path =  $branch->createSourceSnap($build_type);
-
 	$build_dir_parent = $branch->config->getBuildLocation();
 
 	if (!is_dir($build_dir_parent)) {
-		if !(mkdir($build_dir_parent, 0777, true)) {
+		if(!mkdir($build_dir_parent, 0777, true)) {
 			echo "Couldn't create build location";
 			exit(-1);
 		}
 	}
+
+	if (strlen($last_rev) == 40) {
+		$last_rev = substr($last_rev, 0, 7);
+	}
+	$src_original_path =  $branch->createSourceSnap($build_type);
 
 	$toupload_dir = TMP_DIR . '/' . $branch_name . '/r' . $last_rev . '-builds/';
 	if (!is_dir($toupload_dir)) {
