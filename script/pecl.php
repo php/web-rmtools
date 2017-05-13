@@ -96,8 +96,10 @@ echo "Branch <$branch_name>" . PHP_EOL;
 $build_dir_parent = $branch->config->getBuildLocation();
 
 if (!is_dir($build_dir_parent)) {
-	echo "Invalid build location <$build_dir_parent>" . PHP_EOL;
-	exit(-1);
+	if !(mkdir($build_dir_parent, 0777, true)) {
+		echo "Couldn't create build location";
+		exit(-1);
+	}
 }
 
 $builds = $branch->getBuildList('windows');
