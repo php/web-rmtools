@@ -13,14 +13,14 @@ class PeclExt
 	protected $name;
 	protected $version;
 	protected $build;
-	protected $tar_cmd = 'c:\apps\git\bin\tar.exe';
-	protected $bsdtar_cmd = 'c:\apps\bsdtar\bin\bsdtar.exe';
-	protected $gzip_cmd = 'c:\apps\git\bin\gzip.exe';
-	protected $bzip2_cmd = 'c:\apps\git\bin\bzip2.exe';
-	protected $xz_cmd = 'c:\apps\xzutils\xz.exe';
-	protected $zip_cmd = 'c:\php-sdk\bin\zip.exe';
-	protected $unzip_cmd = 'c:\php-sdk\bin\unzip.exe';
-	protected $deplister_cmd = 'c:\apps\bin\deplister.exe';
+	protected $tar_cmd;
+	protected $bsdtar_cmd;
+	protected $gzip_cmd;
+	protected $bzip2_cmd;
+	protected $xz_cmd;
+	protected $zip_cmd;
+	protected $unzip_cmd;
+	protected $deplister_cmd;
 	protected $tmp_extract_path = NULL;
 	protected $ext_dir_in_src_path = NULL;
 	protected $package_xml = NULL;
@@ -35,6 +35,16 @@ class PeclExt
 
 	public function __construct($pkg_path, $build)
 	{
+		$this->tar_cmd = $this->getToolFilepath("tar.exe");
+		$this->bsdtar_cmd = $this->getToolFilepath("bsdtar.exe");
+		$this->gzip_cmd = $this->getToolFilepath("gzip.exe");
+		$this->bzip2_cmd = $this->getToolFilepath("bzip2.exe");
+		$this->xz_cmd = $this->getToolFilepath("xz.exe");
+		$this->zip_cmd = $this->getToolFilepath("zip.exe");
+		$this->unzip_cmd = $this->getToolFilepath("unzip.exe");
+		$this->deplister_cmd = $this->getToolFilepath("deplister.exe");
+		/* XXX handle pickle, for later */
+
 		if (!file_exists($pkg_path)) {
 			throw new \Exception("'$pkg_path' does not exist");
 		} 
@@ -322,6 +332,7 @@ class PeclExt
 		if (file_exists($tmp_path . DIRECTORY_SEPARATOR . 'composer.json')) {
 			$this->composer_json_path = $tmp_path . DIRECTORY_SEPARATOR . 'composer.json';
 		} else if ($this->package_xml_path) {
+			if (0) {
 			$package_xml_dir = dirname($this->package_xml_path);
 			$cmd = PHP_BINARY . " $this->pickle_phar convert " . $package_xml_dir;
 			$pickle_convert_out = shell_exec($cmd);
@@ -336,6 +347,7 @@ class PeclExt
 					"pickle convert fail for " . $this->pkg_basename,
 					$pickle_convert_out
 				);
+			}
 			}
 		}
 
@@ -1186,6 +1198,17 @@ nodoc:
 		$config = $this->getPackageConfig();
 
 		return $config && isset($config['ignore']);
+	}
+
+	protected function getToolFilepath($tool, $hard_error = true)
+	{
+		$path = `where $tool`;
+
+		if (!$path && $hard_error) {
+			throw new \Exception("'$tool' not found.");
+		}
+
+		return $path;
 	}
 }
 

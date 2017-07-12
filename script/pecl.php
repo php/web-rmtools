@@ -130,7 +130,7 @@ foreach ($builds as $build_name) {
 		$build->setSourceDir($build_src_path);
 	} catch (Exception $e) {
 		echo 'Error: ' . $e->getMessage() . PHP_EOL;
-		$build && $build->clean();
+		isset($build) && $build->clean();
 		$was_errors = true;
 
 		unset($build);
