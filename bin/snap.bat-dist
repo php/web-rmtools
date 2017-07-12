@@ -1,0 +1,3 @@
+@echo off
+
+c:\php-snap-build\php-sdk\phpsdk-vc15-x86.bat -t c:\php-snap-build\rmtools\bin\snapshot_task.bat --task-args "phpmaster all"
