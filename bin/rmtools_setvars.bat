@@ -1,5 +1,9 @@
 @echo off
 
+rem RMTOOLS specific, not expected to depend on the SDK
+
+set PHP_RMTOOLS_PHP_SDK_ROOT_PATH=c:\php-snap-build\php-sdk
+
 set PHP_RMTOOLS_BIN_PATH=%~dp0
 set PHP_RMTOOLS_BIN_PATH=%PHP_RMTOOLS_BIN_PATH:~0,-1%
 

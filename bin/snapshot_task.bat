@@ -1,5 +1,10 @@
 @ECHO OFF
 
+if not exist %~dp0rmtools_setvars.bat (
+	echo RMTOOLS is not setup, create %~dp0rmtools_setvars.bat
+	exit /b 3
+)
+
 rem must be on the env already
 if "%PHP_SDK_ROOT_PATH%"=="" (
 	echo PHP SDK is not setup

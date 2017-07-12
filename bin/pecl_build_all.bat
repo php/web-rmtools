@@ -1,8 +1,7 @@
 @ECHO OFF
 
-rem must be on the env already
-if "%PHP_SDK_ROOT_PATH%"=="" (
-	echo PHP SDK is not setup
+if not exist %~dp0rmtools_setvars.bat (
+	echo RMTOOLS is not setup, create %~dp0rmtools_setvars.bat
 	exit /b 3
 )
 call %~dp0rmtools_setvars.bat 
@@ -24,7 +23,7 @@ echo This is the PECL build batch script. You can see the help
 echo output of the underlaying worker below. Note that you HAVE
 echo TO ommit the --config option when running this batch.
 echo ==========================================================
-call "%PHP_SDK_ROOT_PATH%\phpsdk-starter.bat" -c vc14 -a x64 -t "%PHP_RMTOOLS_BIN_PATH%\pecl.bat"
+call "%PHP_RMTOOLS_PHP_SDK_ROOT_PATH%\phpsdk-starter.bat" -c vc14 -a x64 -t "%PHP_RMTOOLS_BIN_PATH%\pecl.bat"
 echo .
 exit /b 0
 
@@ -41,14 +40,12 @@ ECHO running > "%LOCK_FILE%"
 rem Notice the --first and the --last calls marked, that's important
 rem to maintain the state between call for the same package. For instance
 rem if --aggregate-mail is used.
-call "%PHP_SDK_ROOT_PATH%\phpsdk-starter.bat" -c vc14 -a x64 -t "%PHP_RMTOOLS_BIN_PATH%\pecl.bat" --task-args "--config=pecl70_x64 --first %*" >> "%LOG_FILE%" 2<&1
-call "%PHP_SDK_ROOT_PATH%\phpsdk-starter.bat" -c vc14 -a x64 -t "%PHP_RMTOOLS_BIN_PATH%\pecl.bat" --task-args "--config=pecl70_x86 %*" >> "%LOG_FILE%" 2<&1
-call "%PHP_SDK_ROOT_PATH%\phpsdk-starter.bat" -c vc14 -a x64 -t "%PHP_RMTOOLS_BIN_PATH%\pecl.bat" --task-args "--config=pecl56_x64 %*" >> "%LOG_FILE%" 2<&1
-call "%PHP_SDK_ROOT_PATH%\phpsdk-starter.bat" -c vc14 -a x64 -t "%PHP_RMTOOLS_BIN_PATH%\pecl.bat" --task-args "--config=pecl56_x86 %*" >> "%LOG_FILE%" 2<&1
-call "%PHP_SDK_ROOT_PATH%\phpsdk-starter.bat" -c vc14 -a x64 -t "%PHP_RMTOOLS_BIN_PATH%\pecl.bat" --task-args "--config=pecl55_x64 %*" >> "%LOG_FILE%" 2<&1
-call "%PHP_SDK_ROOT_PATH%\phpsdk-starter.bat" -c vc14 -a x64 -t "%PHP_RMTOOLS_BIN_PATH%\pecl.bat" --task-args "--config=pecl55_x86 %*" >> "%LOG_FILE%" 2<&1
-call "%PHP_SDK_ROOT_PATH%\phpsdk-starter.bat" -c vc14 -a x64 -t "%PHP_RMTOOLS_BIN_PATH%\pecl.bat" --task-args "--config=pecl54 %*" >> "%LOG_FILE%" 2<&1
-call "%PHP_SDK_ROOT_PATH%\phpsdk-starter.bat" -c vc14 -a x64 -t "%PHP_RMTOOLS_BIN_PATH%\pecl.bat" --task-args "--config=pecl53 --last %*" >> "%LOG_FILE%" 2<&1
+call "%PHP_RMTOOLS_PHP_SDK_ROOT_PATH%\phpsdk-starter.bat" -c vc14 -a x64 -t "%PHP_RMTOOLS_BIN_PATH%\pecl.bat" --task-args "--config=pecl71_x64 --first %*" >> "%LOG_FILE%" 2<&1
+call "%PHP_RMTOOLS_PHP_SDK_ROOT_PATH%\phpsdk-starter.bat" -c vc14 -a x86 -t "%PHP_RMTOOLS_BIN_PATH%\pecl.bat" --task-args "--config=pecl71_x86 %*" >> "%LOG_FILE%" 2<&1
+call "%PHP_RMTOOLS_PHP_SDK_ROOT_PATH%\phpsdk-starter.bat" -c vc14 -a x64 -t "%PHP_RMTOOLS_BIN_PATH%\pecl.bat" --task-args "--config=pecl70_x64 %*" >> "%LOG_FILE%" 2<&1
+call "%PHP_RMTOOLS_PHP_SDK_ROOT_PATH%\phpsdk-starter.bat" -c vc14 -a x86 -t "%PHP_RMTOOLS_BIN_PATH%\pecl.bat" --task-args "--config=pecl70_x86 %*" >> "%LOG_FILE%" 2<&1
+call "%PHP_RMTOOLS_PHP_SDK_ROOT_PATH%\phpsdk-starter.bat" -c vc14 -a x64 -t "%PHP_RMTOOLS_BIN_PATH%\pecl.bat" --task-args "--config=pecl56_x64 %*" >> "%LOG_FILE%" 2<&1
+call "%PHP_RMTOOLS_PHP_SDK_ROOT_PATH%\phpsdk-starter.bat" -c vc14 -a x86 -t "%PHP_RMTOOLS_BIN_PATH%\pecl.bat" --task-args "--config=pecl56_x86 --last %*" >> "%LOG_FILE%" 2<&1
 
 echo Done.>> "%LOG_FILE%"
 
