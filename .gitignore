@@ -3,3 +3,4 @@ data/db/*.json
 logs/*.log
 locks/*.lock
 bin/rmtools_setvars.bat
+tmp/*.zip
