@@ -9,7 +9,11 @@ if not exist %~dp0rmtools_setvars.bat (
 )
 call %dp0rmtools_setvars.bat 
 
-cd c:\pecl-in-pkg
+if not exist %PHP_RMTOOLS_PECL_IN_PKG_PATH% (
+	echo %PHP_RMTOOLS_PECL_IN_PKG_PATH% does not exist
+	exit /b 3
+)
+cd %PHP_RMTOOLS_PECL_IN_PKG_PATH%
 
 for /r %%i in (*) do (
 	call "%PHP_RMTOOLS_BIN_PATH%\pecl_build_all.bat" --upload --aggregate-mail --package=%%i
@@ -17,7 +21,11 @@ for /r %%i in (*) do (
 	goto ONLY_ONE
 )
 
-cd c:\pecl-in-pkg-nomail
+if not exist %PHP_RMTOOLS_PECL_IN_PKG_NOMAIL_PATH% (
+	echo %PHP_RMTOOLS_PECL_IN_PKG_NOMAIL_PATH% does not exist
+	exit /b 3
+)
+cd %PHP_RMTOOLS_PECL_IN_PKG_NOMAIL_PATH%
 
 for /r %%i in (*) do (
 	call "%PHP_RMTOOLS_BIN_PATH%\pecl_build_all.bat" --upload --package=%%i
@@ -25,7 +33,11 @@ for /r %%i in (*) do (
 	goto ONLY_ONE
 )
 
-cd c:\pecl-in-snap
+if not exist %PHP_RMTOOLS_PECL_IN_SNAP_PATH% (
+	echo %PHP_RMTOOLS_PECL_IN_SNAP_PATH% does not exist
+	exit /b 3
+)
+cd %PHP_RMTOOLS_PECL_IN_SNAP_PATH%
 
 for /r %%i in (*) do (
 	call "%PHP_RMTOOLS_BIN_PATH%\pecl_build_all.bat" --upload --is-snap --aggregate-mail --package=%%i
@@ -33,7 +45,11 @@ for /r %%i in (*) do (
 	goto ONLY_ONE
 )
 
-cd c:\pecl-in-snap-nomail
+if not exist %PHP_RMTOOLS_PECL_IN_SNAP_NOMAIL_PATH% (
+	echo %PHP_RMTOOLS_PECL_IN_SNAP_NOMAIL_PATH% does not exist
+	exit /b 3
+)
+cd %PHP_RMTOOLS_PECL_IN_SNAP_NOMAIL_PATH%
 
 for /r %%i in (*) do (
 	call "%PHP_RMTOOLS_BIN_PATH%\pecl_build_all.bat" --upload --is-snap --package=%%i
@@ -41,7 +57,11 @@ for /r %%i in (*) do (
 	goto ONLY_ONE
 )
 
-cd c:\pecl-in-snap-pre
+if not exist %PHP_RMTOOLS_PECL_IN_SNAP_PRE_PATH% (
+	echo %PHP_RMTOOLS_PECL_IN_SNAP_PRE_PATH% does not exist
+	exit /b 3
+)
+cd %PHP_RMTOOLS_PECL_IN_SNAP_PRE_PATH%
 
 for /r %%i in (*) do (
 	call "%PHP_RMTOOLS_BIN_PATH%\pecl_snap_pre.bat" --upload --is-snap --aggregate-mail --package=%%i
@@ -49,7 +69,11 @@ for /r %%i in (*) do (
 	goto ONLY_ONE
 )
 
-cd c:\pecl-in-snap-nomail-pre
+if not exist %PHP_RMTOOLS_PECL_IN_SNAP_NOMAIL_PRE_PATH% (
+	echo %PHP_RMTOOLS_PECL_IN_SNAP_NOMAIL_PRE_PATH% does not exist
+	exit /b 3
+)
+cd %PHP_RMTOOLS_PECL_IN_SNAP_NOMAIL_PRE_PATH%
 
 for /r %%i in (*) do (
 	call "%PHP_RMTOOLS_BIN_PATH%\pecl_snap_pre.bat" --upload --is-snap --package=%%i
