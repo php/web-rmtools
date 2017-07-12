@@ -7,7 +7,7 @@ if not exist %~dp0rmtools_setvars.bat (
 	echo RMTOOLS is not setup, create %~dp0rmtools_setvars.bat
 	exit /b 3
 )
-call %dp0rmtools_setvars.bat 
+call %~dp0rmtools_setvars.bat 
 
 if not exist %PHP_RMTOOLS_PECL_IN_PKG_PATH% (
 	echo %PHP_RMTOOLS_PECL_IN_PKG_PATH% does not exist
