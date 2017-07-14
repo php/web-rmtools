@@ -964,7 +964,11 @@ nodoc:
 			$max_php_ver = (string)$this->getPackageXmlProperty("dependencies", "required", "php", "max");
 			$php_ver = '';
 
-			$ver_hdr = $this->build->getSourceDir() . '/main/php_version.h';
+			$ver_dir = $this->build->getSourceDir();
+			if (!$ver_dir || !is_dir($ver_dir)) {
+				throw new \Exception("Could not stat source directory at '$ver_dir'.");
+			}
+			$ver_hdr = $ver_dir . '/main/php_version.h';
 			if(preg_match(',#define PHP_VERSION "(.*)",Sm', file_get_contents($ver_hdr), $m)) {
 				$php_ver = $m[1];
 			} else {
