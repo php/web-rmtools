@@ -47,8 +47,8 @@ rem call %BAT_DIR%pecl.bat --config=pecl55_x86 %* >> %LOG_FILE% 2<&1
 rem call %BAT_DIR%pecl.bat --config=pecl54 %* >> %LOG_FILE% 2<&1
 rem call %BAT_DIR%pecl.bat --config=pecl53 --last %* >> %LOG_FILE% 2<&1
 rem
-call %BAT_DIR%pecl.bat --config=pecl71_x86 --first %* >> %LOG_FILE% 2<&1
-call %BAT_DIR%pecl.bat --config=pecl71_x64 --last %* >> %LOG_FILE% 2<&1
+call %BAT_DIR%pecl.bat --config=pecl72_x86 --first %* >> %LOG_FILE% 2<&1
+call %BAT_DIR%pecl.bat --config=pecl72_x64 --last %* >> %LOG_FILE% 2<&1
 
 echo Done.>> %LOG_FILE%
 
