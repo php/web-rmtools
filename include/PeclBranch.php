@@ -104,6 +104,7 @@ class PeclBranch {
 			case 'icc':
 			case 'gcc':
 			case 'clang':
+			default:
 				throw new \Exception("$compiler not supported yet. Not implemented");
 				break;
 		}
