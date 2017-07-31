@@ -94,11 +94,10 @@ class PeclBranch {
 
 		$compiler	= strtolower($build_config['compiler']);
 		switch ($compiler) {
+			case 'vc15':
 			case 'vc14':
 			case 'vc12':
 			case 'vc11':
-			case 'vc9':
-			case 'vc6':
 				$build = new PeclBuildVC($this, $build_name);
 				break;
 			case 'icc':
