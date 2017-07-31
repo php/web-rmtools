@@ -15,6 +15,7 @@ $dump_all = isset($options['dump-all']);
 $help = isset($options['help']);
 $no_fetch = isset($options['no-fetch']);
 $force_fetch = isset($options['force-fetch']);
+$enable_pre = isset($options['enable-pre']);
 
 /* --help */
 if ($_SERVER['argc'] <= 1 || $help) {
@@ -24,6 +25,7 @@ if ($_SERVER['argc'] <= 1 || $help) {
 	echo "  --dump-all      Dump all the db rows, optional." . PHP_EOL;
 	echo "  --no-fetch      Only update db, don't fetch. Only used with --refresh, optional." . PHP_EOL;
 	echo "  --force-fetch   Fetch all the items and reupdate db. Only used with --refresh, optional." . PHP_EOL;
+	echo "  --enable-pre    Create an additional copy of package to build against an unstable PHP version, optional." . PHP_EOL;
 	echo "  --help          Show help and exit, optional." . PHP_EOL;
 	echo PHP_EOL;
 	echo "Example: pecl_rss --refresh" . PHP_EOL;
@@ -65,10 +67,11 @@ if (!isset($latest->item)) {
 	echo "No items could be found in $rss" . PHP_EOL;
 }
 
+/* FIXME Use a separate config for this! */
 $curl = 'C:\apps\bin\curl.exe';
 $get_url_tpl = 'https://pecl.php.net/get/{name}/{version}';
-$download_dir = 'c:\pecl-in-pkg';
-$download_dir_pre = 'c:\pecl-in-snap-pre';
+$download_dir = 'c:\php-snap-build\in-pkg\release';
+$download_dir_pre = 'c:\php-snap-build\in-pkg\snap-pre';
 
 foreach($latest->item as $item) {
 	if (!$item->title) {
@@ -120,8 +123,10 @@ foreach($latest->item as $item) {
 
 		if (!$suspects) {
 			system($curl_cmd, $status);
-			/* This needs to be turned off after 7.1 GA */
-			copy("$name-$version.tgz", "$download_dir_pre" . DIRECTORY_SEPARATOR . "$name-$version.tgz");
+
+			if ($enable_pre) {
+				copy("$name-$version.tgz", "$download_dir_pre" . DIRECTORY_SEPARATOR . "$name-$version.tgz");
+			}
 
 			if ($status) {
 				echo "<$name-$version> download failed" . PHP_EOL;
