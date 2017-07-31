@@ -53,14 +53,15 @@ class PeclBuildVC {
 			throw new \Exception("Compiler mismatch. PHP SDK is configured for '$sdk_vc', while the current RMTOOLS config targets '{$this->compiler}'");
 		}
 
-		$env = array();
+		$env = getenv();
+		/*$env = array();
 		$env['PATH'] = getenv('PATH') ;
 		$env['INCLUDE'] = getenv('INCLUDE');
 		$env['LIB'] = getenv('LIB');
 
 		$env['TMP'] = $env['TEMP'] = getenv('TEMP');
 		$env['SystemDrive'] = getenv('SystemDrive');
-		$env['SystemRoot'] = getenv('SystemRoot');
+		$env['SystemRoot'] = getenv('SystemRoot');*/
 
 		/* XXX Not sure, in how far the below is needed. */
 		/*
