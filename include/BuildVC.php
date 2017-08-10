@@ -123,7 +123,7 @@ class BuildVC {
 	function isPgoSetup()
 	{
 		$env = $this->env;
-		$env["PATH"] = dirname($this->build_dir) . DIRECTORY_SEPARATOR . "deps;" . $env["PATH"];
+		$env["Path"] = dirname($this->build_dir) . DIRECTORY_SEPARATOR . "deps;" . $env["Path"];
 
 		$cmd = 'phpsdk_pgo --ready';
 		$ret = exec_single_log($cmd, $this->build_dir, $env);
@@ -138,7 +138,7 @@ class BuildVC {
 	{
 		$this->log_pgo = isset($this->log_pgo) ? $this->log_pgo . "\n" : "";
 		$env = $this->env;
-		$env["PATH"] = dirname($this->build_dir) . DIRECTORY_SEPARATOR . "deps;" . $env["PATH"];
+		$env["Path"] = dirname($this->build_dir) . DIRECTORY_SEPARATOR . "deps" . DIRECTORY_SEPARATOR . "bin;" . $env["Path"];
 
 		$cmd = 'phpsdk_pgo --init';
 		$ret = exec_single_log($cmd, $this->build_dir, $env);
@@ -152,7 +152,7 @@ class BuildVC {
 	{
 		$this->log_pgo = isset($this->log_pgo) ? $this->log_pgo . "\n" : "";
 		$env = $this->env;
-		$env["PATH"] = dirname($this->build_dir) . DIRECTORY_SEPARATOR . "deps;" . $env["PATH"];
+		$env["Path"] = dirname($this->build_dir) . DIRECTORY_SEPARATOR . "deps" . DIRECTORY_SEPARATOR . "bin;" . $env["Path"];
 
 		$cmd = 'phpsdk_pgo --train';
 		$ret = exec_single_log($cmd, $this->build_dir, $env);
@@ -169,6 +169,9 @@ class BuildVC {
 		/* old build may have been stoped */
 		if (is_dir($this->obj_dir) && $rm_obj === true) {
 			rmdir_rf($this->obj_dir);
+		}
+		if (is_dir($this->obj_dir)) {
+			$this->clean();
 		}
 		mkdir($this->obj_dir, 0655, true);
 		$ret = exec_single_log($cmd, $this->build_dir, $this->env);
