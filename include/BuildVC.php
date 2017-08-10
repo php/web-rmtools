@@ -120,6 +120,41 @@ class BuildVC {
 		$this->log_buildconf = $ret['log'];
 	}
 
+	function isPgoSetup()
+	{
+		$cmd = 'phpsdk_pgo --ready';
+		$ret = exec_single_log($cmd, $this->build_dir, $this->env);
+		if (!$ret) {
+			throw new \Exception('phpsdk_pgo --ready failed');
+		}
+
+		return 0 == $ret["return_value"];
+	}
+
+	function pgoInit()
+	{
+		$this->log_pgo = isset($this->log_pgo) ? $this->log_pgo . "\n" : "";
+
+		$cmd = 'phpsdk_pgo --init';
+		$ret = exec_single_log($cmd, $this->build_dir, $this->env);
+		if (!$ret || 0 != $ret["return_value"]) {
+			throw new \Exception('phpsdk_pgo --init failed');
+		}
+		$this->log_pgo .= $ret["log"];
+	}
+
+	function pgoTrain()
+	{
+		$this->log_pgo = isset($this->log_pgo) ? $this->log_pgo . "\n" : "";
+
+		$cmd = 'phpsdk_pgo --train';
+		$ret = exec_single_log($cmd, $this->build_dir, $this->env);
+		if (!$ret || 0 != $ret["return_value"]) {
+			throw new \Exception('phpsdk_pgo --train failed');
+		}
+		$this->log_pgo .= $ret["log"];
+	}
+
 	function configure($extra = false, $rm_obj = true)
 	{
 		$args = $this->branch->config->getConfigureOptions($this->build_name) . ($extra ?: $extra);

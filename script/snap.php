@@ -65,27 +65,6 @@ for ($i = 0; $i < count($builds_top) && ($force || $branch->hasNewRevision()); $
 	$have_build_run = true;
 	echo "processing revision $last_rev\n";
 
-	if ($branch->config->getPGO() == 1) {  // Check revision to maintain concurrent builds
-		$fh = fopen(getenv("PHP_RMTOOLS_LOCK_PATH") . "/snaps_".$build_type.".lock", "a");
-		fwrite($fh, "$last_rev");
-		fclose($fh);
-		if (strcmp($build_type, 'nts') == 0) {
-			if (!file_exists(getenv("PHP_RMTOOLS_LOCK_PATH") . "/snaps_ts.lock"))  {
-				echo "Waiting for thread-safe build, exiting.\n";
-				exit(0);
-			}
-			else {
-				$fh = fopen(getenv("PHP_RMTOOLS_LOCK_PATH") . "/snaps_ts.lock", "r");
-				$data = fread($fh, filesize(getenv("PHP_RMTOOLS_LOCK_PATH") . "/snaps_ts.lock"));
-				fclose($fh);
-				if (!preg_match("/$last_rev/", $data)) {
-					echo "Revision mismatch on concurrent builds, waiting for ts build to complete\n";
-					exit(0);
-				}
-			}
-		}
-	}
-
 	$build_dir_parent = $branch->config->getBuildLocation();
 
 	if (!is_dir($build_dir_parent)) {
@@ -143,6 +122,18 @@ for ($i = 0; $i < count($builds_top) && ($force || $branch->hasNewRevision()); $
 			echo "running build in <$build_src_path>\n";
 			$build->buildconf();
 			if ($branch->config->getPGO() == 1)  {
+				/* For now it is enough to just get a very same
+				build of PHP to setup the environment. This
+				only needs to be done once for setup. In further
+				also, if there are any difference with TS/NTS,
+				 there might be some separate setup needed. */
+				if (!$build->isPgoSetup()) {
+					echo "Preparing PGO training environment\n";
+					$build->configure();
+					$build->make();
+					$build->pgoInit();
+					$build->make(' clean-all');
+				}
 				echo "Creating PGI build\n";
 				$build->configure(' "--enable-pgi" ');
 			}
@@ -150,37 +141,30 @@ for ($i = 0; $i < count($builds_top) && ($force || $branch->hasNewRevision()); $
 				$build->configure();
 			}
 			$build->make();
-			$html_make_log = $build->getMakeLogParsed();
-			$build->makeArchive();
+			/* $html_make_log = $build->getMakeLogParsed(); */
 		} catch (Exception $e) {
 			echo $e->getMessage() . "\n";
 			echo $build->log_buildconf;
 		}
 		if ($branch->config->getPGO() == 1)  {
-			if ($build->archive_path) {
-				echo "Running pgo_controller.ps1 with PGI build at $build->archive_path, ver=$branch_name, opcache=0\n";
-				$cmd = 'c:\windows\system32\WindowsPowerShell\v1.0\powershell.exe -NonInteractive -Command C:\php-sdk\pgo-build\pgo_controller.ps1 -PHPBUILD '. $build->archive_path . ' -PHPVER ' . $branch_name;
-				$pgolog = rm\exec_single_log($cmd);
-				print_r($pgolog);
-				if ( preg_match('/5\.5/', $branch_name) )  {
-					echo "Running pgo_controller.ps1 with PGI build at $build->archive_path, ver=$branch_name, opcache=1\n";
-					$cmd = 'c:\windows\system32\WindowsPowerShell\v1.0\powershell.exe -NonInteractive -Command C:\php-sdk\pgo-build\pgo_controller.ps1 -PHPBUILD '. $build->archive_path . ' -PHPVER ' . $branch_name . ' -OPCACHE 1';
-					$pgolog = rm\exec_single_log($cmd);
-					print_r($pgolog);
-				}
-
-				echo "Creating PGO build\n";
-				try {
-					$build->make(' clean-pgo');
-					$build->configure(' "--with-pgo" ', false);
-					$build->make();
-					$html_make_log = $build->getMakeLogParsed();
-					$build->makeArchive();
-				} catch (Exception $e) {
-					echo $e->getMessage() . "\n";
-					echo $build->log_buildconf;
-				}
+			echo "Creating PGO build\n";
+			try {
+				$build->pgoTrain();
+				$build->make(' clean-pgo');
+				$build->configure(' "--with-pgo" ', false);
+				$build->make();
+				$html_make_log = $build->getMakeLogParsed();
+			} catch (Exception $e) {
+				echo $e->getMessage() . "\n";
+				echo $build->log_buildconf;
 			}
+		}
+
+		try {
+			$build->makeArchive();
+		} catch (Exception $e) {
+			echo $e->getMessage() . "\n";
+			echo $build->log_buildconf;
 		}
 
 		if ($build->archive_path) {
@@ -201,6 +185,9 @@ for ($i = 0; $i < count($builds_top) && ($force || $branch->hasNewRevision()); $
 		file_put_contents($toupload_dir . '/logs/configure-' . $build_name . '-r'. $last_rev . '.txt', $build->log_configure);
 		file_put_contents($toupload_dir . '/logs/make-'      . $build_name . '-r'. $last_rev . '.txt', $build->log_make);
 		file_put_contents($toupload_dir . '/logs/archive-'   . $build_name . '-r'. $last_rev . '.txt', $build->log_archive);
+		if ($branch->config->getPGO() == 1)  {
+			file_put_contents($toupload_dir . '/logs/pgo-'   . $build_name . '-r'. $last_rev . '.txt', $build->log_pgo);
+		}
 
 		$html_make_log = $build->getMakeLogParsed();
 		file_put_contents($toupload_dir . '/logs/make-' . $build_name . '-r'. $last_rev . '.html', $html_make_log);
