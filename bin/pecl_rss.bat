@@ -12,13 +12,13 @@ if "%1"=="/?" goto :help
 goto :skip_help
 
 :help
-%PECL_RSS_CMD% %PHP_RMTOOLS_SCRIPT_PATH%\script\pecl_rss.php
+%PECL_RSS_CMD% %PHP_RMTOOLS_SCRIPT_PATH%\pecl_rss.php
 GOTO EXIT_LOCKED
 
 :skip_help
 
 
-%PECL_RSS_CMD% %PHP_RMTOOLS_SCRIPT_PATH%\script\pecl_rss.php %*
+%PECL_RSS_CMD% %PHP_RMTOOLS_SCRIPT_PATH%\pecl_rss.php %*
 
 :EXIT_LOCKED
 echo .
