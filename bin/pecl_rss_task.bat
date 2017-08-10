@@ -18,7 +18,7 @@ echo output of the underlaying worker below. This script will
 echo fetch the items from the current RSS feed, download and
 echo put them into the build queue. 
 echo ==========================================================
-call %PHP_RMTOOLS_SCRIPT_PATH%\pecl_rss.bat
+call %PHP_RMTOOLS_BIN_PATH%\pecl_rss.bat
 GOTO EXIT_LOCKED
 
 :skip_help
@@ -31,7 +31,7 @@ GOTO EXIT_LOCKED
 ECHO running > %PHP_RMTOOLS_LOCK_PATH%\pecl-rss.lock
 
 
-call %PHP_RMTOOLS_SCRIPT_PATH%\pecl_rss.bat %* >> %LOG_FILE% 2<&1
+call %PHP_RMTOOLS_BIN_PATH%\pecl_rss.bat %* >> %LOG_FILE% 2<&1
 
 echo Done.>> %LOG_FILE%
 
