@@ -170,10 +170,9 @@ class BuildVC {
 		if (is_dir($this->obj_dir) && $rm_obj === true) {
 			rmdir_rf($this->obj_dir);
 		}
-		if (is_dir($this->obj_dir)) {
-			$this->clean();
+		if (!is_dir($this->obj_dir)) {
+			mkdir($this->obj_dir, 0655, true);
 		}
-		mkdir($this->obj_dir, 0655, true);
 		$ret = exec_single_log($cmd, $this->build_dir, $this->env);
 		if (!$ret) {
 			throw new \Exception('Configure failed');

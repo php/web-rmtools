@@ -127,15 +127,16 @@ for ($i = 0; $i < count($builds_top) && ($force || $branch->hasNewRevision()); $
 				only needs to be done once for setup. In further
 				also, if there are any difference with TS/NTS,
 				 there might be some separate setup needed. */
+				$rm_obj_dir = false;
 				if (!$build->isPgoSetup()) {
 					echo "Preparing PGO training environment\n";
 					$build->configure();
 					$build->make();
 					$build->pgoInit();
-					$build->make(' clean-all');
+					$rm_obj_dir = true;
 				}
 				echo "Creating PGI build\n";
-				$build->configure(' "--enable-pgi" ');
+				$build->configure(' "--enable-pgi" ', $rm_obj_dir);
 			}
 			else {
 				$build->configure();
