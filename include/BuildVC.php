@@ -122,8 +122,11 @@ class BuildVC {
 
 	function isPgoSetup()
 	{
+		$env = $this->env;
+		$env["PATH"] = dirname($this->build_dir) . DIRECTORY_SEPARATOR . "deps;" . $env["PATH"];
+
 		$cmd = 'phpsdk_pgo --ready';
-		$ret = exec_single_log($cmd, $this->build_dir, $this->env);
+		$ret = exec_single_log($cmd, $this->build_dir, $env);
 		if (!$ret) {
 			throw new \Exception('phpsdk_pgo --ready failed');
 		}
@@ -134,9 +137,11 @@ class BuildVC {
 	function pgoInit()
 	{
 		$this->log_pgo = isset($this->log_pgo) ? $this->log_pgo . "\n" : "";
+		$env = $this->env;
+		$env["PATH"] = dirname($this->build_dir) . DIRECTORY_SEPARATOR . "deps;" . $env["PATH"];
 
 		$cmd = 'phpsdk_pgo --init';
-		$ret = exec_single_log($cmd, $this->build_dir, $this->env);
+		$ret = exec_single_log($cmd, $this->build_dir, $env);
 		if (!$ret || 0 != $ret["return_value"]) {
 			throw new \Exception('phpsdk_pgo --init failed');
 		}
@@ -146,9 +151,11 @@ class BuildVC {
 	function pgoTrain()
 	{
 		$this->log_pgo = isset($this->log_pgo) ? $this->log_pgo . "\n" : "";
+		$env = $this->env;
+		$env["PATH"] = dirname($this->build_dir) . DIRECTORY_SEPARATOR . "deps;" . $env["PATH"];
 
 		$cmd = 'phpsdk_pgo --train';
-		$ret = exec_single_log($cmd, $this->build_dir, $this->env);
+		$ret = exec_single_log($cmd, $this->build_dir, $env);
 		if (!$ret || 0 != $ret["return_value"]) {
 			throw new \Exception('phpsdk_pgo --train failed');
 		}
