@@ -5,7 +5,7 @@ include __DIR__ . '/../include/PeclDb.php';
 
 use rmtools as rm;
 
-$longopts = array("help", "refresh", "dump-queue", "dump-all", "no-fetch", "force-fetch");
+$longopts = array("help", "refresh", "dump-queue", "dump-all", "no-fetch", "force-fetch", "enable-pre");
 
 $options = getopt(NULL, $longopts);
 

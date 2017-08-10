@@ -1,10 +1,8 @@
 @echo off
 
-SET BAT_DIR=%~dp0
+call %~dp0rmtools_setvars.bat
 
-set LOG_FILE=c:\php-sdk\logs\task-pecl-rss.log
-
-set PECL_RSS_CMD=c:\php-sdk\php\php.exe -d extension_dir=c:\php-sdk\php\ext -d extension=php_openssl.dll -d extension=php_curl.dll -d extension=php_sqlite3.dll -d date.timezone=UTC %BAT_DIR%\..\script\pecl_rss.php %* >> %LOG_FILE% 2<&1
+set LOG_FILE=%PHP_RMTOOLS_LOG_PATH%\task-pecl-rss.log
 
 
 if "%1"=="" goto :help
@@ -20,24 +18,24 @@ echo output of the underlaying worker below. This script will
 echo fetch the items from the current RSS feed, download and
 echo put them into the build queue. 
 echo ==========================================================
-call %BAT_DIR%pecl_rss.bat
+call %PHP_RMTOOLS_SCRIPT_PATH%\pecl_rss.bat
 GOTO EXIT_LOCKED
 
 :skip_help
 
-IF EXIST c:\php-sdk\locks\pecl-rss.lock (
+IF EXIST %PHP_RMTOOLS_LOCK_PATH%\pecl-rss.lock (
 ECHO Pecl build script is already running.
 GOTO EXIT_LOCKED
 )
 
-ECHO running > c:\php-sdk\locks\pecl-rss.lock 
+ECHO running > %PHP_RMTOOLS_LOCK_PATH%\pecl-rss.lock
 
 
-call %BAT_DIR%pecl_rss.bat %* >> %LOG_FILE% 2<&1
+call %PHP_RMTOOLS_SCRIPT_PATH%\pecl_rss.bat %* >> %LOG_FILE% 2<&1
 
 echo Done.>> %LOG_FILE%
 
-del c:\php-sdk\locks\pecl-rss.lock >> %LOG_FILE% 2<&1
+del %PHP_RMTOOLS_LOCK_PATH%\pecl-rss.lock >> %LOG_FILE% 2<&1
 
 :EXIT_LOCKED
 echo .
