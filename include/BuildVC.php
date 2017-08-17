@@ -123,7 +123,7 @@ class BuildVC {
 	function isPgoSetup()
 	{
 		$env = $this->env;
-		$env["Path"] = dirname($this->build_dir) . DIRECTORY_SEPARATOR . "deps;" . $env["Path"];
+		$env["Path"] = dirname($this->build_dir) . DIRECTORY_SEPARATOR . "deps" . DIRECTORY_SEPARATOR . "bin;" . $env["Path"];
 
 		$cmd = 'phpsdk_pgo --ready';
 		$ret = exec_single_log($cmd, $this->build_dir, $env);
