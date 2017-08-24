@@ -154,12 +154,17 @@ class BuildVC {
 		$env = $this->env;
 		$env["Path"] = dirname($this->build_dir) . DIRECTORY_SEPARATOR . "deps" . DIRECTORY_SEPARATOR . "bin;" . $env["Path"];
 
-		$cmd = 'phpsdk_pgo --train';
-		$ret = exec_single_log($cmd, $this->build_dir, $env);
-		if (!$ret || 0 != $ret["return_value"]) {
-			throw new \Exception('phpsdk_pgo --train failed');
+		foreach (array("default", "cache") as $scenario) {
+			$cmd = 'phpsdk_pgo --train --scenario=' . $scenario;
+			$ret = exec_single_log($cmd, $this->build_dir, $env);
+			if (!$ret || 0 != $ret["return_value"]) {
+				if ($ret["log"]) {
+					$this->log_pgo .= $ret["log"];
+				}
+				throw new \Exception("'$cmd' failed");
+			}
+			$this->log_pgo .= $ret["log"];
 		}
-		$this->log_pgo .= $ret["log"];
 	}
 
 	function configure($extra = false, $rm_obj = true)
