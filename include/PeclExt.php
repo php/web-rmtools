@@ -884,15 +884,19 @@ if (!function_exists('rmtools\combinations')) {
 nodoc:
 
 		/* pack */
-		/* XXX implement the packaging of original fs structure from package.xml */
+		$old_cwd = getcwd();
+		chdir($target);
 		$zip_file = TMP_DIR . DIRECTORY_SEPARATOR . $this->getPackageName() . '.zip';
 		foreach ($files_to_zip as $file_to_zip) {
-			$zip_cmd = $this->zip_cmd . ' -9 ' . $zip_file . ' ' . $file_to_zip;
+			$actual_fn = substr($file_to_zip, strlen($target)+1)
+			$zip_cmd = $this->zip_cmd . ' -9 ' . $zip_file . ' ' . $actual_fn;
 			system($zip_cmd, $status);
 			if ($status) {
+				chdir($old_cwd);
 				throw new \Exception("Couldn't zip files for '$zip_file'");
 			}
 		}
+		chdir($old_cwd);
 
 		return $zip_file;
 	}
