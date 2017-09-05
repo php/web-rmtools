@@ -852,7 +852,7 @@ if (!function_exists('rmtools\combinations')) {
 
 				$tgt_fl = $target
 					. DIRECTORY_SEPARATOR
-					. basename((string)$file["name"]);
+					. (string)$file["name"];
 
 				if (file_exists($tgt_fl)) {
 					continue;
@@ -862,7 +862,14 @@ if (!function_exists('rmtools\combinations')) {
 				if (in_array($tgt_fl, $files_to_zip)) {
 					continue;
 				}
-	
+
+				$tgt_dir = dirname($tgt_fl);
+				if (!is_dir($tgt_dir)) {
+					if (!mkdir($tgt_dir, 0777, true)) {
+						throw new \Exception("Failed to create '$tgt_dir'");
+					}
+				}
+
 				if (!copy($src_fl, $tgt_fl)) {
 					/* XXX actually it's not fatal, lets observe */
 					throw new \Exception("Failed to copy doc file '$src_fl' "
