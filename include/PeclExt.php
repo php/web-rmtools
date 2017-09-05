@@ -341,12 +341,12 @@ class PeclExt
 				$this->composer_json_path = $package_xml_dir . DIRECTORY_SEPARATOR . "composer.json";
 			} else {
 				/* XXX mail these errors to the package maintainers later in the main script pecl.php */
-				xmail(
+				/*xmail(
 					NULL,
 					'ab@php.net',
 					"pickle convert fail for " . $this->pkg_basename,
 					$pickle_convert_out
-				);
+				);*/
 			}
 			//}
 		}
