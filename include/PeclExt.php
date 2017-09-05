@@ -888,7 +888,7 @@ nodoc:
 		chdir($target);
 		$zip_file = TMP_DIR . DIRECTORY_SEPARATOR . $this->getPackageName() . '.zip';
 		foreach ($files_to_zip as $file_to_zip) {
-			$actual_fn = substr($file_to_zip, strlen($target)+1)
+			$actual_fn = substr($file_to_zip, strlen($target)+1);
 			$zip_cmd = $this->zip_cmd . ' -9 ' . $zip_file . ' ' . $actual_fn;
 			system($zip_cmd, $status);
 			if ($status) {
