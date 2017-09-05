@@ -1206,11 +1206,16 @@ nodoc:
 
 	protected function getToolFilepath($tool, $hard_error = true)
 	{
-		$path = `where $tool`;
-		$path = trim($path);
+		$path = NULL;
 
-		if (!$path && $hard_error) {
+		exec("where $tool", $out, $st);
+
+		if (($st || count($out) < 1) && $hard_error) {
 			throw new \Exception("'$tool' not found.");
+		}
+
+		if (isset($out[0])) {
+			$path = trim($out[0]);
 		}
 
 		return $path;
