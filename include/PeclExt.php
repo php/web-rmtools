@@ -872,6 +872,8 @@ if (!function_exists('rmtools\combinations')) {
 				$files_to_zip[] = $tgt_fl;
 			}
 		}
+
+		$files_to_zip = array_unique($files_to_zip);
 nodoc:
 
 		/* pack */
