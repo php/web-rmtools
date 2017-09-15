@@ -6,6 +6,7 @@ include __DIR__ . '/Repository.php';
 include __DIR__ . '/BuildVC.php';
 
 class Branch {
+	const REQUIRED_BUILDS_NUM = 4;
 	public $last_revision;
 	public $last_revision_has_snap;
 	public $config;
@@ -47,6 +48,8 @@ class Branch {
 			$data->revision_last = NULL;
 			$data->revision_previous = NULL;
 			$data->revision_last_exported = NULL;
+			$data->build_num = 0;
+			$data->builds = array();
 		}
 		
 		return $data;
@@ -63,13 +66,27 @@ class Branch {
 		$builds = $this->config->getBuildList();
 
 		if (!empty($builds)) {
-			foreach ($builds as $n => $v) {
-				if (in_array($n, $this->data->builds) && $this->hasUnfinishedBuild()) {
+			if ($build_name) {
+				if (in_array($build_name, $this->data->builds) && $this->hasUnfinishedBuild()) {
 					throw new \Exception("Builds for '$n' are already done or in progress");
 				}
-				$this->data->builds[] = $n;
-				if ($build_name && $n == $build_name) {
-					break;
+				$found = 0;
+				foreach ($builds as $n => $v) {
+					if ($n == $build_name) {
+						$found = 1;
+						$this->data->builds[] = $n;
+						break;
+					}
+				}
+				if (!$found) {
+					throw new \Exception("Build name '$build_name' is not on the supported build list.");
+				}
+			} else {
+				foreach ($builds as $n => $v) {
+					if (in_array($n, $this->data->builds) && $this->hasUnfinishedBuild()) {
+						throw new \Exception("Builds for '$n' are already done or in progress");
+					}
+					$this->data->builds[] = $n;
 				}
 			}
 		} else {
@@ -85,19 +102,20 @@ class Branch {
 			throw new \Exception("last revision id is empty");
 		}
 	
-		if ($this->requiredBuildRunsReached() && $this->hasNewRevision()) {
+		if ($this->requiredBuildRunsReached() && $this->hasNewRevision() || NULL == $this->data->revision_last) {
 			$this->data->revision_previous = $this->data->revision_last;
 			$this->data->revision_last = $last_id;
 		}
 
 		if ($this->requiredBuildRunsReached()) {
 			$this->data->builds = array();
+			$this->data->build_num = 0;
 		}
 		
 		if ($this->hasUnfinishedBuild()) {
 			$this->addBuildList($build_name);
 		}
-		
+
 		$this->writeData();
 		
 		return true;
@@ -110,19 +128,16 @@ class Branch {
 	
 	public function requiredBuildRunsReached()
 	{
-		/* XXX 4 stands for all the combinations, scan the files to get this number from there instead of hardcoding. */
-		if (!isset($this->data->builds) || empty($this->data->builds)) {
-			return true;
-		}
-		
-		return count($this->data->builds) == 4;
+		$data = $this->readdata();
+		$this->data->build_num = $data->build_num;
+		return $this->data->build_num == self::REQUIRED_BUILDS_NUM;
 	}
 	
 	public function hasNewRevision()
 	{
 		$last = $this->repo->getLastCommitId();
 
-		return $last && !$this->isLastRevisionExported($last);
+		return $last && !$this->isLastRevisionExported($last) || is_null($data->revision_last);
 	}
 
 	public function export($revision = false, $build_type = false, $zip = false, $is_zip = false)
@@ -248,5 +263,17 @@ class Branch {
 		}
 
 		return $build;
+	}
+
+	function buildFinished()
+	{
+		$this->data = $this->readdata();
+		$this->data->build_num++;
+		$this->writeData();
+	}
+
+	function numBuildsRunning()
+	{
+		return count($this->data->builds);
 	}
 }

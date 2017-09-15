@@ -28,6 +28,11 @@ try {
 	goto out_here;
 }
 
+if (!$branch->requiredBuildRunsReached() && rm\Branch::REQUIRED_BUILDS_NUM == $branch->numBuildsRunning()) {
+	$err_msg = "Waiting for " . $branch->getLastRevisionId() . " builds to finish.";
+	goto out_here;
+}
+
 $branch_name = $branch->config->getName();
 $branch_name_short = $branch->config->getBranch();
 
@@ -35,17 +40,6 @@ echo "Running <" . realpath($config_path) . ">\n";
 echo "\t$branch_name\n";
 
 if ($branch->hasNewRevision() || $branch->hasUnfinishedBuild() || $force) {
-
-
-/* Prepared rewritten part, which might be helpful for PGO integration later. */
-/*$builds_top = $branch->getBuildList('windows');
-for ($i = 0; $i < count($builds_top) && ($force || $branch->hasNewRevision()); $i++) {
-	if (preg_match(",(ts|nts),", $builds_top[$i], $m)) {
-		$build_type = $m[0];
-	} else {
-		echo "Unknown build type '{$builds_top[$i]}', skip\n";
-		continue;
-	}*/
 	
 	try {
 		if (!$branch->update("all" == $build_type ? NULL : $build_type)) {
@@ -215,7 +209,10 @@ for ($i = 0; $i < count($builds_top) && ($force || $branch->hasNewRevision()); $
 		
 //			$build->clean();
 		rmdir($build_src_path);
+
+		$branch->buildFinished();
 	}
+
 
 	/* Only upload once, and then cleanup. */
 	if ($branch->requiredBuildRunsReached()) {
