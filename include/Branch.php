@@ -58,7 +58,7 @@ class Branch {
 		return file_put_contents($this->db_path, $json, LOCK_EX);
 	}
 
-	private function addBuildList()
+	private function addBuildList($build_name = NULL)
 	{
 		$builds = $this->config->getBuildList();
 
@@ -68,13 +68,16 @@ class Branch {
 					throw new \Exception("Builds for '$n' are already done or in progress");
 				}
 				$this->data->builds[] = $n;
+				if ($build_name && $n == $build_name) {
+					break;
+				}
 			}
 		} else {
 				throw new \Exception("No build configuration");
 		}
 	}
 
-	public function update()
+	public function update($build_name = NULL)
 	{
 		$last_id = $this->repo->getLastCommitId();
 		
@@ -92,7 +95,7 @@ class Branch {
 		}
 		
 		if ($this->hasUnfinishedBuild()) {
-			$this->addBuildList();
+			$this->addBuildList($build_name);
 		}
 		
 		$this->writeData();

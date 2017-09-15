@@ -48,7 +48,7 @@ for ($i = 0; $i < count($builds_top) && ($force || $branch->hasNewRevision()); $
 	}*/
 	
 	try {
-		if (!$branch->update()) {
+		if (!$branch->update("all" == $build_type ? NULL : $build_type)) {
 			goto out_here;
 		}
 	} catch (\Exception $e) {
