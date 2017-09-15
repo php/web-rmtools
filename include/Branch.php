@@ -147,7 +147,7 @@ class Branch {
 			if (!$res) {
 				throw new \Exception("Unzipping $exportfile failed.");
 			}
-			$gitname = $build_dir . '/php-src-' . strtoupper($this->config->getName()) . '-' . $rev_name;
+			$gitname = $extract_dir . '/php-src-' . strtoupper($this->config->getName()) . '-' . $rev_name;
 			if (true !== rename($gitname, $target)) {
 				throw new \Exception("Failed to rename '$gitname' to '$target'");
 			}
