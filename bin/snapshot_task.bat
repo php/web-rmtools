@@ -23,7 +23,7 @@ rem 	ECHO Snapshot script is already running.
 rem 	GOTO EXIT_LOCKED
 rem )
 
-ECHO running > %LOCK_FILE% 
+rem ECHO running > %LOCK_FILE% 
 
 if not exist "%PHP_RMTOOLS_ROOT_PATH%\data\config\credentials_ftps.php" (
 	echo FTP config %PHP_SDK_ROOT_PATH%\data\config\credentials_ftps.php not found >> %LOG_FILE% 2<&1
