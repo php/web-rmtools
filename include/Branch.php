@@ -272,6 +272,15 @@ class Branch {
 		$this->writeData();
 	}
 
+	function resetBuildNum()
+	{
+		if (rm\Branch::REQUIRED_BUILDS_NUM <= $branch->numBuildsRunning()) {
+			$this->data = $this->readdata();
+			$this->data->build_num = 0;
+			$this->writeData();
+		}
+	}
+
 	function numBuildsRunning()
 	{
 		return count($this->data->builds);
