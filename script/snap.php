@@ -89,8 +89,8 @@ if ($branch->hasNewRevision() || $branch->hasUnfinishedBuild() || $force) {
 	$build_errors = array();
 
 	foreach ($builds as $build_name) {
-		if (strcmp($build_type, 'all') != 0) {
-			if (substr_compare($build_name, $build_type, 0, 2) != 0) {  // i.e. nts-windows-vc9-x86
+		if ($build_type != 'all') {
+			if ($build_name != $build_type) {  // i.e. nts-windows-vc9-x86
 				continue;
 			}
 			else  {
