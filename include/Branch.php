@@ -137,13 +137,24 @@ class Branch {
 			}
 		}
 		elseif ($is_zip === true)  {
-			$cmd = 'unzip -q -o ' . $exportfile . ' -d ' . $build_dir;
+			$extract_dir = $build_dir . DIRECTORY_SEPARATOR . "$build_type-$rev_name-tmp-unzip";
+			if (true !== mkdir($extract_dir)) {
+				throw new \Exception("Could not create temporary exctract dir under '$extract_dir'.");
+			}
+
+			$cmd = 'unzip -q -o ' . $exportfile . ' -d ' . $extract_dir;
 			$res = exec_single_log($cmd);
 			if (!$res) {
 				throw new \Exception("Unzipping $exportfile failed.");
 			}
 			$gitname = $build_dir . '/php-src-' . strtoupper($this->config->getName()) . '-' . $rev_name;
-			rename($gitname, $target);
+			if (true !== rename($gitname, $target)) {
+				throw new \Exception("Failed to rename '$gitname' to '$target'");
+			}
+
+			if (true !== rmdir($extract_dir)) {
+				throw new \Exception("Could not remove temporary exctract dir under '$extract_dir'.");
+			}
 		}
 
 		$target = realpath($target);
