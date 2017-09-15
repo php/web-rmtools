@@ -12,7 +12,7 @@ if ($argc < 2 || $argc > 4) {
 
 $have_build_run = false;
 $branch_name = $argv[1];
-$build_type = "all"; /* $argv[2] */ /* Build both ts and NTS for one given arch. This also complies with the top level script, otherwise it'd need a special SDK setup. */
+$build_type = $argv[2];
 $force = isset($argv[3]) && $argv[3] ? true : false;
 $sdk_arch = getenv("PHP_SDK_ARCH");
 if (!$sdk_arch) {
