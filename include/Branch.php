@@ -30,7 +30,18 @@ class Branch {
 	protected function readData()
 	{
 		if (file_exists($this->db_path)) {
-			$data = json_decode(file_get_contents($this->db_path));
+			$fd = fopen($this->db_path, "rb");
+			if (!$fd) {
+				throw new \Exception("Failed to open {$this->db_path}.");
+			}
+			flock($fd, LOCK_SH);
+			$j = "";
+			while(!feof($fd)) {
+				$j .= fread($fd, 1024);
+			}
+			$data = json_decode($j);
+			flock($fd, LOCK_UN);
+			fclose($fd);
 		} else {
 			$data = new \StdClass;
 			$data->revision_last = NULL;
