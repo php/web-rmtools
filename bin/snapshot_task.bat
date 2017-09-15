@@ -18,10 +18,10 @@ set PART=%*
 set LOG_FILE=%PHP_RMTOOLS_LOG_PATH%\task-%PART: =-%-%cur_date%.log
 set LOCK_FILE=%PHP_RMTOOLS_LOCK_PATH%\snaps.lock
 
-IF EXIST %LOCK_FILE% (
-	ECHO Snapshot script is already running.
-	GOTO EXIT_LOCKED
-)
+rem IF EXIST %LOCK_FILE% (
+rem 	ECHO Snapshot script is already running.
+rem 	GOTO EXIT_LOCKED
+rem )
 
 ECHO running > %LOCK_FILE% 
 
@@ -33,7 +33,7 @@ if not exist "%PHP_RMTOOLS_ROOT_PATH%\data\config\credentials_ftps.php" (
 
 call %PHP_RMTOOLS_BIN_PATH%\snap.bat %* >> %LOG_FILE% 2<&1
 
-del %LOCK_FILE% >> %LOG_FILE% 2<&1
+rem del %LOCK_FILE% >> %LOG_FILE% 2<&1
 
 echo Done.>> %LOG_FILE%
 
