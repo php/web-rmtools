@@ -28,13 +28,22 @@ class Branch {
 		$this->data = $this->readdata();
 	}
 
+	protected function getEmptyData()
+	{
+		$data = new \StdClass;
+		$data->revision_last = NULL;
+		$data->revision_previous = NULL;
+		$data->revision_last_exported = NULL;
+		$data->build_num = 0;
+		$data->builds = array();
+		
+		return $data;
+	}
+	
 	protected function readData()
 	{
-		if (file_exists($this->db_path)) {
-			$fd = fopen($this->db_path, "rb");
-			if (!$fd) {
-				throw new \Exception("Failed to open {$this->db_path}.");
-			}
+		$fd = fopen($this->db_path, "rb");
+		if ($fd) {
 			flock($fd, LOCK_SH);
 			$j = "";
 			while(!feof($fd)) {
@@ -44,12 +53,7 @@ class Branch {
 			flock($fd, LOCK_UN);
 			fclose($fd);
 		} else {
-			$data = new \StdClass;
-			$data->revision_last = NULL;
-			$data->revision_previous = NULL;
-			$data->revision_last_exported = NULL;
-			$data->build_num = 0;
-			$data->builds = array();
+			$data = $this->getEmptyData();
 		}
 		
 		if ($data->build_num > self::REQUIRED_BUILDS_NUM) {
@@ -61,6 +65,7 @@ class Branch {
 
 	protected function writeData()
 	{
+		/* This might be an issue under high concurrency. */
 		$json = json_encode($this->data, JSON_PRETTY_PRINT);
 		return file_put_contents($this->db_path, $json, LOCK_EX);
 	}
@@ -100,9 +105,27 @@ class Branch {
 
 	public function update($build_name = NULL)
 	{
+		$fd = fopen($this->db_path, "cb+");
+		if (!$fd) {
+			throw new \Exception("Failed to open {$this->db_path}.");
+		}
+		flock($fd, LOCK_EX);
+		$j = "";
+		while(!feof($fd)) {
+			$j .= fread($fd, 1024);
+		}
+		$got_data = strlen($j) > 0;
+		if ($got_data) {
+			$this->data = json_decode($j);
+		} else {
+			$this->data = $this->getEmptyData();
+		}
+		
 		$last_id = $this->repo->getLastCommitId();
 		
 		if (!$last_id) {
+			flock($fd, LOCK_UN);
+			fclose($fd);
 			throw new \Exception("last revision id is empty");
 		}
 
@@ -111,12 +134,28 @@ class Branch {
 			$this->data->revision_previous = $this->data->revision_last;
 			$this->data->revision_last = $last_id;
 		}
-		
-		if ($this->hasUnfinishedBuild()) {
-			$this->addBuildList($build_name);
-		}
+	
+		$this->addBuildList($build_name);
 
-		$this->writeData();
+		$json = json_encode($this->data, JSON_PRETTY_PRINT);
+		$to_write = strlen($json);
+		$wrote = 0;
+
+		rewind($fd);
+		do {
+			$got = fwrite($fd, substr($json, $wrote));
+			if (false == $got) {
+				break;
+			}
+			$wrote += $got;
+		} while ($wrote < $to_write);
+
+		flock($fd, LOCK_UN);
+		fclose($fd);
+		
+		if ($to_write !== $wrote) {
+ 			throw new Exception("Couldn't cache '{$this->db_path}'");
+		}
 		
 		return true;
 	}
@@ -142,9 +181,9 @@ class Branch {
 
 	public function export($revision = false, $build_type = false, $zip = false, $is_zip = false)
 	{
-		$rev_name = $this->data->revision_last;
-		if (strlen($this->data->revision_last) == 40) {
-			$rev_name = substr($this->data->revision_last, 0, 7);
+		$rev_name = $revision ? $revision : $this->data->revision_last;
+		if (strlen($rev_name) == 40) {
+			$rev_name = substr($rev_name, 0, 7);
 		}
 		$dir_name = $this->config->getName() . '-src-' . ($build_type ? $build_type.'-' : $build_type) . 'r' . $rev_name;
 		$build_dir = $this->config->getBuildDir();
@@ -152,7 +191,7 @@ class Branch {
 			throw new \Exception("Directory '$build_dir' doesn't exist");
 		}
 		$target = $build_dir . '/' . $dir_name;
-		$exportfile = $this->repo->export($target);
+		$exportfile = $this->repo->export($target, $rev_name);
 
 		if (preg_match('/\.zip$/', $exportfile) > 0) {  // export function returned a .zip file.
 			$is_zip = true;
@@ -176,7 +215,11 @@ class Branch {
 			if (!$res) {
 				throw new \Exception("Unzipping $exportfile failed.");
 			}
-			$gitname = $extract_dir . '/php-src-' . strtoupper($this->config->getName()) . '-' . $rev_name;
+			if (!$revision) {
+				$gitname = $extract_dir . '/php-src-' . strtoupper($this->config->getName()) . '-' . $rev_name;
+			} else {
+				$gitname = $extract_dir . '/php-src-' . $rev_name;
+			}
 			if (true !== rename($gitname, $target)) {
 				throw new \Exception("Failed to rename '$gitname' to '$target'");
 			}

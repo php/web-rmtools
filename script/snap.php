@@ -71,7 +71,7 @@ if ($branch->hasNewRevision() || $branch->hasUnfinishedBuild() || $force) {
 	if (strlen($last_rev) == 40) {
 		$last_rev = substr($last_rev, 0, 7);
 	}
-	$src_original_path =  $branch->createSourceSnap($build_type);
+	$src_original_path =  $branch->createSourceSnap($build_type, $last_rev);
 
 	$toupload_dir = TMP_DIR . '/' . $branch_name . '/r' . $last_rev . '-builds/';
 	if (!is_dir($toupload_dir)) {
@@ -215,11 +215,11 @@ if ($branch->hasNewRevision() || $branch->hasUnfinishedBuild() || $force) {
 
 
 	/* Only upload once, and then cleanup. */
-	if ($branch->requiredBuildRunsReached()) {
+	//if ($branch->requiredBuildRunsReached()) {
 		$src_dir = $branch_name . '/r' . $last_rev;
 		rm\upload_build_result_ftp_curl($toupload_dir, $src_dir);
-		rm\rmdir_rf($toupload_dir);
-	}
+		//rm\rmdir_rf($toupload_dir);
+	//}
 	
 	$branch->setLastRevisionExported($last_rev);
 	$branch->resetBuildInfo();
