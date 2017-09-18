@@ -75,7 +75,7 @@ class Branch {
 		$builds = $this->config->getBuildList();
 
 		if (!empty($builds)) {
-			if ($build_name) {
+			if ($build_name && "all" != $build_name) {
 				if (in_array($build_name, $this->data->builds) && $this->hasUnfinishedBuild()) {
 					throw new \Exception("Builds for '$build_name' are already done or in progress");
 				}
