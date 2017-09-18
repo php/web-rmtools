@@ -222,7 +222,7 @@ if ($branch->hasNewRevision() || $branch->hasUnfinishedBuild() || $force) {
 	}
 	
 	$branch->setLastRevisionExported($last_rev);
-	$branch->resetBuildNum();
+	$branch->resetBuildInfo();
 }
 
 out_here:

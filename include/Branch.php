@@ -52,6 +52,10 @@ class Branch {
 			$data->builds = array();
 		}
 		
+		if ($data->build_num > self::REQUIRED_BUILDS_NUM) {
+			throw new \Exception("Inconsistent db, build number can't be {$data->build_num}.");
+		}
+
 		return $data;
 	}
 
@@ -101,15 +105,11 @@ class Branch {
 		if (!$last_id) {
 			throw new \Exception("last revision id is empty");
 		}
-	
-		if ($this->requiredBuildRunsReached() && $this->hasNewRevision() || NULL == $this->data->revision_last) {
+
+		/* Update this only for the first build for the current revision. */
+		if (0 == $this->numBuildsRunning() && $this->hasNewRevision() || NULL == $this->data->revision_last) {
 			$this->data->revision_previous = $this->data->revision_last;
 			$this->data->revision_last = $last_id;
-		}
-
-		if ($this->requiredBuildRunsReached()) {
-			$this->data->builds = array();
-			$this->data->build_num = 0;
 		}
 		
 		if ($this->hasUnfinishedBuild()) {
@@ -272,11 +272,12 @@ class Branch {
 		$this->writeData();
 	}
 
-	function resetBuildNum()
+	function resetBuildInfo()
 	{
-		if (rm\Branch::REQUIRED_BUILDS_NUM <= $branch->numBuildsRunning()) {
+		if (self::REQUIRED_BUILDS_NUM <= $branch->numBuildsRunning()) {
 			$this->data = $this->readdata();
 			$this->data->build_num = 0;
+			$this->data->builds = array();
 			$this->writeData();
 		}
 	}
