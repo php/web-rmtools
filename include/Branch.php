@@ -137,7 +137,7 @@ class Branch {
 	{
 		$last = $this->repo->getLastCommitId();
 
-		return $last && !$this->isLastRevisionExported($last) || is_null($data->revision_last);
+		return $last && !$this->isLastRevisionExported($last) || is_null($this->data->revision_last);
 	}
 
 	public function export($revision = false, $build_type = false, $zip = false, $is_zip = false)
