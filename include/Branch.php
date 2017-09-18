@@ -197,8 +197,6 @@ class Branch {
 
 	public function setLastRevisionExported($last_rev)
 	{
-		/* Basically, we need two runs for x64 and x86, every run covers ts and nts.
-			Only set the revision exported, if we're on last required build run. */
 		if ($this->requiredBuildRunsReached()) {
 			$this->data->revision_last_exported = $last_rev;
 			$this->writeData();
@@ -274,7 +272,7 @@ class Branch {
 
 	function resetBuildInfo()
 	{
-		if (self::REQUIRED_BUILDS_NUM <= $branch->numBuildsRunning()) {
+		if (self::REQUIRED_BUILDS_NUM <= $this->numBuildsRunning()) {
 			$this->data = $this->readdata();
 			$this->data->build_num = 0;
 			$this->data->builds = array();
