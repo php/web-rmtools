@@ -44,10 +44,14 @@ class Branch {
 	/* If both read and write are requested, read and yield data first. The fd
 		is still open and the exclusive lock is held. Call the function once
 	 	more to write. */
-	protected function atomicDataRW($read = true, $write = false)
+	protected function atomicDataRW($read = true, $write = false, $truncate = false)
 	{
 		if ($write) {
-			$open_mode = "cb+";
+			if ($truncate) {
+				$open_mode = "wb+";
+			} else {
+				$open_mode = "cb+";
+			}
 			$lock_mode = LOCK_EX;
 		} else {
 			$open_mode = "rb";
@@ -64,6 +68,7 @@ class Branch {
 		}
 
 		if ($read) {
+			rewind($this->db_fd);
 			$j = "";
 			while(!feof($this->db_fd)) {
 				$j .= fread($this->db_fd, 1024);
@@ -354,10 +359,10 @@ class Branch {
 	function resetBuildInfo()
 	{
 		if ($this->requiredBuildRunsReached()) {
-			$this->data = $this->readdata();
+			$this->data = $this->readData();
 			$this->data->build_num = 0;
 			$this->data->builds = array();
-			$this->writeData();
+			$this->atomicDataRW(false, true, true);
 		}
 	}
 
