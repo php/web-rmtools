@@ -346,14 +346,14 @@ class Branch {
 
 	function buildFinished()
 	{
-		$this->data = $this->readdata();
+		$this->data = $this->atomicDataRW(true, true);
 		$this->data->build_num++;
-		$this->writeData();
+		$this->atomicDataRW(false, true);
 	}
 
 	function resetBuildInfo()
 	{
-		if (self::REQUIRED_BUILDS_NUM <= $this->numBuildsRunning()) {
+		if ($this->requiredBuildRunsReached()) {
 			$this->data = $this->readdata();
 			$this->data->build_num = 0;
 			$this->data->builds = array();
