@@ -276,6 +276,11 @@ class Branch {
 		return $target;
 	}
 
+	public function getLastCommitId()
+	{
+		return $this->repo->getLastCommitId();
+	}
+
 	public function createSourceSnap($build_type = false, $revision = false)
 	{
 		return $this->export($revision, $build_type, true);

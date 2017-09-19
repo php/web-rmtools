@@ -39,7 +39,9 @@ $branch_name_short = $branch->config->getBranch();
 echo "Running <" . realpath($config_path) . ">\n";
 echo "\t$branch_name\n";
 
-if ($branch->hasNewRevision() || $branch->hasUnfinishedBuild() || $force) {
+var_dump($branch->hasNewRevision(), !$branch->isLastRevisionExported($branch->getLastCommitId()) && $branch->hasUnfinishedBuild());
+
+if ($branch->hasNewRevision() || !$branch->isLastRevisionExported($branch->getLastCommitId()) && $branch->hasUnfinishedBuild()|| $force) {
 	
 	try {
 		if (!$branch->update("all" == $build_type ? NULL : $build_type)) {
