@@ -12,6 +12,7 @@ class Branch {
 	public $config;
 	private $repo;
 	public $db_path;
+	protected $db_fd;
 	public $data = NULL;
 
 	public function __construct($config_path)
@@ -25,7 +26,7 @@ class Branch {
 		$this->repo->setBranch($this->config->getRepoBranch());
 		$this->db_path = __DIR__ . '/../data/db/' . $this->config->getName() . '.json';
 
-		$this->data = $this->readdata();
+		$this->data = $this->readData();
 	}
 
 	protected function getEmptyData()
@@ -40,22 +41,84 @@ class Branch {
 		return $data;
 	}
 	
-	protected function readData()
+	/* If both read and write are requested, read and yield data first. The fd
+		is still open and the exclusive lock is held. Call the function once
+	 	more to write. */
+	protected function atomicDataRW($read = true, $write = false)
 	{
-		$fd = fopen($this->db_path, "rb");
-		if ($fd) {
-			flock($fd, LOCK_SH);
+		if ($write) {
+			$open_mode = "cb+";
+			$lock_mode = LOCK_EX;
+		} else {
+			$open_mode = "rb";
+			$lock_mode = LOCK_SH;
+		}
+
+		if (!$this->db_fd) {
+			$this->db_fd = fopen($this->db_path, $open_mode);
+			if (!$this->db_fd) {
+				$this->db_fd = NULL;
+				throw new \Exception("Failed to open {$this->db_path}.");
+			}
+			flock($this->db_fd, $lock_mode);
+		}
+
+		if ($read) {
 			$j = "";
-			while(!feof($fd)) {
-				$j .= fread($fd, 1024);
+			while(!feof($this->db_fd)) {
+				$j .= fread($this->db_fd, 1024);
 			}
 			$data = json_decode($j);
-			flock($fd, LOCK_UN);
-			fclose($fd);
-		} else {
-			$data = $this->getEmptyData();
+
+			if (!$write) {
+				flock($this->db_fd, LOCK_UN);
+				fclose($this->db_fd);
+				$this->db_fd = NULL;
+			}
+			return $data;
 		}
-		
+
+		if ($write) {
+			$json = json_encode($this->data, JSON_PRETTY_PRINT);
+			$to_write = strlen($json);
+			$wrote = 0;
+
+			rewind($this->db_fd);
+			do {
+				$got = fwrite($this->db_fd, substr($json, $wrote));
+				if (false == $got) {
+					break;
+				}
+				$wrote += $got;
+			} while ($wrote < $to_write);
+
+			if ($to_write !== $wrote) {
+				flock($this->db_fd, LOCK_UN);
+				fclose($this->db_fd);
+				$this->db_fd = NULL;
+				throw new Exception("Couldn't write '{$this->db_path}'");
+			}
+
+			flock($this->db_fd, LOCK_UN);
+			fclose($this->db_fd);
+			$this->db_fd = NULL;
+
+			return $wrote > 0;
+		}
+	}
+
+	protected function readData()
+	{
+		try {
+			$data = $this->atomicDataRW(true, false);
+		} catch (\Exception $e) {
+			$data = $this->getEmptyData();
+		} finally {
+			if (!$data) {
+				$data = $this->getEmptyData();
+			}			
+		}
+
 		if ($data->build_num > self::REQUIRED_BUILDS_NUM) {
 			throw new \Exception("Inconsistent db, build number can't be {$data->build_num}.");
 		}
@@ -65,9 +128,7 @@ class Branch {
 
 	protected function writeData()
 	{
-		/* This might be an issue under high concurrency. */
-		$json = json_encode($this->data, JSON_PRETTY_PRINT);
-		return file_put_contents($this->db_path, $json, LOCK_EX);
+		return $this->atomicDataRW(false, true);
 	}
 
 	private function addBuildList($build_name = NULL)
@@ -105,21 +166,16 @@ class Branch {
 
 	public function update($build_name = NULL)
 	{
-		$fd = fopen($this->db_path, "cb+");
-		if (!$fd) {
-			throw new \Exception("Failed to open {$this->db_path}.");
+		try {
+			$data = $this->atomicDataRW(true, true);
+		} catch (\Exception $e) {
+			$data = $this->getEmptyData();
+		} finally {
+			if (!$data) {
+				$data = $this->getEmptyData();
+			}			
 		}
-		flock($fd, LOCK_EX);
-		$j = "";
-		while(!feof($fd)) {
-			$j .= fread($fd, 1024);
-		}
-		$got_data = strlen($j) > 0;
-		if ($got_data) {
-			$this->data = json_decode($j);
-		} else {
-			$this->data = $this->getEmptyData();
-		}
+		$this->data = $data;
 		
 		$last_id = $this->repo->getLastCommitId();
 		
@@ -137,27 +193,9 @@ class Branch {
 	
 		$this->addBuildList($build_name);
 
-		$json = json_encode($this->data, JSON_PRETTY_PRINT);
-		$to_write = strlen($json);
-		$wrote = 0;
 
-		rewind($fd);
-		do {
-			$got = fwrite($fd, substr($json, $wrote));
-			if (false == $got) {
-				break;
-			}
-			$wrote += $got;
-		} while ($wrote < $to_write);
+		return $this->atomicDataRW(false, true);
 
-		flock($fd, LOCK_UN);
-		fclose($fd);
-		
-		if ($to_write !== $wrote) {
- 			throw new Exception("Couldn't cache '{$this->db_path}'");
-		}
-		
-		return true;
 	}
 
 	public function hasUnfinishedBuild()
