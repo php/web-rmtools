@@ -213,16 +213,21 @@ if ($branch->hasNewRevision() || $branch->hasUnfinishedBuild() || $force) {
 		$branch->buildFinished();
 	}
 
-
-	/* Only upload once, and then cleanup. */
-	//if ($branch->requiredBuildRunsReached()) {
-		$src_dir = $branch_name . '/r' . $last_rev;
-		rm\upload_build_result_ftp_curl($toupload_dir, $src_dir);
-		//rm\rmdir_rf($toupload_dir);
-	//}
+	$src_dir = $branch_name . '/r' . $last_rev;
+	rm\upload_build_result_ftp_curl($toupload_dir, $src_dir);
+	/* FIXME This is still not safe, locking needed! */
+	foreach (["$to_upload_dir/logs", $to_upload_dir] as $path) { 
+		$items = scandir($path);
+		foreach ($items as $item) {
+			$full = $path . "/" . $item;
+			if (is_file($full)) {
+				@unlink($full);
+			}
+		}
+	}
+	//rm\rmdir_rf($toupload_dir);
 	
 	$branch->setLastRevisionExported($last_rev);
-	$branch->resetBuildInfo();
 }
 
 out_here:
@@ -239,6 +244,7 @@ if ($have_build_run) {
 		$status = rm\upload_file_curl($branch->db_path, $branch_name . '/' . basename($branch->db_path));
 		$try++;
 	} while ( $status === false && $try < 10 );
+	$branch->resetBuildInfo();
 }
 
 //if ($has_build_errors) {
