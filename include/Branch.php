@@ -249,6 +249,10 @@ class Branch {
 		}
 		elseif ($is_zip === true)  {
 			$extract_dir = $build_dir . DIRECTORY_SEPARATOR . "$build_type-$rev_name-tmp-unzip";
+			while(is_dir($extract_dir)) {
+				rmdir_rf($extract_dir);
+				$extract_dir = $extract_dir . "-" . rand(0, 9);
+			}
 			if (true !== mkdir($extract_dir)) {
 				throw new \Exception("Could not create temporary exctract dir under '$extract_dir'.");
 			}
@@ -262,6 +266,10 @@ class Branch {
 				$gitname = $extract_dir . '/php-src-' . strtoupper($this->config->getName()) . '-' . $rev_name;
 			} else {
 				$gitname = $extract_dir . '/php-src-' . $rev_name;
+			}
+			while(is_dir($target)) {
+				rmdir_rf($target);
+				$target = $target . "-" . rand(0, 9);
 			}
 			if (true !== rename($gitname, $target)) {
 				throw new \Exception("Failed to rename '$gitname' to '$target'");
