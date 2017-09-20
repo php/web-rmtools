@@ -218,7 +218,7 @@ if ($branch->hasNewRevision() || !$branch->isLastRevisionExported($branch->getLa
 	$src_dir = $branch_name . '/r' . $last_rev;
 	rm\upload_build_result_ftp_curl($toupload_dir, $src_dir);
 	/* FIXME This is still not safe, locking needed! */
-	foreach (["$to_upload_dir/logs", $to_upload_dir] as $path) { 
+	foreach (["$toupload_dir/logs", $toupload_dir] as $path) { 
 		$items = scandir($path);
 		foreach ($items as $item) {
 			$full = $path . "/" . $item;
