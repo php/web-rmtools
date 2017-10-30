@@ -73,4 +73,14 @@ class BranchConfig {
 			return '';
 		}
 	}
+
+	function getPgoScenarios()
+	{
+		if (!isset($this->config["pgo_scenario"])) {
+			/* TODO obtain all from SDK. */
+			return array("default", "cache");
+		}
+
+		return explode(",", $this->config["pgo_scenario"]);
+	}
 }

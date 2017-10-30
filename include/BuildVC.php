@@ -154,7 +154,7 @@ class BuildVC {
 		$env = $this->env;
 		$env["Path"] = dirname($this->build_dir) . DIRECTORY_SEPARATOR . "deps" . DIRECTORY_SEPARATOR . "bin;" . $env["Path"];
 
-		foreach (array("default", "cache") as $scenario) {
+		foreach ($this->branch->config->getPgoScenarios() as $scenario) {
 			$cmd = 'phpsdk_pgo --train --scenario=' . $scenario;
 			$ret = exec_single_log($cmd, $this->build_dir, $env);
 			if (!$ret || 0 != $ret["return_value"]) {
