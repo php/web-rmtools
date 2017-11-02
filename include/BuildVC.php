@@ -187,7 +187,7 @@ class BuildVC {
 
 	function make($target = false)
 	{
-		$cmd = 'nmake' . ($target ?: $target);
+		$cmd = 'nmake /nologo' . ($target ?: $target);
 		$ret = exec_single_log($cmd, $this->build_dir, $this->env);
 		if (!$ret) {
 			throw new \Exception('Make failed');
@@ -197,7 +197,7 @@ class BuildVC {
 
 	function makeArchive()
 	{
-		$cmd = 'nmake snap';
+		$cmd = 'nmake /nologo snap';
 		$ret = exec_single_log($cmd, $this->build_dir, $this->env);
 		if (!$ret) {
 			throw new \Exception('Make snap failed');
