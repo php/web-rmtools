@@ -339,7 +339,8 @@ class PeclExt
 				$php_bin = PHP_BINARY;
 			}
 			$cmd = $php_bin . " $this->pickle_phar convert " . $package_xml_dir;
-			$pickle_convert_out = shell_exec($cmd);
+			$pickle_convert_out = exec_single_log($cmd, NULL, $this->build->env);
+
 
 			if (file_exists($package_xml_dir . DIRECTORY_SEPARATOR . "composer.json")) {
 				$this->composer_json_path = $package_xml_dir . DIRECTORY_SEPARATOR . "composer.json";
