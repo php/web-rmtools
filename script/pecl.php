@@ -154,14 +154,15 @@ foreach ($builds as $build_name) {
 			if (!$aggregate_mail) {
 				echo "Mailing info to <$maintainer_mailto>" . PHP_EOL;
 			}
+			$mail_pkg_name = isset($ext) ? $ext->getPackageName() : basename($pkg_path);
 			/* Not initialized yet, so no ->getPackageName() */
-			if ($mailer) {
+			if (isset($mailer) && $mailer) {
 				$mailer->xmail(
 					MAIL_FROM,
 					/* no chance to have the maintainers mailto at this stage */
 					$maintainer_mailto,
 					'[PECL-DEV] Windows build: ' . basename($pkg_path),
-					$ext->getPackageName() . " not started\nReason: " . $e->getMessage()
+					$mail_pkg_name . " not started\nReason: " . $e->getMessage()
 				);
 			} else {
 				rm\xmail(
@@ -169,7 +170,7 @@ foreach ($builds as $build_name) {
 					/* no chance to have the maintainers mailto at this stage */
 					$maintainer_mailto,
 					'[PECL-DEV] Windows build: ' . basename($pkg_path),
-					$ext->getPackageName() . " not started\nReason: " . $e->getMessage()
+					$mail_pkg_name . " not started\nReason: " . $e->getMessage()
 				);
 			}
 		}
