@@ -40,7 +40,9 @@ ECHO running > "%LOCK_FILE%"
 rem Notice the --first and the --last calls marked, that's important
 rem to maintain the state between call for the same package. For instance
 rem if --aggregate-mail is used.
-call "%PHP_RMTOOLS_PHP_SDK_ROOT_PATH%\phpsdk-starter.bat" -c vc14 -a x64 -t "%PHP_RMTOOLS_BIN_PATH%\pecl.bat" --task-args "--config=pecl71_x64 --first %*" >> "%LOG_FILE%" 2<&1
+call "%PHP_RMTOOLS_PHP_SDK_ROOT_PATH%\phpsdk-starter.bat" -c vc15 -a x64 -t "%PHP_RMTOOLS_BIN_PATH%\pecl.bat" --task-args "--config=pecl72_x64 --first %*" >> "%LOG_FILE%" 2<&1
+call "%PHP_RMTOOLS_PHP_SDK_ROOT_PATH%\phpsdk-starter.bat" -c vc15 -a x86 -t "%PHP_RMTOOLS_BIN_PATH%\pecl.bat" --task-args "--config=pecl72_x86 %*" >> "%LOG_FILE%" 2<&1
+call "%PHP_RMTOOLS_PHP_SDK_ROOT_PATH%\phpsdk-starter.bat" -c vc14 -a x64 -t "%PHP_RMTOOLS_BIN_PATH%\pecl.bat" --task-args "--config=pecl71_x64 %*" >> "%LOG_FILE%" 2<&1
 call "%PHP_RMTOOLS_PHP_SDK_ROOT_PATH%\phpsdk-starter.bat" -c vc14 -a x86 -t "%PHP_RMTOOLS_BIN_PATH%\pecl.bat" --task-args "--config=pecl71_x86 %*" >> "%LOG_FILE%" 2<&1
 call "%PHP_RMTOOLS_PHP_SDK_ROOT_PATH%\phpsdk-starter.bat" -c vc14 -a x64 -t "%PHP_RMTOOLS_BIN_PATH%\pecl.bat" --task-args "--config=pecl70_x64 %*" >> "%LOG_FILE%" 2<&1
 call "%PHP_RMTOOLS_PHP_SDK_ROOT_PATH%\phpsdk-starter.bat" -c vc14 -a x86 -t "%PHP_RMTOOLS_BIN_PATH%\pecl.bat" --task-args "--config=pecl70_x86 %*" >> "%LOG_FILE%" 2<&1
