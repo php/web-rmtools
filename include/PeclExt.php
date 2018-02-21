@@ -723,7 +723,7 @@ if (!function_exists('rmtools\combinations')) {
 					$ret
 				);
 
-				if(file_exists($look_for)) {
+				if(file_exists($look_for) && !file_exists($dll_file)) {
 					if (!copy($look_for, $dll_file)) {
 						throw new \Exception("The dependency dll '$dll_name' "
 						. "was found but couldn't be copied into '$target'");
@@ -739,7 +739,7 @@ if (!function_exists('rmtools\combinations')) {
 					. DIRECTORY_SEPARATOR . $pdb_name;
 
 
-				if(file_exists($look_for)) {
+				if(file_exists($look_for) && !file_exists($pdb_file)) {
 					if (!copy($look_for, $pdb_file)) {
 						throw new \Exception("The dependency pdb '$dll_name' "
 						. "was found but couldn't be copied into '$target'");
@@ -812,6 +812,62 @@ if (!function_exists('rmtools\combinations')) {
 			$msg = "No DLL for " . implode(',', $ext_names) . " was found, build failed";
 			throw new \Exception($msg);
 		}
+
+		/* Look if we have to package all the dep DLLs. */
+		$config = $this->getPackageConfig();
+		var_dump($config);
+		if ($config && isset($config["libs"]) && is_array($config["libs"])) {
+			$deps_path = $this->build->branch->config->getPeclDepsBase();
+			foreach($config['libs'] as $lib) {
+				if (!$lib) {
+					continue;
+				}
+
+				$lib_conf = $this->getLibraryConfig($lib);
+				var_dump($lib_conf);
+				if (!isset($lib_conf["copy_all_dep_dll"]) || !$lib_conf["copy_all_dep_dll"]) {
+					continue;
+				}
+
+				$bin_path = $deps_path . DIRECTORY_SEPARATOR . $lib . DIRECTORY_SEPARATOR . "bin";
+				var_dump($bin_path);
+				if (!is_dir($bin_path)) {
+					continue;
+				}
+
+				$dep_dll = glob($bin_path . DIRECTORY_SEPARATOR . "*.dll");
+				var_dump($dep_dll);
+				foreach ($dep_dll as $base_dll_file) {
+					$dll_file = $target . DIRECTORY_SEPARATOR . basename($base_dll_file);
+					if (!file_exists($dll_file)) {
+						if (!copy($base_dll_file, $dll_file)) {
+							throw new \Exception("Couldn't copy '$base_dll_file' into '$target'");
+						}
+					}
+					$files_to_zip[] = $dll_file;
+
+					$base_pdb_file = dirname($base_dll_file) . DIRECTORY_SEPARATOR . basename($base_dll_file, ".dll") . ".pdb";
+					$pdb_file = $target . DIRECTORY_SEPARATOR . basename($base_dll_file, ".dll") . ".pdb";
+					if (file_exists($base_pdb_file) && !file_exists($pdb_file)) {
+						if (!copy($base_pdb_file, $pdb_file)) {
+							throw new \Exception("Couldn't copy '$base_pdb_file' into '$target'");
+						}
+						$files_to_zip[] = $pdb_file;
+					}
+
+					$files_to_zip = array_merge($this->prepareAllDepDlls($base_dll_file, $target), $files_to_zip);
+				}
+
+				$dep_pdb = glob($bin_path . DIRECTORY_SEPARATOR . "*.pdb");
+				foreach ($dep_pdb as $base_pdb_file) {
+					$pdb_file = $target . DIRECTORY_SEPARATOR . basename($base_pdb_file);
+					if (!copy($base_pdb_file, $pdb_file)) {
+						throw new \Exception("Couldn't copy '$base_pdb_file' into '$target'");
+					}
+				}
+			}
+		}
+		var_dump($files_to_zip);
 
 		/* care about extension license */
 		/* The ext license will be copied based on the info from package.xml, but let these lines stay */
