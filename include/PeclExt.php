@@ -815,7 +815,6 @@ if (!function_exists('rmtools\combinations')) {
 
 		/* Look if we have to package all the dep DLLs. */
 		$config = $this->getPackageConfig();
-		var_dump($config);
 		if ($config && isset($config["libs"]) && is_array($config["libs"])) {
 			$deps_path = $this->build->branch->config->getPeclDepsBase();
 			foreach($config['libs'] as $lib) {
@@ -824,19 +823,16 @@ if (!function_exists('rmtools\combinations')) {
 				}
 
 				$lib_conf = $this->getLibraryConfig($lib);
-				var_dump($lib_conf);
 				if (!isset($lib_conf["copy_all_dep_dll"]) || !$lib_conf["copy_all_dep_dll"]) {
 					continue;
 				}
 
 				$bin_path = $deps_path . DIRECTORY_SEPARATOR . $lib . DIRECTORY_SEPARATOR . "bin";
-				var_dump($bin_path);
 				if (!is_dir($bin_path)) {
 					continue;
 				}
 
 				$dep_dll = glob($bin_path . DIRECTORY_SEPARATOR . "*.dll");
-				var_dump($dep_dll);
 				foreach ($dep_dll as $base_dll_file) {
 					$dll_file = $target . DIRECTORY_SEPARATOR . basename($base_dll_file);
 					if (!file_exists($dll_file)) {
@@ -867,7 +863,6 @@ if (!function_exists('rmtools\combinations')) {
 				}
 			}
 		}
-		var_dump($files_to_zip);
 
 		/* care about extension license */
 		/* The ext license will be copied based on the info from package.xml, but let these lines stay */
