@@ -103,8 +103,8 @@ class BuildVC {
 		$compiler = $this->branch->config->getCompiler();
 		$cmd = "phpsdk_deps -un -s $stability -b $branch -t $compiler -d " . dirname($this->build_dir) . "/deps";
 		$ret = exec_single_log($cmd, $this->build_dir, $this->env);
-		if (!$ret) {
-			throw new \Exception('dependencies update failed');
+		if (!$ret || 0 !== (int)$ret["return_value"]) {
+			throw new \Exception('dependencies update failed' . (isset($ret["log"]) ? ": \n$ret[log]" : ""));
 		}
 
 		return $ret;
@@ -114,8 +114,8 @@ class BuildVC {
 	{
 		$cmd = 'buildconf';
 		$ret = exec_single_log($cmd, $this->build_dir, $this->env);
-		if (!$ret) {
-			throw new \Exception('buildconf failed');
+		if (!$ret || 0 !== (int)$ret["return_value"]) {
+			throw new \Exception('buildconf failed' . (isset($ret["log"]) ? ": \n$ret[log]" : ""));
 		}
 		$this->log_buildconf = $ret['log'];
 	}
@@ -127,8 +127,8 @@ class BuildVC {
 
 		$cmd = 'phpsdk_pgo --ready';
 		$ret = exec_single_log($cmd, $this->build_dir, $env);
-		if (!$ret) {
-			throw new \Exception('phpsdk_pgo --ready failed');
+		if (!$ret || 0 !== (int)$ret["return_value"]) {
+			throw new \Exception('phpsdk_pgo --ready failed' . (isset($ret["log"]) ? ": \n$ret[log]" : ""));
 		}
 
 		return 0 == $ret["return_value"];
@@ -142,8 +142,8 @@ class BuildVC {
 
 		$cmd = 'phpsdk_pgo --init';
 		$ret = exec_single_log($cmd, $this->build_dir, $env);
-		if (!$ret || 0 != $ret["return_value"]) {
-			throw new \Exception('phpsdk_pgo --init failed');
+		if (!$ret || 0 !== (int)$ret["return_value"]) {
+			throw new \Exception('phpsdk_pgo --init failed' . (isset($ret["log"]) ? ": \n$ret[log]" : ""));
 		}
 		$this->log_pgo .= $ret["log"];
 	}
@@ -157,11 +157,11 @@ class BuildVC {
 		foreach ($this->branch->config->getPgoScenarios() as $scenario) {
 			$cmd = 'phpsdk_pgo --train --scenario=' . $scenario;
 			$ret = exec_single_log($cmd, $this->build_dir, $env);
-			if (!$ret || 0 != $ret["return_value"]) {
+			if (!$ret || 0 !== (int)$ret["return_value"]) {
 				if ($ret["log"]) {
 					$this->log_pgo .= $ret["log"];
 				}
-				throw new \Exception("'$cmd' failed");
+				throw new \Exception("'$cmd' failed" . (isset($ret["log"]) ? ": \n$ret[log]" : ""));
 			}
 			$this->log_pgo .= $ret["log"];
 		}
@@ -179,8 +179,8 @@ class BuildVC {
 			mkdir($this->obj_dir, 0655, true);
 		}
 		$ret = exec_single_log($cmd, $this->build_dir, $this->env);
-		if (!$ret) {
-			throw new \Exception('Configure failed');
+		if (!$ret || 0 !== (int)$ret["return_value"]) {
+			throw new \Exception('Configure failed' . (isset($ret["log"]) ? ": \n$ret[log]" : ""));
 		}
 		$this->log_configure = $ret['log'];
 	}
@@ -189,8 +189,8 @@ class BuildVC {
 	{
 		$cmd = 'nmake /nologo' . ($target ?: $target);
 		$ret = exec_single_log($cmd, $this->build_dir, $this->env);
-		if (!$ret) {
-			throw new \Exception('Make failed');
+		if (!$ret || 0 !== (int)$ret["return_value"]) {
+			throw new \Exception('Make failed' . (isset($ret["log"]) ? ": \n$ret[log]" : ""));
 		}
 		$this->log_make = $ret['log'];
 	}
@@ -199,8 +199,8 @@ class BuildVC {
 	{
 		$cmd = 'nmake /nologo snap';
 		$ret = exec_single_log($cmd, $this->build_dir, $this->env);
-		if (!$ret) {
-			throw new \Exception('Make snap failed');
+		if (!$ret || 0 !== (int)$ret["return_value"]) {
+			throw new \Exception('Make snap failed' . (isset($ret["log"]) ? ": \n$ret[log]" : ""));
 		}
 
 		$this->log_archive = $ret['log'];
