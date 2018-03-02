@@ -25,6 +25,7 @@ class BranchConfig {
 		'PeclDepsBase'	=> 'pecl_deps_base',
 		'CoreDepsBase'	=> 'core_deps_base',
 		'PeclNonCoreExtDepsBase' => 'pecl_non_core_ext_deps_base',
+		'Intrinsics'		=> 'intrinsics',
 	);
 
 	function __construct($path)
@@ -82,5 +83,22 @@ class BranchConfig {
 		}
 
 		return explode(",", $this->config["pgo_scenario"]);
+	}
+
+	public static function getRequiredBuildsNum($path, $branch)
+	{
+		$files = glob("$path/*/$branch.ini"); 
+		$i = 0;
+
+		foreach ($files as $fname) {
+			$cfg = parse_ini_file($fname, true, INI_SCANNER_RAW);
+			foreach ($cfg as $name => $entry) {
+				if (substr($name, 0, 6) == 'build-' && is_array($entry)) {
+					$i++;
+				}
+			}
+		}
+
+		return $i;
 	}
 }

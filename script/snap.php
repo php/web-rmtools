@@ -18,17 +18,19 @@ $sdk_arch = getenv("PHP_SDK_ARCH");
 if (!$sdk_arch) {
 	throw new \Exception("Arch is empty, the SDK might not have been setup. ");
 }
-$config_path = __DIR__ . '/../data/config/branch/' . $sdk_arch . '/' . $branch_name . '.ini';
+$all_branch_confs_path = __DIR__ . '/../data/config/branch';
+$config_path = $all_branch_confs_path . '/' . $sdk_arch . '/' . $branch_name . '.ini';
+$req_builds_num = rm\BranchConfig::getRequiredBuildsNum($all_branch_confs_path, $branch_name);
 
 $err_msg = NULL;
 try {
-	$branch = new rm\Branch($config_path);
+	$branch = new rm\Branch($config_path, $req_builds_num);
 } catch (\Exception $e) {
 	$err_msg = $e->getMessage();
 	goto out_here;
 }
 
-if (!$branch->requiredBuildRunsReached() && rm\Branch::REQUIRED_BUILDS_NUM == $branch->numBuildsRunning()) {
+if (!$branch->requiredBuildRunsReached() && $branch->numBuildsRunning() == $req_builds_num) {
 	$err_msg = "Waiting for " . $branch->getLastRevisionId() . " builds to finish.";
 	goto out_here;
 }
@@ -218,7 +220,7 @@ if ($branch->hasNewRevision() || !$branch->isLastRevisionExported($branch->getLa
 	$src_dir = $branch_name . '/r' . $last_rev;
 	rm\upload_build_result_ftp_curl($toupload_dir, $src_dir);
 	/* FIXME This is still not safe, locking needed! */
-	foreach (["$toupload_dir/logs", $toupload_dir] as $path) { 
+	/*foreach (["$toupload_dir/logs", $toupload_dir] as $path) { 
 		$items = scandir($path);
 		foreach ($items as $item) {
 			$full = $path . "/" . $item;
@@ -226,7 +228,7 @@ if ($branch->hasNewRevision() || !$branch->isLastRevisionExported($branch->getLa
 				@unlink($full);
 			}
 		}
-	}
+	}*/
 	//rm\rmdir_rf($toupload_dir);
 	
 	$branch->setLastRevisionExported($last_rev);

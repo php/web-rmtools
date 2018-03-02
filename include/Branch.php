@@ -6,7 +6,7 @@ include __DIR__ . '/Repository.php';
 include __DIR__ . '/BuildVC.php';
 
 class Branch {
-	const REQUIRED_BUILDS_NUM = 4;
+	public $required_builds_num = 4;
 	public $last_revision;
 	public $last_revision_has_snap;
 	public $config;
@@ -15,7 +15,7 @@ class Branch {
 	protected $db_fd;
 	public $data = NULL;
 
-	public function __construct($config_path)
+	public function __construct($config_path, $required_builds_num = 4)
 	{
 		if (!is_readable($config_path)) {
 			throw new \Exception('Cannot open config data <' . $config_path . '>');
@@ -25,6 +25,7 @@ class Branch {
 		$this->repo->setModule($this->config->getModule());
 		$this->repo->setBranch($this->config->getRepoBranch());
 		$this->db_path = __DIR__ . '/../data/db/' . $this->config->getName() . '.json';
+		$this->required_builds_num = $required_builds_num;
 
 		$this->data = $this->readData();
 	}
@@ -124,7 +125,7 @@ class Branch {
 			}			
 		}
 
-		if ($data->build_num > self::REQUIRED_BUILDS_NUM) {
+		if ($data->build_num > $this->required_builds_num) {
 			throw new \Exception("Inconsistent db, build number can't be {$data->build_num}.");
 		}
 
@@ -212,7 +213,7 @@ class Branch {
 	{
 		$data = $this->readdata();
 		$this->data->build_num = $data->build_num;
-		return $this->data->build_num == self::REQUIRED_BUILDS_NUM;
+		return $this->data->build_num == $this->required_builds_num;
 	}
 	
 	public function hasNewRevision()
