@@ -136,7 +136,6 @@ class BuildVC {
 	{
 		if (!is_null($this->pgo_init_lock_fd)) {
 			flock($this->pgo_init_lock_fd, LOCK_UN);
-			@unlink(TMP_DIR . DIRECTORY_SEPARATOR . "sdk_pgo_init.lock");
 			$this->pgo_init_lock_fd = NULL;
 		}
 	}
