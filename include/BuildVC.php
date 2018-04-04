@@ -27,6 +27,8 @@ class BuildVC {
 	public $zip_debug_filename;
 	public $zip_test_filename;
 
+	protected $pgo_init_lock_fd;
+
 	function __construct(Branch $branch, $build_name)
 	{
 		/* XXX this has to be merged with PeclBuildVC and any other, be it per trait or inheritance. */
@@ -77,6 +79,8 @@ class BuildVC {
 		}
 
 		$this->env = $env;
+
+		$this->pgo_init_lock_fd = NULL;
 	}
 
 	function setSourceDir($src_dir)
@@ -120,6 +124,23 @@ class BuildVC {
 		$this->log_buildconf = $ret['log'];
 	}
 
+	function pgoInitLock()
+	{
+		if (is_null($this->pgo_init_lock_fd)) {
+			$this->pgo_init_lock_fd = fopen(TMP_DIR . DIRECTORY_SEPARATOR . "sdk_pgo_init.lock");
+			flock($this->pgo_init_lock_fd, LOCK_EX);
+		}
+	}
+
+	function pgoInitUnlock()
+	{
+		if (!is_null($this->pgo_init_lock_fd)) {
+			flock($this->pgo_init_lock_fd, LOCK_UN);
+			@unlink(TMP_DIR . DIRECTORY_SEPARATOR . "sdk_pgo_init.lock");
+			$this->pgo_init_lock_fd = NULL;
+		}
+	}
+
 	function isPgoSetup()
 	{
 		$env = $this->env;
@@ -128,6 +149,7 @@ class BuildVC {
 		$cmd = 'phpsdk_pgo --ready';
 		$ret = exec_single_log($cmd, $this->build_dir, $env);
 		if (!$ret) {
+			$this->pgoInitUnlock();
 			throw new \Exception('phpsdk_pgo --ready failed' . (isset($ret["log"]) ? ": \n$ret[log]" : ""));
 		}
 
@@ -143,6 +165,7 @@ class BuildVC {
 		$cmd = 'phpsdk_pgo --init';
 		$ret = exec_single_log($cmd, $this->build_dir, $env);
 		if (!$ret || 0 !== (int)$ret["return_value"]) {
+			$this->pgoInitUnlock();
 			throw new \Exception('phpsdk_pgo --init failed' . (isset($ret["log"]) ? ": \n$ret[log]" : ""));
 		}
 		$this->log_pgo .= $ret["log"];

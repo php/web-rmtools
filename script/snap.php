@@ -125,12 +125,14 @@ if ($branch->hasNewRevision() || !$branch->isLastRevisionExported($branch->getLa
 				only needs to be done once for setup. In further
 				also, if there are any difference with TS/NTS,
 				 there might be some separate setup needed. */
+				$build->pgoInitLock();
 				if (!$build->isPgoSetup()) {
 					echo "Preparing PGO training environment\n";
 					$build->configure();
 					$build->make();
 					$build->pgoInit();
 				}
+				$build->pgoInitUnlock();
 				echo "Creating PGI build\n";
 				$build->configure(' "--enable-pgi" ');
 			}
