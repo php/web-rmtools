@@ -127,11 +127,11 @@ class BuildVC {
 
 		$cmd = 'phpsdk_pgo --ready';
 		$ret = exec_single_log($cmd, $this->build_dir, $env);
-		if (!$ret || 0 !== (int)$ret["return_value"]) {
+		if (!$ret) {
 			throw new \Exception('phpsdk_pgo --ready failed' . (isset($ret["log"]) ? ": \n$ret[log]" : ""));
 		}
 
-		return 0 == $ret["return_value"];
+		return 0 == (int)$ret["return_value"];
 	}
 
 	function pgoInit()
