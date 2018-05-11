@@ -178,7 +178,7 @@ class BuildVC {
 		$env["Path"] = dirname($this->build_dir) . DIRECTORY_SEPARATOR . "deps" . DIRECTORY_SEPARATOR . "bin;" . $env["Path"];
 
 		foreach ($this->branch->config->getPgoScenarios() as $scenario) {
-			$cases = $this->branch->config->getPgoCases();
+			$cases = $this->branch->config->getPgoCases($this->build_name);
 			$cmd = 'phpsdk_pgo --train --scenario=' . $scenario . ($cases ? (" --cases=" . implode(",", $cases)) : "");
 			$ret = exec_single_log($cmd, $this->build_dir, $env);
 			if (!$ret || 0 !== (int)$ret["return_value"]) {

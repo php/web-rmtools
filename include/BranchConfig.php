@@ -85,13 +85,13 @@ class BranchConfig {
 		return explode(",", $this->config["pgo_scenario"]);
 	}
 
-	function getPgoCases()
+	function getPgoCases($build_name)
 	{
-		if (!isset($this->config["pgo_cases"])) {
+		if (!isset($this->builds[$build_name]) || !isset($this->builds[$build_name]["pgo_cases"])) {
 			return NULL;
 		}
 
-		return explode(",", $this->config["pgo_cases"]);
+		return explode(",", $this->builds[$build_name]["pgo_cases"]);
 	}
 
 	public static function getRequiredBuildsNum($path, $branch)
