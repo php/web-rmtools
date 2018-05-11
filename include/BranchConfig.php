@@ -85,6 +85,15 @@ class BranchConfig {
 		return explode(",", $this->config["pgo_scenario"]);
 	}
 
+	function getPgoCases()
+	{
+		if (!isset($this->config["pgo_cases"])) {
+			return NULL;
+		}
+
+		return explode(",", $this->config["pgo_cases"]);
+	}
+
 	public static function getRequiredBuildsNum($path, $branch)
 	{
 		$files = glob("$path/*/$branch.ini"); 
