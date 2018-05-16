@@ -75,14 +75,14 @@ class BranchConfig {
 		}
 	}
 
-	function getPgoScenarios()
+	function getPgoScenarios($build_name)
 	{
-		if (!isset($this->config["pgo_scenario"])) {
+		if (!isset($this->builds[$build_name]) || !isset($this->builds[$build_name]["pgo_scenario"])) {
 			/* TODO obtain all from SDK. */
 			return array("default", "cache");
 		}
 
-		return explode(",", $this->config["pgo_scenario"]);
+		return explode(",", $this->builds[$build_name]["pgo_scenario"]);
 	}
 
 	function getPgoCases($build_name)
