@@ -78,6 +78,12 @@ class BuildVC {
 			$env['NODEBUG'] = "1";
 		}
 
+		foreach ($env as $k => &$v) {
+			if (strtolower($k) == "path") {
+				$v = 'c:\apps\git\bin;' . $v;
+			}
+		}
+
 		$this->env = $env;
 
 		$this->pgo_init_lock_fd = NULL;
