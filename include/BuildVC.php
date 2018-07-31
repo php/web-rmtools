@@ -78,9 +78,10 @@ class BuildVC {
 			$env['NODEBUG'] = "1";
 		}
 
-		foreach ($env as $k => &$v) {
+		foreach ($env as $k => $v) {
 			if (strtolower($k) == "path") {
-				$v = 'c:\apps\git\bin;' . $v;
+				$env[$k] = 'c:\apps\git\bin;' . $env[$k];
+				break;
 			}
 		}
 
