@@ -78,6 +78,8 @@ class BuildVC {
 			$env['NODEBUG'] = "1";
 		}
 
+		$env["PHP_RMTOOLS_PHP_BUILD_BRANCH"] = $this->branch->config->getBranch();
+
 		$this->env = $env;
 
 		$this->pgo_init_lock_fd = NULL;
