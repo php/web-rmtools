@@ -129,7 +129,11 @@ class BuildVC {
 	function pgoInitLock()
 	{
 		if (is_null($this->pgo_init_lock_fd)) {
-			$this->pgo_init_lock_fd = fopen(TMP_DIR . DIRECTORY_SEPARATOR . "sdk_pgo_init.lock", "wb");
+			$fn = TMP_DIR . DIRECTORY_SEPARATOR . "sdk_pgo_init.lock";
+			$this->pgo_init_lock_fd = fopen($fn, "wb");
+			if (false == $this->pgo_init_lock_fd) {
+				throw new \Exception("Failed to create lock under '$fn'");
+			}
 			flock($this->pgo_init_lock_fd, LOCK_EX);
 		}
 	}
