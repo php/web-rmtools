@@ -28,7 +28,7 @@ NOTE: All the paths in the usage exampled are on drive C: for simplicity. Locati
 - `md c:\php-snap-build`
 - `cd c:\php-snap-build`
 - `git clone https://github.com/OSTC/php-sdk-binary-tools.git --branch new_binary_tools php-sdk`
-- `git clone https://github.com/OSTC/web-rmtools.git --branch new_sdk_compliance rmtools`
+- `git clone https://github.com/php/web-rmtools.git --branch new_sdk_compliance rmtools`
 - `md c:\php-snap-build\obj-x64`, or alternatively similar to `mklink /d obj-x64 d:\tmp-obj-x64`
 - `md c:\php-snap-build\obj`, or alternatively similar to `mklink /d obj d:\tmp-obj`
 - `md C:\php-snap-build\snap_master\vc14\x64`
