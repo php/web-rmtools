@@ -1,6 +1,6 @@
 # PHP RMTOOLS
 
-Tools PHP release and snapshot build automation
+Tools PHP release and snapshot build automation for Windows.
 
 # License
 
