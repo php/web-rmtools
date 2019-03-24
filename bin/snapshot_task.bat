@@ -12,7 +12,7 @@ if "%PHP_SDK_ROOT_PATH%"=="" (
 )
 call %~dp0rmtools_setvars.bat
 
-for /f "tokens=2-8 delims=.:/ " %%a in ("%date% %time%") do set cur_date=%%c-%%a-%%b_%%d-%%e-%%f.%%g
+for /f "tokens=1-8 delims=-" %%a in ('powershell get-date -format "{yyyy-MM-dd-HH-mm-ss-ff}"') do set cur_date=%%a-%%b-%%c_%%d-%%e-%%f.%%g
 
 set PART=%*
 set LOG_FILE=%PHP_RMTOOLS_LOG_PATH%\task-%PART: =-%-%cur_date%.log
