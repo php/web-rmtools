@@ -145,7 +145,13 @@ if ($branch->hasNewRevision() || !$branch->isLastRevisionExported($branch->getLa
 			/* $html_make_log = $build->getMakeLogParsed(); */
 			if ($branch->config->getPGO() == 1)  {
 				echo "Creating PGO build\n";
-				$build->pgoTrain();
+				try {
+					// if training fails, we still can go on for snaps
+					$build->pgoTrain();
+				} catch (Exception $e) {
+					echo $e->getMessage() . "\n";
+					echo $build->log_buildconf;
+				}
 				$build->make(' clean-pgo');
 				$build->configure(' "--with-pgo" ', false);
 				$build->make();
