@@ -120,6 +120,7 @@ if ($branch->hasNewRevision() || !$branch->isLastRevisionExported($branch->getLa
 			echo "running build in <$build_src_path>\n";
 			$build->buildconf();
 			if ($branch->config->getPGO() == 1)  {
+				$need_pgo_build = true;
 				/* For now it is enough to just get a very same
 				build of PHP to setup the environment. This
 				only needs to be done once for setup. In further
@@ -137,29 +138,26 @@ if ($branch->hasNewRevision() || !$branch->isLastRevisionExported($branch->getLa
 				$build->configure(' "--enable-pgi" ');
 			}
 			else {
+				$need_pgo_build = false;
 				$build->configure();
 			}
 			$build->make();
 			/* $html_make_log = $build->getMakeLogParsed(); */
-		} catch (Exception $e) {
-			echo $e->getMessage() . "\n";
-			echo $build->log_buildconf;
-		}
-		if ($branch->config->getPGO() == 1)  {
-			echo "Creating PGO build\n";
-			try {
-				$build->pgoTrain();
+			if ($branch->config->getPGO() == 1)  {
+				echo "Creating PGO build\n";
+				try {
+					// if training fails, we still can go on for snaps
+					$build->pgoTrain();
+				} catch (Exception $e) {
+					echo $e->getMessage() . "\n";
+					echo $build->log_buildconf;
+				}
 				$build->make(' clean-pgo');
 				$build->configure(' "--with-pgo" ', false);
 				$build->make();
 				$html_make_log = $build->getMakeLogParsed();
-			} catch (Exception $e) {
-				echo $e->getMessage() . "\n";
-				echo $build->log_buildconf;
+				$need_pgo_build = false;
 			}
-		}
-
-		try {
 			$build->makeArchive();
 		} catch (Exception $e) {
 			echo $e->getMessage() . "\n";
@@ -192,7 +190,11 @@ if ($branch->hasNewRevision() || !$branch->isLastRevisionExported($branch->getLa
 		file_put_contents($toupload_dir . '/logs/make-' . $build_name . '-r'. $last_rev . '.html', $html_make_log);
 		copy(__DIR__ . '/../template/log_style.css', $toupload_dir . '/logs/log_style.css');
 
-		$stats = $build->getStats();
+		if ($need_pgo_build) {
+			$stats = ['warning' => 0, 'error' => 1];
+		} else {
+			$stats = $build->getStats();
+		}
 
 		$json_filename = $build_name . '.json';
 
@@ -206,8 +208,12 @@ if ($branch->hasNewRevision() || !$branch->isLastRevisionExported($branch->getLa
 
 		if ($stats['error'] > 0) {
 			$has_build_errors = true;
-			$build_errors[$build_name] = $build->compiler_log_parser->getErrors();
-			$json_data['build_error'] = $build_errors[$build_name];
+			if ($need_pgo_build) {
+				$json_data['build_error'] = ['PGO build not attempted'];
+			} else {
+				$build_errors[$build_name] = $build->compiler_log_parser->getErrors();
+				$json_data['build_error'] = $build_errors[$build_name];
+			}
 		}
 
 		$json = json_encode($json_data);
