@@ -143,26 +143,15 @@ if ($branch->hasNewRevision() || !$branch->isLastRevisionExported($branch->getLa
 			}
 			$build->make();
 			/* $html_make_log = $build->getMakeLogParsed(); */
-		} catch (Exception $e) {
-			echo $e->getMessage() . "\n";
-			echo $build->log_buildconf;
-		}
-		if ($branch->config->getPGO() == 1)  {
-			echo "Creating PGO build\n";
-			try {
+			if ($branch->config->getPGO() == 1)  {
+				echo "Creating PGO build\n";
 				$build->pgoTrain();
 				$build->make(' clean-pgo');
 				$build->configure(' "--with-pgo" ', false);
 				$build->make();
 				$html_make_log = $build->getMakeLogParsed();
 				$need_pgo_build = false;
-			} catch (Exception $e) {
-				echo $e->getMessage() . "\n";
-				echo $build->log_buildconf;
 			}
-		}
-
-		try {
 			$build->makeArchive();
 		} catch (Exception $e) {
 			echo $e->getMessage() . "\n";
