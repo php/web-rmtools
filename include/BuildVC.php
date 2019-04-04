@@ -48,9 +48,9 @@ class BuildVC {
 			throw new \Exception("Arch mismatch. PHP SDK is configured for '$sdk_arch', while the current RMTOOLS config targets '{$this->architecture}'");
 		}
 
-		$sdk_vc = getenv("PHP_SDK_VC");
-		if (strtolower($this->compiler) != strtolower($sdk_vc)) {
-			throw new \Exception("Compiler mismatch. PHP SDK is configured for '$sdk_vc', while the current RMTOOLS config targets '{$this->compiler}'");
+		$sdk_vs = getenv("PHP_SDK_VS");
+		if (strtolower($this->compiler) != strtolower($sdk_vs)) {
+			throw new \Exception("Compiler mismatch. PHP SDK is configured for '$sdk_vs', while the current RMTOOLS config targets '{$this->compiler}'");
 		}
 
 		$env = getenv();
