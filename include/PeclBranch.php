@@ -94,6 +94,7 @@ class PeclBranch {
 
 		$compiler	= strtolower($build_config['compiler']);
 		switch ($compiler) {
+			case 'vs16':
 			case 'vc15':
 			case 'vc14':
 			case 'vc12':
