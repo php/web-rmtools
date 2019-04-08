@@ -49,6 +49,9 @@ class PeclBuildVC {
 		}
 
 		$sdk_vs = getenv("PHP_SDK_VS");
+		if (!$sdk_vs) { // fallback for versions before php-sdk-2.2.0beta4
+			$sdk_vs = getenv("PHP_SDK_VC");
+		}
 		if (strtolower($this->compiler) != strtolower($sdk_vs)) {
 			throw new \Exception("Compiler mismatch. PHP SDK is configured for '$sdk_vs', while the current RMTOOLS config targets '{$this->compiler}'");
 		}
