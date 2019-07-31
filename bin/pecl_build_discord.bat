@@ -23,7 +23,7 @@ echo This is the PECL build batch script. You can see the help
 echo output of the underlaying worker below. Note that you HAVE
 echo TO ommit the --config option when running this batch.
 echo ==========================================================
-call "%PHP_RMTOOLS_PHP_SDK_ROOT_PATH%\phpsdk-starter.bat" -c vc15 -a x64 -t "%PHP_RMTOOLS_BIN_PATH%\pecl.bat"
+call "%PHP_RMTOOLS_PHP_SDK_ROOT_PATH%\phpsdk-starter.bat" -c vs16 -a x64 -t "%PHP_RMTOOLS_BIN_PATH%\pecl.bat"
 GOTO EXIT_LOCKED
 
 :skip_help
@@ -43,8 +43,8 @@ rem call %BAT_DIR%pecl.bat --config=pecl55_x86 %* >> %LOG_FILE% 2<&1
 rem call %BAT_DIR%pecl.bat --config=pecl54 %* >> %LOG_FILE% 2<&1
 rem call %BAT_DIR%pecl.bat --config=pecl53 --last %* >> %LOG_FILE% 2<&1
 rem
-call "%PHP_RMTOOLS_PHP_SDK_ROOT_PATH%\phpsdk-starter.bat" -c vc15 -a x64 -t "%PHP_RMTOOLS_BIN_PATH%\pecl.bat" --task-args "--config=pecl73_x64 --first %*" >> "%LOG_FILE%" 2<&1
-call "%PHP_RMTOOLS_PHP_SDK_ROOT_PATH%\phpsdk-starter.bat" -c vc15 -a x86 -t "%PHP_RMTOOLS_BIN_PATH%\pecl.bat" --task-args "--config=pecl73_x86 --last %*" >> "%LOG_FILE%" 2<&1
+call "%PHP_RMTOOLS_PHP_SDK_ROOT_PATH%\phpsdk-starter.bat" -c vs16 -a x64 -t "%PHP_RMTOOLS_BIN_PATH%\pecl.bat" --task-args "--config=pecl74_x64 --first %*" >> "%LOG_FILE%" 2<&1
+call "%PHP_RMTOOLS_PHP_SDK_ROOT_PATH%\phpsdk-starter.bat" -c vs16 -a x86 -t "%PHP_RMTOOLS_BIN_PATH%\pecl.bat" --task-args "--config=pecl74_x86 --last %*" >> "%LOG_FILE%" 2<&1
 
 echo Done.>> "%LOG_FILE%"
 
