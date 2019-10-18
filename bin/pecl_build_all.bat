@@ -6,7 +6,7 @@ if not exist %~dp0rmtools_setvars.bat (
 )
 call %~dp0rmtools_setvars.bat 
 
-for /f "tokens=2-8 delims=.:/ " %%a in ("%date% %time%") do set cur_date=%%c-%%a-%%b_%%d-%%e-%%f.%%g
+for /f "tokens=1-8 delims=-" %%a in ('powershell get-date -format "{yyyy-MM-dd-HH-mm-ss-ff}"') do set cur_date=%%a-%%b-%%c_%%d-%%e-%%f.%%g
 
 set LOG_FILE=%PHP_RMTOOLS_LOG_PATH%\task-pecl-%cur_date%.log
 set LOCK_FILE=%PHP_RMTOOLS_LOCK_PATH%\pecl.lock
