@@ -298,8 +298,6 @@ class PeclExt
 				throw new \Exception("Unsupported package format");
 		}
 
-		/* XXX what if we would look for subdirs containing config.w32? The subdir
-		where the file is has to be the root of the source tree. */
 		if (file_exists(realpath($tmp_path . '/' . $this->pkg_basename))) {
 			/* This covers the case when the source is in a subdir within a package,
 			thats native pecl, git.php.net export too. Github should work too, whereby
@@ -309,6 +307,16 @@ class PeclExt
 		} else {
 			/* If one manually packed the source into the root of archive, so be.*/
 			$this->tmp_extract_path = realpath($tmp_path);
+		}
+
+		/* if there is no config.w32 in the tmp_extract_path, but there is exactly 
+		   one in a subfolder, we copy the whole subfolder one level up, unless
+		   there are conflicting files/dirs */
+		if (!file_exists($this->tmp_extract_path . '/config.w32')
+			&& ($configdirs = glob($this->tmp_extract_path . '/*/config.w32'))
+			&& count($configdirs) === 1)
+		{
+			$this->copyConfigW32DirToToplevel(dirname($configdirs[0]), $this->tmp_extract_path);
 		}
 
 		if (file_exists($tmp_path . DIRECTORY_SEPARATOR . 'package2.xml')) {
@@ -359,6 +367,29 @@ class PeclExt
 		$this->pkg_path = NULL;
 
 		return $this->tmp_extract_path;
+	}
+
+	private function copyConfigW32DirToToplevel($src, $dst)
+	{
+		$iterator = new \RecursiveIteratorIterator(
+			new \RecursiveDirectoryIterator($src, \RecursiveDirectoryIterator::SKIP_DOTS),
+			\RecursiveIteratorIterator::SELF_FIRST
+		);
+		foreach ($iterator as $item) {
+			$subdir = $dst . DIRECTORY_SEPARATOR . $iterator->getSubPathName();
+			if (file_exists($subdir)) {
+				throw new \Exception('Failed to copy config.w32 dir to toplevel');
+			}
+			if ($item->isDir()) {
+				if (!mkdir($subdir)) {
+					throw new \Exception('Failed to copy config.w32 dir to toplevel');
+				}
+			} else {
+				if (!copy($item, $subdir)) {
+					throw new \Exception('Failed to copy config.w32 dir to toplevel');
+				}
+			}
+		}
 	}
 
 	public function putSourcesIntoBranch()
