@@ -42,6 +42,10 @@ class Git {
 		$http_url = preg_replace('/git:\/\//', 'http://', $this->repo_url);
 		$rev = $revision ? $revision : $this->branch;
 		$url = $http_url . '/?p=' . $this->module . ';a=snapshot;h=' . $rev . ';sf=zip';
+		// FIXME: hack to export from Github, since snapshot downloads have been disabled
+		if ($this->repo_url === 'git://git.php.net') {
+			$url = "https://codeload.github.com/php/php-src/zip/$rev";
+		}
 		$dest .= '.zip';
 		wget($url, $dest);
 		return $dest;
