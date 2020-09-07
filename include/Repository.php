@@ -29,7 +29,7 @@ class Repository {
 				return $r;
 				break;
 			case 'git':
-				$r = new Git($repo['url']);
+				$r = new Git($repo['url'], isset($repo['gh_url']) ? $repo['gh_url'] : null);
 				return $r;
 				break;
             default:

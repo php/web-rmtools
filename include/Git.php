@@ -3,14 +3,16 @@ namespace rmtools;
 
 class Git {
 	public $repo_url;
+	private $gh_url;
 	public $module;
 	public $branch;
 	private $git_cmd = 'c:\apps\git\bin\git.exe';
 	private $tar_cmd = 'c:\apps\git\bin\tar.exe';
 
-	public function __construct($repo_url)
+	public function __construct($repo_url, $gh_url = null)
 	{
 		$this->repo_url = $repo_url;
+		$this->gh_url = $gh_url;
 
 		if (!file_exists($this->git_cmd)) {
 			$git_cmd = trim(shell_exec("where git.exe"));
@@ -39,12 +41,12 @@ class Git {
 
 	public function export($dest, $revision = false)
 	{
-		$http_url = preg_replace('/git:\/\//', 'http://', $this->repo_url);
 		$rev = $revision ? $revision : $this->branch;
-		$url = $http_url . '/?p=' . $this->module . ';a=snapshot;h=' . $rev . ';sf=zip';
-		// FIXME: hack to export from Github, since snapshot downloads have been disabled
-		if ($this->repo_url === 'git://git.php.net') {
-			$url = "https://codeload.github.com/php/php-src/zip/$rev";
+		if (isset($this->gh_url)) {
+			$url = $this->gh_url . '/zip/' . $rev;
+		} else {
+			$http_url = preg_replace('/git:\/\//', 'http://', $this->repo_url);
+			$url = $http_url . '/?p=' . $this->module . ';a=snapshot;h=' . $rev . ';sf=zip';
 		}
 		$dest .= '.zip';
 		wget($url, $dest);
