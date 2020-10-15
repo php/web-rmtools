@@ -295,7 +295,7 @@ foreach ($builds as $build_name) {
 
 	$stats = $build->getStats();
 
-	if ($stats['error'] > 0) {
+	if (isset($stats['error']) && $stats['error'] > 0) {
 		$error_log_fname = $log_base . '/error-' . $ext->getPackageName() . '.txt';
 		file_put_contents($error_log_fname, $build->compiler_log_parser->getErrors());
 	}
