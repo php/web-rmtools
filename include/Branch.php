@@ -227,7 +227,7 @@ class Branch {
 	{
 		$rev_name = $revision ? $revision : $this->data->revision_last;
 		if (strlen($rev_name) == 40) {
-			$rev_name = substr($rev_name, 0, 7);
+			$rev_name = substr($rev_name, 0, 10);
 		}
 		$dir_name = $this->config->getName() . '-src-' . ($build_type ? $build_type.'-' : $build_type) . 'r' . $rev_name;
 		$build_dir = $this->config->getBuildDir();
