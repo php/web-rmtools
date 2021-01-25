@@ -11,6 +11,7 @@ class PeclExt
 	protected $pkg_basename;
 	protected $pkg_fmt;
 	protected $name;
+	protected $unreal_name; // if real_name is configured, this is the package name
 	protected $version;
 	protected $build;
 	protected $tar_cmd;
@@ -161,6 +162,7 @@ class PeclExt
 				}
 
 				$this->tmp_extract_path = $new_path;
+				$this->unreal_name = $this->name;
 				$this->name = $config['real_name'];
 			}
 		}
@@ -169,15 +171,24 @@ class PeclExt
 		$this->version = strtolower($this->version);
 	}
 
-	public function getPackageName()
+	public function getPackageName($unreal = false)
 	{
 		// looks like php_http-2.0.0beta4-5.3-nts-vc9-x86
-		return 'php_' . $this->name
+		// or like php_pecl_http-2.0.0beta4-5.3-nts-vc9-x86 for $unreal===true
+		return 'php_' . ($unreal ? $this->unreal_name : $this->name)
 			. '-' . $this->version 
 			. '-' . $this->build->branch->config->getBranch()
 			. '-' . ($this->build->thread_safe ? 'ts' : 'nts')
 			. '-' . $this->build->compiler
 			. '-' . $this->build->architecture;
+	}
+
+	public function getUnrealName()
+	{
+		if (isset($this->unreal_name)) {
+			return $this->unreal_name;
+		}
+		return $this->name;
 	}
 
 	protected function createTmpUnpackDir()
