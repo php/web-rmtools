@@ -36,7 +36,7 @@ NOTE: All the paths in the usage exampled are on drive C: for simplicity. Locati
 - copy C:\php-snap-build\rmtools\bin\rmtools_setvars.bat-dist to C:\php-snap-build\rmtools\bin\rmtools_setvars.bat, set the appropriate values
 - copy C:\php-snap-build\rmtools\data\config\credentials_ftps.php-dist to C:\php-snap-build\rmtools\data\config\credentials_ftps.php, set the appropriate values
 
-## Buiding
+## Building
 
 With this configuration, for example for a VC14 64-bit build
 
