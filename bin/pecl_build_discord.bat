@@ -43,8 +43,8 @@ rem call %BAT_DIR%pecl.bat --config=pecl55_x86 %* >> %LOG_FILE% 2<&1
 rem call %BAT_DIR%pecl.bat --config=pecl54 %* >> %LOG_FILE% 2<&1
 rem call %BAT_DIR%pecl.bat --config=pecl53 --last %* >> %LOG_FILE% 2<&1
 rem
-call "%PHP_RMTOOLS_PHP_SDK_ROOT_PATH%\phpsdk-starter.bat" -c vs16 -a x64 -t "%PHP_RMTOOLS_BIN_PATH%\pecl.bat" --task-args "--config=pecl80_x64 --first %*" >> "%LOG_FILE%" 2<&1
-call "%PHP_RMTOOLS_PHP_SDK_ROOT_PATH%\phpsdk-starter.bat" -c vs16 -a x86 -t "%PHP_RMTOOLS_BIN_PATH%\pecl.bat" --task-args "--config=pecl80_x86 --last %*" >> "%LOG_FILE%" 2<&1
+call "%PHP_RMTOOLS_PHP_SDK_ROOT_PATH%\phpsdk-starter.bat" -c vs16 -a x64 -t "%PHP_RMTOOLS_BIN_PATH%\pecl.bat" --task-args "--config=pecl81_x64 --first %*" >> "%LOG_FILE%" 2<&1
+call "%PHP_RMTOOLS_PHP_SDK_ROOT_PATH%\phpsdk-starter.bat" -c vs16 -a x86 -t "%PHP_RMTOOLS_BIN_PATH%\pecl.bat" --task-args "--config=pecl81_x86 --last %*" >> "%LOG_FILE%" 2<&1
 
 echo Done.>> "%LOG_FILE%"
 
