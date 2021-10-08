@@ -327,7 +327,7 @@ foreach ($builds as $build_name) {
 	if ($upload) {
 		try {
 			$root = $is_snap ? 'snaps' : 'releases';
-			$target = '/' . $root . '/' .  $ext->getUnrealName() . '/' . $ext->getVersion();
+			$target = '/pecl/' . $root . '/' .  $ext->getUnrealName() . '/' . $ext->getVersion();
 
 			if ($ext->getName() != $ext->getUnrealName()) {
 				$real_pkg_file = $pkg_file;
