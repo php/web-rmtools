@@ -73,7 +73,7 @@ if ($branch->hasNewRevision() || !$branch->isLastRevisionExported($branch->getLa
 	}
 
 	if (strlen($last_rev) == 40) {
-		$last_rev = substr($last_rev, 0, 7);
+		$last_rev = substr($last_rev, 0, 10);
 	}
 	$src_original_path =  $branch->createSourceSnap($build_type, $last_rev);
 
