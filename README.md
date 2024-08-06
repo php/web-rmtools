@@ -2,6 +2,9 @@
 
 Tools PHP release and snapshot build automation for Windows.
 
+Since this software is no longer used for build automation on Windows,
+it has been archived.
+
 # License
 
 The PHP RMTOOLS itself is licensed under the BSD 2-Clause license. With the usage of the other tools, you accept the respective licenses.
